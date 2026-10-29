@@ -1,11 +1,13 @@
 import { CANDLES, CAKES, TOPPERS, KINDS, DURATIONS, RARITY, STUDIO, STUDIO_COST, AMBIENCE, CAKE_SLOTS, kindFor } from './data.js';
 import {
   state, save, resetAll, dayKey, newId, allCandles, getCandle, getCake, ownsCandle, streak, isBlue,
+  replaceState, loadLocal, GUEST_KEY, setSync, flushSync,
   currentCake, serveCake, rolloverIfNewDay, addCandleToCake, spend, totals, encodeGift, decodeGift,
 } from './store.js';
 import { candleSVG, cakeSVG, sculptureSVG, setCakeStyle } from './render.js';
 import * as audio from './audio.js';
 import { party } from './party.js';
+import { api, auth } from './api.js';
 import { periodStats, barChart, donut, hourChart, trendChart, heatmap, tagColor, fmtMin, PALETTE } from './stats.js';
 
 const $ = (s, r = document) => r.querySelector(s);
@@ -85,6 +87,7 @@ function route() {
   if (!a) { setDim(0); document.title = BASE_TITLE; }
   VIEWS[name]();
   renderWallet();
+  renderAccount();
 }
 window.addEventListener('hashchange', route);
 const go = (v) => { if (location.hash === '#/' + v) route(); else location.hash = '#/' + v; };
@@ -152,6 +155,7 @@ function focusActive() {
     <div id="time" class="time">${fmt(a.durationMs)}</div>
     <div id="stage" class="stage"></div>
     <div id="friends" class="friends"></div>
+    ${a.party && party.active ? `<div class="burn-chat"><div id="burn-chat-log" class="chat-log mini">${chatLogHTML(party.room, 4)}</div><form class="chat-form"><input type="text" maxlength="240" placeholder="Say something to the party…" aria-label="Party message"><button class="btn sm" type="submit">Send</button><button class="btn ghost sm" type="button" data-act="cheerAll">Cheer everyone</button></form></div>` : ''}
     <div class="burn-actions">${ambienceControls()}<button class="btn ghost" data-act="giveUp">Blow out early</button></div>
     <p class="hint">Stay on this tab. Your flame flickers when you wander off.</p>
   </section>`;
@@ -532,57 +536,102 @@ VIEWS.studio = () => {
 };
 
 /* ---------- party ---------- */
+function chatLogHTML(room, limit = 60) {
+  if (!room) return '';
+  return room.chat.slice(-limit).map((c) => (c.system
+    ? `<div class="msg sys ${c.cheer ? 'cheer' : ''}">${esc(c.text)}</div>`
+    : `<div class="msg ${c.from === room.you ? 'me' : ''}"><b>${esc(c.from === room.you ? 'You' : c.name)}</b><span>${esc(c.text)}</span></div>`)).join('') || '<div class="msg sys">Say hi to your study buddies.</div>';
+}
+function partyMembersHTML(room) {
+  return room.members.map((m) => {
+    const me = m.id === room.you;
+    return `<div class="member">${candleSVG(getCandle(m.design), 'taper', m.status === 'quit' ? 0.45 : 1, { lit: m.status === 'burning', cls: '' })}
+      <div class="member-name">${room.host === m.id ? '<span class="crown" title="Host">♛</span> ' : ''}${esc(m.name)}${me ? ' (you)' : ''}</div>
+      <div class="muted" style="font-size:.78rem">${esc(m.subject || '')}${m.status !== 'idle' ? ` · ${esc(m.status)}` : ''}</div>
+      ${me ? '' : `<div class="member-actions"><button class="chip sm" data-act="cheer" data-id="${m.id}">Cheer</button>${party.isHost ? `<button class="chip sm" data-act="makeHost" data-id="${m.id}">Make host</button>` : ''}</div>`}</div>`;
+  }).join('');
+}
+function partyControlsHTML(room) {
+  const sess = room.session;
+  const live = sess && party.serverNow() < sess.startAt + sess.durationMs;
+  if (live) return `<p class="served">A party session is burning. <a href="#/focus">Join the flame →</a></p>`;
+  if (!party.isHost) return '<p class="muted">Waiting for the host to light the candles…</p>';
+  return `<h3>Light everyone's candles</h3>
+    <div class="chips" style="justify-content:center">${DURATIONS.map((x) => `<button class="chip ${state.settings.minutes === x.minutes ? 'on' : ''}" data-act="minutes" data-min="${x.minutes}">${x.minutes} min</button>`).join('')}</div>
+    <p class="muted">Everyone uses their own equipped candle and tag${state.settings.demo ? ' · demo speed is on' : ''}.</p>
+    <button class="btn big" data-act="partyStart">Light together</button>`;
+}
+const lobbyCache = {};
+function setIf(sel, html) { const el = $(sel); if (el && lobbyCache[sel] !== html) { lobbyCache[sel] = html; el.innerHTML = html; return true; } return false; }
+function updatePartyLobby() {
+  const room = party.room;
+  if (!room) return;
+  setIf('#party-members', partyMembersHTML(room));
+  setIf('#party-controls', partyControlsHTML(room));
+  const log = $('#chat-log');
+  if (log) {
+    const atBottom = log.scrollHeight - log.scrollTop - log.clientHeight < 60;
+    if (setIf('#chat-log', chatLogHTML(room)) && atBottom) log.scrollTop = log.scrollHeight;
+  }
+}
 VIEWS.party = () => {
+  Object.keys(lobbyCache).forEach((k) => delete lobbyCache[k]);
+  if (!auth.user) {
+    view.innerHTML = `<section class="grid" style="max-width:640px;margin:0 auto"><div class="card" style="text-align:center">
+      <h1>Study Party</h1><p class="muted">Study parties need an account so your friends can see your candle burning.</p>
+      <button class="btn big" data-act="signIn">Sign in or create an account</button></div></section>`;
+    return;
+  }
   if (!party.active) {
     view.innerHTML = `
-    <section class="grid" style="max-width:760px;margin:0 auto">
+    <section class="party-start">
       <div class="card">
         <h1>Study Party</h1>
-        <p class="muted">Light candles with friends. Everyone's candle burns at the same time, and at the end you blow them out together and get a party cake.</p>
-        <label class="field">Your name</label><input type="text" data-change="name" value="${esc(state.name)}" placeholder="Annika" style="width:100%">
-        <div class="row" style="margin-top:18px"><button class="btn" data-act="createParty">Start a party</button></div>
-        <label class="field" style="margin-top:24px">…or join with a code</label>
-        <div class="row"><input type="text" data-change="joinCode" value="${esc(ui.joinCode)}" placeholder="ABCDE" style="width:160px;text-transform:uppercase;letter-spacing:.2em"><button class="btn rose" data-act="joinParty">Join</button></div>
+        <p class="muted">Light candles with friends. Everyone's candle burns at the same time; at the end you blow them out together and each get a party cake.</p>
+        <p class="muted" style="margin-top:14px">You'll appear as <b>${esc(auth.user.name)}</b>.</p>
+        <button class="btn big" data-act="createParty">Start a party</button>
+      </div>
+      <div class="card">
+        <h2>Join a party</h2>
+        <p class="muted">Got a code from a friend?</p>
+        <div class="row"><input type="text" data-change="joinCode" value="${esc(ui.joinCode)}" placeholder="ABCDE" maxlength="5" class="code-input" aria-label="Party code"><button class="btn rose" data-act="joinParty">Join</button></div>
       </div>
     </section>`;
     return;
   }
-  const room = party.room || { members: [] };
-  const sess = room.session;
-  const now = party.serverNow();
-  const live = sess && now < sess.startAt + sess.durationMs;
   const link = `${location.origin}${location.pathname}?party=${party.code}`;
   view.innerHTML = `
-  <section class="grid" style="max-width:900px;margin:0 auto">
+  <section class="party-grid">
     <div class="card" style="text-align:center">
-      <p class="muted">Party code</p>
+      <p class="eyebrow">Party code</p>
       <div class="party-code">${party.code}</div>
       <div class="row" style="justify-content:center"><button class="btn ghost sm" data-act="copy" data-text="${esc(link)}">Copy invite link</button><button class="btn ghost sm" data-act="leaveParty">Leave party</button></div>
-      <div class="members" style="justify-content:center">
-        ${room.members.map((m) => `<div class="member">${candleSVG(getCandle(m.design), 'taper', m.status === 'quit' ? 0.45 : 1, { lit: m.status === 'burning', cls: '' })}<div>${room.host === m.id ? '<span class="crown">♛</span> ' : ''}${esc(m.name)}${m.id === party.memberId ? ' (you)' : ''}</div><div class="muted" style="font-size:.8rem">${esc(m.subject || '')} ${m.status !== 'idle' ? '· ' + m.status : ''}</div></div>`).join('')}
-      </div>
-      ${live ? `<p class="served">A party session is burning. <a href="#/focus">Join the flame →</a></p>`
-        : party.isHost ? `
-        <h3>Light everyone's candles</h3>
-        <div class="chips" style="justify-content:center">${DURATIONS.map((x) => `<button class="chip ${state.settings.minutes === x.minutes ? 'on' : ''}" data-act="minutes" data-min="${x.minutes}">${x.minutes} min</button>`).join('')}</div>
-        <p class="muted">Each person uses their own equipped candle and subject${state.settings.demo ? ' · demo speed is on' : ''}.</p>
-        <button class="btn big" data-act="partyStart">Light together</button>`
-        : '<p class="muted">Waiting for the host to light the candles…</p>'}
+      <div class="members" id="party-members" style="justify-content:center"></div>
+      <div id="party-controls"></div>
+    </div>
+    <div class="card chat-card">
+      <h3>Party chat</h3>
+      <div id="chat-log" class="chat-log"></div>
+      <form class="chat-form"><input type="text" maxlength="240" placeholder="Message the party…" aria-label="Party message"><button class="btn sm" type="submit">Send</button></form>
     </div>
   </section>`;
+  updatePartyLobby();
+  const log = $('#chat-log'); if (log) log.scrollTop = log.scrollHeight;
 };
 
 party.onChange((room) => {
   const s = room?.session;
   if (s && !state.active && state.lastPartySession !== s.id) {
-    const me = room.members.find((m) => m.id === party.memberId);
+    const me = room.members.find((m) => m.id === room.you);
     if (me?.status === 'burning' && party.serverNow() < s.startAt + s.durationMs) {
       party.status({ design: state.settings.design, subject: state.settings.subject });
       startFocus(s);
       return;
     }
   }
-  if (ui.view === 'party') VIEWS.party();
+  if (ui.view === 'party') { if (party.active && $('#party-members')) updatePartyLobby(); else VIEWS.party(); }
+  const bl = $('#burn-chat-log');
+  if (bl && room) bl.innerHTML = chatLogHTML(room, 4);
   if (state.active?.party) ui.lastRem = -1;
 });
 
@@ -620,7 +669,7 @@ VIEWS.stats = () => {
       ${stat('Completion', st.rate + '%', 'sessions finished')}
       ${stat('Tasks done', st.tasksDone.length, `${Object.keys(st.tasksByTag).length} tag${Object.keys(st.tasksByTag).length === 1 ? '' : 's'}`)}
       ${stat('Cakes served', st.cakes, `${st.flames} flames earned`)}
-      ${stat('Streak', streak() + ' days', streak() >= 7 ? 'blue flame active' : `${7 - streak()} to blue flame`)}
+      ${stat('Streak', `${streak()} day${streak() === 1 ? '' : 's'}`, streak() >= 7 ? 'blue flame active' : `${7 - streak()} to blue flame`)}
       ${stat('Distractions', st.distractions, 'tab switches')}
     </div>
     <div class="card"><div class="row"><h2 style="margin:0">Focus time</h2><span class="spacer"></span><span class="muted">${st.best?.total ? `Best ${P === 'year' ? 'month' : 'day'}: ${esc(st.best.full)} · ${fmtMin(st.best.total)}` : ''}</span></div>${barChart(st.buckets, { labelEvery: P === 'month' ? 3 : 1 })}</div>
@@ -634,7 +683,7 @@ VIEWS.stats = () => {
     </div>
     ${P === 'year' ? `<div class="card"><h2>${st.range.start.getFullYear()} at a glance</h2>${heatmap(st.range.start.getFullYear())}</div>` : ''}
     <div class="card plain">
-      <div class="row"><label class="muted">Name <input type="text" data-change="name" value="${esc(state.name)}" style="width:160px"></label><span class="spacer"></span><button class="btn ghost sm" data-act="reset">Reset all data</button></div>
+      <div class="row">${auth.user ? `<label class="muted">Display name <input type="text" data-change="displayName" value="${esc(auth.user.name)}" style="width:180px" maxlength="24"></label>` : ''}<span class="spacer"></span><button class="btn ghost sm" data-act="reset">Reset all data</button></div>
     </div>
   </section>`;
 };
@@ -782,7 +831,7 @@ const actions = {
   confirmGift: ({ type, id }) => {
     const item = catalog(type, id);
     if (!spend('flames', item.price)) return toast('Not enough flames');
-    const code = encodeGift({ type, id, from: state.name || 'a friend' });
+    const code = encodeGift({ type, id, from: auth.user?.name || state.name || 'a friend' });
     modal(`<h2>Gift wrapped</h2><p>Send this code to your friend. They can redeem it in the shop.</p><div class="code-box">${code}</div>
       <div class="row" style="margin-top:12px"><button class="btn" data-act="copy" data-text="${code}">Copy code</button></div>`);
     renderWallet();
@@ -814,14 +863,34 @@ const actions = {
     route();
   },
   createParty: async () => {
-    if (!state.name) return toast('Add your name first');
-    try { await party.create(state.name, state.settings.design); party.status({ subject: state.settings.subject }); route(); } catch (e) { toast(esc(e.message)); }
+    try { await party.create(state.settings.design, state.settings.subject); route(); } catch (e) { toast(esc(e.message)); }
   },
   joinParty: async () => {
-    if (!state.name) return toast('Add your name first');
-    if (!ui.joinCode) return toast('Enter a party code');
-    try { await party.join(ui.joinCode.toUpperCase(), state.name, state.settings.design); party.status({ subject: state.settings.subject }); route(); } catch (e) { toast(esc(e.message)); }
+    const code = (ui.joinCode || '').trim().toUpperCase();
+    if (code.length !== 5) return toast('Party codes are 5 letters');
+    try { await party.join(code, state.settings.design, state.settings.subject); ui.joinCode = ''; route(); } catch (e) { toast(esc(e.message)); }
   },
+  cheer: ({ id }) => party.cheer(+id).then(() => toast('Cheer sent')).catch((e) => toast(esc(e.message))),
+  cheerAll: () => party.chat('🔥 Keep going, everyone!').catch(() => {}),
+  makeHost: ({ id }) => party.makeHost(+id).catch((e) => toast(esc(e.message))),
+  toggleTheme: () => { localStorage.setItem('candlelit-theme', document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark'); applyTheme(); },
+  setTheme: ({ id }) => { localStorage.setItem('candlelit-theme', id); applyTheme(); },
+  accountMenu: () => { ui.menuOpen = !ui.menuOpen; renderAccount(); },
+  goStats: () => { ui.menuOpen = false; go('stats'); },
+  signIn: () => { if (state.active) return toast('Finish your session first'); ui.menuOpen = false; showAuth('login'); },
+  signOut: async () => {
+    if (state.active) return toast('Finish your session first');
+    ui.menuOpen = false;
+    await flushSync();
+    await party.leave();
+    await auth.logout();
+    setSync(null);
+    replaceState(loadLocal(GUEST_KEY), GUEST_KEY);
+    localStorage.removeItem('candlelit-guest');
+    showAuth('login');
+  },
+  authMode: ({ id }) => showAuth(id),
+  guest: () => { localStorage.setItem('candlelit-guest', '1'); startApp(); },
   leaveParty: async () => { await party.leave(); route(); },
   partyStart: async () => {
     try {
@@ -902,6 +971,7 @@ const actions = {
 };
 
 document.addEventListener('click', (e) => {
+  if (ui.menuOpen && !e.target.closest('#account')) { ui.menuOpen = false; renderAccount(); }
   const el = e.target.closest('[data-act]');
   if (!el) return;
   if (el.tagName === 'BUTTON' || el.dataset.act !== 'clearPending') e.preventDefault();
@@ -922,6 +992,7 @@ document.addEventListener('change', (e) => {
   if (k === 'linkTask') { const t = state.tasks.find((x) => x.id === v); state.settings.taskId = t ? t.id : null; if (t) state.settings.subject = t.tag; save(); route(); }
   if (k === 'newTag' && v.trim()) { const s = v.trim().slice(0, 24); if (!state.subjects.includes(s)) state.subjects.push(s); ui.taskTag = s; save(); route(); }
   if (k === 'name') { state.name = v.trim().slice(0, 24); save(); }
+  if (k === 'displayName' && v.trim()) auth.rename(v.trim()).then(() => { toast('Name updated'); renderAccount(); }).catch((er) => toast(esc(er.message)));
 });
 document.addEventListener('input', (e) => {
   const k = e.target.dataset.change;
@@ -953,18 +1024,128 @@ document.addEventListener('visibilitychange', () => {
   }
 });
 
+/* ---------- theme & account ---------- */
+const SUN = '<svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="4.2"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>';
+const MOON = '<svg class="ico" viewBox="0 0 24 24" fill="currentColor"><path d="M20.5 14.6A8.5 8.5 0 0 1 9.4 3.5a8.5 8.5 0 1 0 11.1 11.1z"/></svg>';
+const themePref = () => localStorage.getItem('candlelit-theme') || 'system';
+function applyTheme() {
+  const t = themePref();
+  const d = t === 'dark' || (t === 'system' && matchMedia('(prefers-color-scheme: dark)').matches);
+  document.documentElement.dataset.theme = d ? 'dark' : 'light';
+  renderAccount();
+}
+matchMedia('(prefers-color-scheme: dark)').addEventListener('change', applyTheme);
+function renderAccount() {
+  const el = $('#account');
+  if (!el) return;
+  const dark = document.documentElement.dataset.theme === 'dark';
+  const u = auth.user;
+  el.innerHTML = `<button class="icon-btn" data-act="toggleTheme" aria-label="Switch to ${dark ? 'light' : 'dark'} mode" title="${dark ? 'Light' : 'Dark'} mode">${dark ? SUN : MOON}</button>
+    ${u ? `<button class="avatar" data-act="accountMenu" aria-label="Account menu" aria-expanded="${!!ui.menuOpen}">${esc((u.name || '?')[0].toUpperCase())}</button>` : '<button class="btn sm" data-act="signIn">Sign in</button>'}
+    ${ui.menuOpen && u ? `<div class="menu" role="menu"><div class="menu-head"><b>${esc(u.name)}</b><span class="muted">@${esc(u.username)}</span></div>
+      <div class="menu-label">Theme</div><div class="seg seg-sm">${['light', 'dark', 'system'].map((t) => `<button class="${themePref() === t ? 'on' : ''}" data-act="setTheme" data-id="${t}">${t[0].toUpperCase() + t.slice(1)}</button>`).join('')}</div>
+      <button class="menu-item" data-act="goStats">Stats &amp; settings</button>
+      <button class="menu-item danger" data-act="signOut">Sign out</button></div>` : ''}`;
+}
+
+/* ---------- auth screen ---------- */
+function showAuth(mode = ui.authMode || 'login') {
+  ui.authMode = mode;
+  document.body.classList.add('auth-mode');
+  document.body.classList.remove('immersive');
+  view.innerHTML = `
+  <section class="auth">
+    <div class="auth-art">
+      <div class="auth-brand"><span class="brand-mark"></span>Candlelit</div>
+      <div class="auth-candles">${[['rosestick', 1], ['striped', 0.72], ['teacup', 0.85]].map(([id, r], i) => candleSVG(getCandle(id), 'taper', r, { lit: true, sparkles: i === 0, cls: 'auth-candle' })).join('')}</div>
+      <h1>Study until your candle melts.</h1>
+      <p>Light a candle, focus until it burns down, and fill your bakery with cakes. Bring friends to study parties.</p>
+    </div>
+    <div class="auth-card">
+      <div class="seg auth-seg"><button class="${mode === 'login' ? 'on' : ''}" data-act="authMode" data-id="login">Sign in</button><button class="${mode === 'signup' ? 'on' : ''}" data-act="authMode" data-id="signup">Create account</button></div>
+      <h2>${mode === 'login' ? 'Welcome back' : 'Make your account'}</h2>
+      <p class="muted">${mode === 'login' ? 'Sign in to pick up where you left off.' : 'Your candles, cakes, tasks and stats save to your account.'}</p>
+      <form id="authForm" novalidate>
+        ${mode === 'signup' ? '<label class="field" for="f-name">Display name</label><input id="f-name" type="text" name="name" placeholder="Annika" maxlength="24" autocomplete="nickname">' : ''}
+        <label class="field" for="f-user">Username</label><input id="f-user" type="text" name="username" maxlength="24" autocomplete="username" autocapitalize="off" spellcheck="false" placeholder="${mode === 'signup' ? 'letters, numbers, _ or .' : ''}">
+        <label class="field" for="f-pass">Password</label><input id="f-pass" type="password" name="password" autocomplete="${mode === 'login' ? 'current-password' : 'new-password'}" placeholder="${mode === 'signup' ? 'at least 8 characters' : ''}">
+        <p class="auth-error" id="authError" role="alert"></p>
+        <button class="btn big" type="submit" style="width:100%">${mode === 'login' ? 'Sign in' : 'Create account'}</button>
+      </form>
+      <div class="auth-alt"><button class="link-btn" data-act="guest">Continue as guest</button><span class="muted">Guest progress stays on this device, and study parties need an account.</span></div>
+    </div>
+  </section>`;
+  setTimeout(() => $('#authForm input')?.focus(), 0);
+}
+
+async function enterAccount(user) {
+  const key = `candlelit-u${user.id}`;
+  let remote = null;
+  try { remote = await api('/api/state'); } catch { remote = null; }
+  if (remote?.data) replaceState(remote.data, key);
+  else {
+    replaceState(loadLocal(key) || loadLocal(GUEST_KEY), key);
+    await api('/api/state', { data: state }, 'PUT').catch(() => {});
+  }
+  setSync((st) => api('/api/state', { data: st }, 'PUT').then(() => { ui.syncError = false; }).catch(() => { ui.syncError = true; }));
+}
+
+let started = false;
+function startApp() {
+  document.body.classList.remove('auth-mode');
+  setCakeStyle(state.settings.cakeStyle);
+  audio.setVolume(state.settings.volume);
+  rolloverIfNewDay();
+  if (ui.joinCode && !state.active) location.hash = '#/party';
+  route();
+  if (auth.user) party.resume().then(() => { if (ui.view === 'party') route(); });
+  if (!started) {
+    started = true;
+    setInterval(tick, 250);
+    if (state.settings.ambience.length) window.addEventListener('pointerdown', () => audio.setAmbience(state.settings.ambience), { once: true });
+  }
+}
+
+document.addEventListener('submit', async (e) => {
+  if (e.target.id === 'authForm') {
+    e.preventDefault();
+    const f = new FormData(e.target);
+    const err = $('#authError');
+    const btn = e.target.querySelector('button[type=submit]');
+    const username = String(f.get('username') || '').trim(), password = String(f.get('password') || '');
+    if (!username || !password) { err.textContent = 'Enter your username and password.'; return; }
+    btn.disabled = true;
+    try {
+      const user = ui.authMode === 'signup' ? await auth.signup(username, password, String(f.get('name') || '').trim()) : await auth.login(username, password);
+      localStorage.removeItem('candlelit-guest');
+      await enterAccount(user);
+      startApp();
+      toast(ui.authMode === 'signup' ? `Welcome, ${esc(user.name)}!` : `Welcome back, ${esc(user.name)}`);
+    } catch (ex) { err.textContent = ex.message; btn.disabled = false; }
+    return;
+  }
+  if (e.target.classList.contains('chat-form')) {
+    e.preventDefault();
+    const inp = e.target.querySelector('input');
+    const t = inp.value.trim();
+    if (!t) return;
+    inp.value = '';
+    try { await party.chat(t); const log = $('#chat-log'); if (log) log.scrollTop = log.scrollHeight; } catch (ex) { toast(esc(ex.message)); }
+  }
+});
+window.addEventListener('beforeunload', () => { flushSync(); });
+
 /* ---------- boot ---------- */
-audio.setVolume(state.settings.volume);
-rolloverIfNewDay();
 const params = new URLSearchParams(location.search);
 if (params.get('party')) {
-  ui.joinCode = params.get('party').toUpperCase();
+  ui.joinCode = params.get('party').toUpperCase().slice(0, 5);
   history.replaceState(null, '', location.pathname + '#/party');
 }
-if (state.settings.ambience.length) {
-  window.addEventListener('pointerdown', () => audio.setAmbience(state.settings.ambience), { once: true });
-}
-setCakeStyle(state.settings.cakeStyle);
-party.resume().then(route);
-route();
-setInterval(tick, 250);
+applyTheme();
+(async () => {
+  let user = null;
+  try { user = await auth.me(); } catch { user = null; }
+  if (user) { await enterAccount(user); startApp(); }
+  else if (localStorage.getItem('candlelit-guest') === '1') startApp();
+  else showAuth(ui.joinCode ? 'signup' : 'login');
+})();

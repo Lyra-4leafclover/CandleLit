@@ -1,65 +1,43 @@
-async function call(path, body) {
-  const res = await fetch(path, body ? { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) } : undefined);
-  const data = await res.json().catch(() => ({}));
-  if (!res.ok) throw new Error(data.error || 'Party server unavailable');
-  return data;
-}
+import { api } from './api.js';
 
 export const party = {
-  code: null,
-  memberId: null,
   room: null,
   timer: null,
   listeners: new Set(),
   offset: 0,
+  lastChat: 0,
 
-  get active() { return !!this.code; },
-  get isHost() { return this.room && this.room.host === this.memberId; },
+  get active() { return !!this.room; },
+  get code() { return this.room?.code || null; },
+  get memberId() { return this.room?.you ?? null; },
+  get isHost() { return !!this.room && this.room.host === this.room.you; },
   serverNow() { return Date.now() + this.offset; },
 
   onChange(fn) { this.listeners.add(fn); return () => this.listeners.delete(fn); },
   emit() { this.listeners.forEach((fn) => fn(this.room)); },
   setRoom(room) {
-    this.room = room;
-    if (room && room.now) this.offset = room.now - Date.now();
+    this.room = room || null;
+    if (room?.now) this.offset = room.now - Date.now();
+    if (room) this.poll(); else clearInterval(this.timer);
     this.emit();
   },
 
-  async create(name, design) {
-    const r = await call('/api/party/create', { name, design });
-    this.code = r.code; this.memberId = r.memberId; this.setRoom(r.room); this.poll();
-    sessionStorage.setItem('candlelit-party', JSON.stringify({ code: r.code, memberId: r.memberId }));
-  },
-  async join(code, name, design) {
-    const r = await call('/api/party/join', { code, name, design });
-    this.code = r.code; this.memberId = r.memberId; this.setRoom(r.room); this.poll();
-    sessionStorage.setItem('candlelit-party', JSON.stringify({ code: r.code, memberId: r.memberId }));
-  },
-  async resume() {
-    const saved = JSON.parse(sessionStorage.getItem('candlelit-party') || 'null');
-    if (!saved) return;
-    this.code = saved.code; this.memberId = saved.memberId;
-    try { await this.refresh(); this.poll(); } catch { this.clear(); }
-  },
+  async create(design, subject) { this.setRoom((await api('/api/party/create', { design, subject })).room); },
+  async join(code, design, subject) { this.setRoom((await api('/api/party/join', { code, design, subject })).room); },
+  async resume() { try { this.setRoom((await api('/api/party/mine')).room); } catch { this.setRoom(null); } },
   async refresh() {
-    const room = await call(`/api/party/state?code=${this.code}&member=${this.memberId}`);
-    this.setRoom(room);
+    try { this.setRoom((await api('/api/party/ping', {})).room); } catch (e) { if (e.status === 404 || e.status === 401) this.setRoom(null); }
   },
   poll() {
-    clearInterval(this.timer);
-    this.timer = setInterval(() => this.refresh().catch(() => {}), 2000);
+    if (this.timer) return;
+    this.timer = setInterval(() => { if (this.room) this.refresh(); else { clearInterval(this.timer); this.timer = null; } }, 2000);
   },
-  async start(minutes, durationMs) { this.setRoom(await call('/api/party/start', { code: this.code, memberId: this.memberId, minutes, durationMs })); },
-  async status(fields) { if (this.active) this.setRoom(await call('/api/party/status', { code: this.code, memberId: this.memberId, ...fields }).catch(() => this.room)); },
-  async reset() { this.setRoom(await call('/api/party/reset', { code: this.code, memberId: this.memberId })); },
-  async leave() {
-    if (this.active) await call('/api/party/leave', { code: this.code, memberId: this.memberId }).catch(() => {});
-    this.clear();
-  },
-  clear() {
-    clearInterval(this.timer);
-    this.code = null; this.memberId = null; this.room = null;
-    sessionStorage.removeItem('candlelit-party');
-    this.emit();
-  },
+  async send(path, body = {}) { if (this.active) this.setRoom((await api(path, body)).room); },
+  start(minutes, durationMs) { return this.send('/api/party/start', { minutes, durationMs }); },
+  status(fields) { return this.send('/api/party/status', fields).catch(() => {}); },
+  reset() { return this.send('/api/party/reset'); },
+  chat(text) { return this.send('/api/party/chat', { text }); },
+  cheer(to) { return this.send('/api/party/cheer', { to }); },
+  makeHost(to) { return this.send('/api/party/host', { to }); },
+  async leave() { if (this.active) await api('/api/party/leave', {}).catch(() => {}); clearInterval(this.timer); this.timer = null; this.setRoom(null); },
 };

@@ -30,25 +30,49 @@ function fresh() {
   };
 }
 
-export const state = load();
+let KEY_ACTIVE = KEY;
+let syncFn = null;
+let syncTimer = null;
 
-function load() {
+export const state = load(KEY);
+
+function load(key) {
   try {
-    const raw = JSON.parse(localStorage.getItem(KEY));
-    if (raw) {
-      const base = fresh();
-      return { ...base, ...raw, owned: { ...base.owned, ...raw.owned }, settings: { ...base.settings, ...raw.settings } };
-    }
+    const raw = JSON.parse(localStorage.getItem(key));
+    if (raw) return hydrate(raw);
   } catch (e) { /* ignore corrupt storage */ }
   return fresh();
 }
 
-export function save() {
-  localStorage.setItem(KEY, JSON.stringify(state));
+function hydrate(raw) {
+  const base = fresh();
+  return { ...base, ...raw, owned: { ...base.owned, ...raw.owned }, settings: { ...base.settings, ...raw.settings } };
 }
 
-export function resetAll() {
-  localStorage.removeItem(KEY);
+/** Swap the in-memory state for another snapshot (used on sign in / sign out). */
+export function replaceState(data, key) {
+  const next = data ? hydrate(data) : fresh();
+  Object.keys(state).forEach((k) => delete state[k]);
+  Object.assign(state, next);
+  if (key) KEY_ACTIVE = key;
+  localStorage.setItem(KEY_ACTIVE, JSON.stringify(state));
+}
+export const loadLocal = (key) => { try { return JSON.parse(localStorage.getItem(key)); } catch { return null; } };
+export const GUEST_KEY = KEY;
+export function setSync(fn) { syncFn = fn; }
+export function flushSync() { if (syncFn && syncTimer) { clearTimeout(syncTimer); syncTimer = null; return syncFn(state); } return Promise.resolve(); }
+
+export function save() {
+  localStorage.setItem(KEY_ACTIVE, JSON.stringify(state));
+  if (syncFn) {
+    clearTimeout(syncTimer);
+    syncTimer = setTimeout(() => { syncTimer = null; syncFn(state); }, 1200);
+  }
+}
+
+export async function resetAll() {
+  replaceState(null);
+  if (syncFn) await syncFn(state);
   location.reload();
 }
 
