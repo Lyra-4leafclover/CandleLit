@@ -512,11 +512,10 @@ VIEWS.shop = () => {
         ${!unavailable && c.price ? `<button class="btn ghost sm" data-act="gift" data-type="candle" data-id="${c.id}">Gift</button>` : ''}</div>`;
     }).join('');
   } else if (tab === 'cakes') {
-    const sample = [{ design: 'striped', kind: 'birthday', minutes: 25 }, { design: 'classic', kind: 'taper', minutes: 50 }, { design: 'polka', kind: 'birthday', minutes: 25 }];
     items = CAKES.map((c) => {
       const owned = state.owned.cakes.includes(c.id);
       const unavailable = c.available === false;
-      return `<div class="item-card ${c.rarity}">${cakeSVG(c, sample, [], cakeOpts({ cls: 'cake-svg thumb-cake' }))}${rarityBadge(c.rarity)}<b>${esc(c.name)}</b>
+      return `<div class="item-card ${c.rarity}">${cakeSVG(c, [], [], cakeOpts({ cls: 'cake-svg thumb-cake' }))}${rarityBadge(c.rarity)}<b>${esc(c.name)}</b>
         ${owned ? `<button class="btn sm ${currentCake().design === c.id ? 'ghost' : ''}" data-act="cakeDesign" data-id="${c.id}">${currentCake().design === c.id ? 'Baking now' : 'Bake next'}</button>`
           : unavailable ? `<span class="muted">Returns in ${c.season}</span>`
           : `<button class="btn sm" data-act="buy" data-type="cake" data-id="${c.id}" ${state.flames < c.price ? 'disabled' : ''}>${FLAME} ${c.price}</button>`}
