@@ -1066,7 +1066,7 @@ const actions = {
     showAuth('login');
   },
   authMode: ({ id }) => showAuth(id),
-  guest: () => { localStorage.setItem('candlelit-guest', '1'); startApp(); },
+  guest: () => { localStorage.setItem('candlelit-guest', '1'); countVisit(true); startApp(); },
   leaveParty: async () => { await party.leave(); route(); },
   partyStart: async () => {
     try {
@@ -1341,6 +1341,7 @@ document.addEventListener('submit', async (e) => {
 window.addEventListener('beforeunload', () => { flushSync(); });
 
 /* ---------- boot ---------- */
+function countVisit(guest) { api('/api/visit', { guest }).catch(() => {}); }
 const params = new URLSearchParams(location.search);
 if (params.get('party')) history.replaceState(null, '', location.pathname + '#/party');
 applyTheme();
@@ -1350,4 +1351,8 @@ applyTheme();
   if (user) { await enterAccount(user); startApp(); }
   else if (localStorage.getItem('candlelit-guest') === '1') startApp();
   else showAuth(ui.joinCode ? 'signup' : 'login');
+  if (!sessionStorage.getItem('candlelit-visit')) {
+    sessionStorage.setItem('candlelit-visit', '1');
+    countVisit(!user && localStorage.getItem('candlelit-guest') === '1');
+  }
 })();

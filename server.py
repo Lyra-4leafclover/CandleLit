@@ -35,6 +35,8 @@ db_lock = threading.Lock()
 
 
 DATABASE_URL = os.environ.get("DATABASE_URL") or os.environ.get("POSTGRES_URL") or os.environ.get("STORAGE_URL")
+# visitor IPs are stored only as keyed hashes; the key never leaves the server
+VISITOR_SALT = (os.environ.get("VISITOR_SALT") or hashlib.sha256(("candlelit-visitors:" + (DATABASE_URL or DB_PATH)).encode()).hexdigest()).encode()
 INTEGRITY_ERRORS = (sqlite3.IntegrityError,)
 if DATABASE_URL:
     import psycopg
@@ -96,6 +98,14 @@ CREATE TABLE IF NOT EXISTS states (
   version INTEGER NOT NULL DEFAULT 1,
   updated DOUBLE PRECISION NOT NULL
 );
+CREATE TABLE IF NOT EXISTS visitors (
+  id TEXT PRIMARY KEY,
+  first_seen REAL NOT NULL,
+  last_seen REAL NOT NULL,
+  visits INTEGER NOT NULL DEFAULT 1,
+  guest INTEGER NOT NULL DEFAULT 0,
+  account INTEGER NOT NULL DEFAULT 0
+);
 """
 
 
@@ -134,6 +144,14 @@ def init_db():
               data TEXT NOT NULL,
               version INTEGER NOT NULL DEFAULT 1,
               updated REAL NOT NULL
+            );
+            CREATE TABLE IF NOT EXISTS visitors (
+              id TEXT PRIMARY KEY,
+              first_seen REAL NOT NULL,
+              last_seen REAL NOT NULL,
+              visits INTEGER NOT NULL DEFAULT 1,
+              guest INTEGER NOT NULL DEFAULT 0,
+              account INTEGER NOT NULL DEFAULT 0
             );
             """
         )
@@ -321,6 +339,8 @@ class Handler(SimpleHTTPRequestHandler):
         body = self.read_body()
         if body is None:
             return self.send_json({"error": "Too large"}, 413)
+        if path == "/api/visit":
+            return self.visit(body)
         if path.startswith("/api/auth/"):
             return self.auth(path, body)
         if path.startswith("/api/party/"):
@@ -329,6 +349,27 @@ class Handler(SimpleHTTPRequestHandler):
                 return self.send_json({"error": "Sign in to join study parties"}, 401)
             return self.party(path, body, user)
         return self.send_json({"error": "Not found"}, 404)
+
+    def client_ip(self):
+        fwd = self.headers.get("X-Forwarded-For")
+        if fwd:
+            return fwd.split(",")[0].strip()
+        return self.headers.get("X-Real-IP") or self.client_address[0]
+
+    def visit(self, body):
+        vid = hmac.new(VISITOR_SALT, self.client_ip().encode(), hashlib.sha256).hexdigest()
+        guest = 1 if body.get("guest") else 0
+        account = 1 if self.current_user() else 0
+        now = time.time()
+        with db_lock, db() as c:
+            c.execute(
+                "INSERT INTO visitors (id, first_seen, last_seen, visits, guest, account) VALUES (?, ?, ?, 1, ?, ?) "
+                "ON CONFLICT(id) DO UPDATE SET last_seen = excluded.last_seen, visits = visitors.visits + 1, "
+                "guest = CASE WHEN excluded.guest = 1 THEN 1 ELSE visitors.guest END, "
+                "account = CASE WHEN excluded.account = 1 THEN 1 ELSE visitors.account END",
+                (vid, now, now, guest, account),
+            )
+        return self.send_json({"ok": True})
 
     def auth(self, path, body):
         if path == "/api/auth/logout":
