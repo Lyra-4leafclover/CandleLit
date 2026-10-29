@@ -102,6 +102,19 @@ function ambienceControls() {
 }
 
 /* ---------- focus (setup) ---------- */
+/* Recently used first, then newest acquired, then the rest from newest to oldest. */
+function candleOrder(list) {
+  let recent = state.recent;
+  if (!recent) {
+    const used = [...state.gallery.flatMap((c) => c.candles || []), ...(state.cake?.candles || [])].map((c) => c.design).reverse();
+    recent = [...new Set([state.settings.design, ...used])].filter(Boolean).slice(0, 6);
+  }
+  const acq = state.acquired || {};
+  const ownedAt = (id) => { const i = state.owned.candles.indexOf(id); return i >= 0 ? i : state.custom.findIndex((c) => c.id === id); };
+  const rank = (c) => { const r = recent.indexOf(c.id); return r >= 0 ? [0, r] : [1, -(acq[c.id] || ownedAt(c.id))]; };
+  return [...list].sort((a, b) => { const x = rank(a), y = rank(b); return x[0] - y[0] || x[1] - y[1]; });
+}
+const markAcquired = (id) => { state.acquired = { ...(state.acquired || {}), [id]: Date.now() }; };
 VIEWS.focus = () => {
   if (state.active?.type === 'focus') return focusActive();
   const st = state.settings;
@@ -109,7 +122,7 @@ VIEWS.focus = () => {
   const d = getCandle(st.design);
   const kind = kindFor(st.minutes);
   const s = streak();
-  const owned = allCandles().filter((c) => ownsCandle(c.id));
+  const owned = candleOrder(allCandles().filter((c) => ownsCandle(c.id)));
   const isCustom = !DURATIONS.some((x) => x.minutes === st.minutes);
   view.innerHTML = `
   <section class="focus-grid">
@@ -127,11 +140,6 @@ VIEWS.focus = () => {
         ${DURATIONS.map((x) => `<button class="chip ${st.minutes === x.minutes ? 'on' : ''}" data-act="minutes" data-min="${x.minutes}">${x.minutes} min <small>${KINDS[x.kind].label.split(' ')[0]}</small></button>`).join('')}
         <input type="number" min="1" max="180" placeholder="custom" value="${isCustom ? st.minutes : ''}" data-change="customMin" style="width:110px">
       </div>
-      <label class="field">Candle</label>
-      <div class="candle-picker">
-        ${owned.map((c) => `<div class="candle-opt ${c.id === st.design ? 'on' : ''}" data-act="design" data-id="${c.id}">${candleThumb(c, 'taper', false)}${esc(c.name)}</div>`).join('')}
-        <a class="candle-opt" href="#/shop" style="display:flex;align-items:center;justify-content:center;text-decoration:none">+ more in the shop</a>
-      </div>
       <label class="field">Task</label>
       <div class="row"><select data-change="linkTask" style="flex:1;min-width:220px"><option value="">No task, just focus</option>${state.tasks.filter((t) => !t.done).map((t) => `<option value="${t.id}" ${linkedTask?.id === t.id ? 'selected' : ''}>${esc(t.title)} · ${esc(t.tag)}</option>`).join('')}</select><a class="btn ghost sm" href="#/tasks">Manage to-do</a></div>
       <label class="field">Tag${linkedTask ? ' <span style="text-transform:none;letter-spacing:0;font-weight:500">· set by the linked task</span>' : ''}</label>
@@ -146,6 +154,11 @@ VIEWS.focus = () => {
         <label class="muted" title="1 minute = 1 second, for trying things out"><input type="checkbox" data-change="demo" ${st.demo ? 'checked' : ''}> Demo speed</label>
       </div>
       <p class="muted" style="margin-top:12px">Finish and the candle goes on today's cake, plus you earn <b>${Math.round(st.minutes * (s >= 7 ? 2 : 1))} flames</b>. Blow it out early and a half-melted stub goes on the cake instead. You'll see the cake once the timer ends.</p>
+      <label class="field">Candle <span style="text-transform:none;letter-spacing:0;font-weight:500">· recently used first</span></label>
+      <div class="candle-picker">
+        ${owned.map((c) => `<div class="candle-opt ${c.id === st.design ? 'on' : ''}" data-act="design" data-id="${c.id}">${candleThumb(c, 'taper', false)}${esc(c.name)}</div>`).join('')}
+        <a class="candle-opt" href="#/shop" style="display:flex;align-items:center;justify-content:center;text-decoration:none">+ more in the shop</a>
+      </div>
     </div>
   </section>`;
 };
@@ -220,6 +233,7 @@ function tick() {
 }
 
 function startFocus(partySession) {
+  state.recent = [state.settings.design, ...(state.recent || []).filter((x) => x !== state.settings.design)].slice(0, 6);
   audio.unlock();
   audio.setAmbience(state.settings.ambience);
   const minutes = partySession ? partySession.minutes : state.settings.minutes;
@@ -955,6 +969,7 @@ const actions = {
     const item = catalog(type, id);
     if (!spend('flames', item.price)) return toast('Not enough flames yet');
     state.owned[type + 's'].push(id);
+    markAcquired(id);
     save();
     toast(`${esc(item.name)} is yours`);
     if (item.rarity === 'legendary') confetti(80);
@@ -980,7 +995,7 @@ const actions = {
     if (state.redeemed.includes(g.n)) return toast('Already redeemed');
     const list = state.owned[g.type + 's'];
     state.redeemed.push(g.n);
-    if (!list.includes(g.id)) list.push(g.id);
+    if (!list.includes(g.id)) { list.push(g.id); markAcquired(g.id); }
     else state.flames += Math.round(catalog(g.type, g.id).price / 2);
     save();
     confetti(60);
@@ -996,6 +1011,7 @@ const actions = {
     if (!spend('wax', STUDIO_COST)) return toast('Not enough wax drips');
     const d = { ...studioDesign(), id: 'custom-' + newId(), scent: ui.studio.scent, name: ui.studio.name || `${ui.studio.scent} candle` };
     state.custom.push(d);
+    markAcquired(d.id);
     state.settings.design = d.id;
     save();
     confetti(50);
@@ -1083,12 +1099,23 @@ const actions = {
   editTags: () => tagEditor(),
   tagColor: ({ tag }) => { const i = PALETTE.indexOf(tagColor(tag)); state.tagColors[tag] = PALETTE[(i + 1) % PALETTE.length]; save(); route(); tagEditor(); },
   deleteTag: ({ tag }) => {
-    if (state.subjects.length <= 1) return;
-    const target = state.subjects.includes('General') && tag !== 'General' ? 'General' : state.subjects.find((x) => x !== tag);
-    renameTag(tag, target);
-    toast(`Deleted “${esc(tag)}”. Its tasks and history moved to ${esc(target)}.`);
-    route(); tagEditor();
+    if (state.subjects.length <= 1) return toast('Keep at least one tag');
+    const n = state.tasks.filter((t) => t.tag === tag).length;
+    const btn = (mode, label, cls = '') => `<button class="btn ${cls}" data-act="confirmDelTag" data-tag="${esc(tag)}" data-mode="${mode}">${label}</button>`;
+    modal(`<h2>Delete the “${esc(tag)}” tag?</h2><p>Your stats keep every session you logged under ${esc(tag)} either way. You just won't be able to pick it for new tasks or pomodoros.</p>
+      ${n ? `<p><b>${n} task${n === 1 ? '' : 's'}</b> use${n === 1 ? 's' : ''} this tag.</p>` : ''}
+      <div class="row" style="margin-top:16px;flex-wrap:wrap">${n ? btn('keep', 'Keep its tasks') + btn('purge', `Delete its task${n === 1 ? '' : 's'} too`, 'ghost') : btn('keep', 'Delete tag')}<button class="btn ghost" data-act="tagEditorBack">Cancel</button></div>`);
   },
+  confirmDelTag: ({ tag, mode }) => {
+    if (!state.subjects.includes(tag)) return tagEditor();
+    state.tagColors[tag] = tagColor(tag);
+    state.subjects = state.subjects.filter((x) => x !== tag);
+    if (mode === 'purge') state.tasks = state.tasks.filter((t) => t.tag !== tag);
+    if (state.settings.subject === tag) state.settings.subject = state.subjects[0];
+    save(); route(); tagEditor();
+    toast(mode === 'purge' ? `Deleted “${esc(tag)}” and its tasks. Its stats history stays.` : `Deleted “${esc(tag)}”. Its tasks and stats history stay.`);
+  },
+  tagEditorBack: () => tagEditor(),
   editTask: ({ id }) => taskEditor(id),
   editTaskTag: ({ id }) => { ui.edit.tag = id; document.querySelectorAll('#modal [data-act="editTaskTag"]').forEach((el) => el.classList.toggle('on', el.dataset.id === id)); },
   editTaskEst: ({ id }) => { ui.edit.est = +id; document.querySelectorAll('#modal [data-act="editTaskEst"]').forEach((el) => el.classList.toggle('on', el.dataset.id === id)); },
@@ -1268,12 +1295,22 @@ async function enterAccount(user) {
   const key = `candlelit-u${user.id}`;
   let remote = null;
   try { remote = await api('/api/state'); } catch { remote = null; }
+  let version = remote?.version || 0;
+  const push = (st) => api('/api/state', { data: st, base: version }, 'PUT').then((r) => { version = r.version; ui.syncError = false; }).catch(async (e) => {
+    if (e.status !== 409) { ui.syncError = true; return; }
+    const fresh = await api('/api/state').catch(() => null);
+    if (!fresh?.data) { ui.syncError = true; return; }
+    version = fresh.version;
+    replaceState(fresh.data, key);
+    if (started) { renderWallet(); route(); }
+    toast('Your account changed in another tab, so this tab reloaded it.');
+  });
   if (remote?.data) replaceState(remote.data, key);
   else {
     replaceState(loadLocal(key) || loadLocal(GUEST_KEY), key);
-    await api('/api/state', { data: state }, 'PUT').catch(() => {});
+    await push(state);
   }
-  setSync((st) => api('/api/state', { data: st }, 'PUT').then(() => { ui.syncError = false; }).catch(() => { ui.syncError = true; }));
+  setSync(push);
 }
 
 let started = false;

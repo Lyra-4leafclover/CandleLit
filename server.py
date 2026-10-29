@@ -237,6 +237,9 @@ class Handler(SimpleHTTPRequestHandler):
             return self.send_json({"error": "Bad data"}, 400)
         with db_lock, db() as c:
             row = c.execute("SELECT version FROM states WHERE user_id = ?", (user["id"],)).fetchone()
+            base = body.get("base")
+            if row and (not isinstance(base, int) or base < row["version"]):
+                return self.send_json({"error": "stale", "version": row["version"]}, 409)
             version = (row["version"] if row else 0) + 1
             c.execute(
                 "INSERT INTO states (user_id, data, version, updated) VALUES (?, ?, ?, ?) "

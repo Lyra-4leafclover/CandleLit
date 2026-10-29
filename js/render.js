@@ -1279,7 +1279,7 @@ function studioPainted(d, r, id, opts) {
   let defs = `<linearGradient id="${id}tg" gradientUnits="userSpaceOnUse" x1="0" y1="${-bh}" x2="0" y2="0"><stop offset=".08" stop-color="${top}"/><stop offset=".92" stop-color="${bot}"/></linearGradient><mask id="${id}pm" mask-type="alpha" maskUnits="userSpaceOnUse" ${box}><g>${p.art}</g></mask>`;
   let bodyG = `${p.out}<g mask="url(#${id}pm)" style="mix-blend-mode:multiply"><rect ${box} fill="url(#${id}tg)"/></g>`;
   if (d.pattern && ART4.pattern.includes(d.pattern)) {
-    const ps = 84;
+    const ps = Math.round(bh * 1.8);
     defs += `<pattern id="${id}pp" patternUnits="userSpaceOnUse" width="${ps}" height="${ps}"><image href="/art4/pat_${d.pattern}.webp" width="${ps}" height="${ps}"/></pattern><filter id="${id}pc" x="0" y="0" width="1" height="1" color-interpolation-filters="sRGB"><feColorMatrix type="matrix" values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  -1.1 -1.1 -1.1 0 3.15" result="a"/><feFlood flood-color="${acc}"/><feComposite in2="a" operator="in"/></filter>`;
     bodyG += `<g mask="url(#${id}pm)"><rect ${box} fill="url(#${id}pp)" filter="url(#${id}pc)" opacity=".92"/></g>`;
   }
