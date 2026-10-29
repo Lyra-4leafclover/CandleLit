@@ -487,7 +487,8 @@ async function shareCard(cakeId) {
       const file = new File([blob], 'candlelit-cake.png', { type: 'image/png' });
       const canShare = navigator.canShare && navigator.canShare({ files: [file] });
       modal(`<h2>Your cake card</h2><img class="share-img" src="${png}" alt="Share card">
-        <div class="row" style="margin-top:14px"><button class="btn" data-act="downloadCard">Download PNG</button>${canShare ? '<button class="btn rose" data-act="nativeShare">Share…</button>' : ''}</div>`);
+        <div class="row" style="margin-top:14px"><button class="btn" data-act="downloadCard">Download PNG</button><a class="btn ghost" href="${png}" target="_blank" rel="noopener" download="candlelit-cake.png">Open image</a>${canShare ? '<button class="btn rose" data-act="nativeShare">Share…</button>' : ''}</div>
+        <p class="muted small" style="margin-top:8px">If the download doesn't start, right-click the image (or press and hold on a phone) and choose <b>Save image</b>.</p>`);
       ui.shareFile = file;
       ui.shareBlob = blob;
     }, 'image/png');

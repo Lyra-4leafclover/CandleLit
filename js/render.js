@@ -1353,7 +1353,7 @@ function cakeSVG3D(design, candles = [], toppers = [], opts = {}) {
 }
 
 const CAKE_TOP = { cx: 0.5, cy: 0.165, rx: 0.33, ry: 0.1 };
-const CAKE_TOP_THEME = { cy: 0.2, rx: 0.34, ry: 0.135 };
+const CAKE_TOP_THEME = { cy: 0.215, rx: 0.36, ry: 0.13, scale: 0.5 };
 function cakeSVGPainted(design, candles = [], toppers = [], opts = {}) {
   const R = rng(opts.seed || design.id);
   const art = CAKE_ART[design.id], top = { ...CAKE_TOP, ...(art.dir === 'art6' || art.dir === 'art7' ? CAKE_TOP_THEME : {}), ...(art.top || {}) };
@@ -1376,10 +1376,10 @@ function cakeSVGPainted(design, candles = [], toppers = [], opts = {}) {
     else p = onTop(0.22, Math.PI / 2 + ((k - outer) / (n - outer)) * Math.PI * 2 + 0.6);
     const cd = opts.getDesign(c.design);
     const rem = c.melted ? Math.max(0.12, c.remaining ?? 0.5) : 1;
-    items.push({ y: p.y, s: `<ellipse cx="${p.x.toFixed(1)}" cy="${(p.y + 1).toFixed(1)}" rx="13" ry="3.6" fill="#3a2420" opacity=".14"/><g transform="translate(${p.x.toFixed(1)},${p.y.toFixed(1)}) scale(.6)"><title>${c.subject || ''} · ${c.minutes} min${c.melted ? ' (blown out early)' : ''}</title>${candleGroup(cd, c.kind, rem, { bare: true, lit: !c.melted && opts.lit !== false, blue: c.blue })}</g>` });
+    items.push({ y: p.y, s: `<ellipse cx="${(p.x + 3).toFixed(1)}" cy="${(p.y + 1.5).toFixed(1)}" rx="17" ry="5" fill="url(#cshadow)"/><ellipse cx="${p.x.toFixed(1)}" cy="${(p.y + 0.5).toFixed(1)}" rx="9" ry="2.4" fill="#2a1a14" opacity=".32"/><g transform="translate(${p.x.toFixed(1)},${(p.y + 2).toFixed(1)}) scale(${top.scale || 0.6})"><title>${c.subject || ''} · ${c.minutes} min${c.melted ? ' (blown out early)' : ''}</title>${candleGroup(cd, c.kind, rem, { bare: true, lit: !c.melted && opts.lit !== false, blue: c.blue })}</g>` });
   });
   const body = items.sort((a, b) => a.y - b.y).map((it) => it.s).join('');
-  return `<svg class="${opts.cls || 'cake-svg'}" viewBox="0 0 400 ${Y0 + H + 12}" xmlns="http://www.w3.org/2000/svg"><ellipse cx="200" cy="${Y0 + H - 4}" rx="${W * 0.3}" ry="9" fill="#3a2420" opacity=".1"/><image href="/${art.dir || 'art3'}/cake_${design.id}.webp" x="${X0}" y="${Y0}" width="${W}" height="${H}"/>${body}</svg>`;
+  return `<svg class="${opts.cls || 'cake-svg'}" viewBox="0 0 400 ${Y0 + H + 12}" xmlns="http://www.w3.org/2000/svg"><defs><radialGradient id="cshadow"><stop offset="0" stop-color="#2a1a14" stop-opacity=".38"/><stop offset="1" stop-color="#2a1a14" stop-opacity="0"/></radialGradient></defs><ellipse cx="200" cy="${Y0 + H - 4}" rx="${W * 0.3}" ry="9" fill="#3a2420" opacity=".1"/><image href="/${art.dir || 'art3'}/cake_${design.id}.webp" x="${X0}" y="${Y0}" width="${W}" height="${H}"/>${body}</svg>`;
 }
 
 export const PSTUDIO = { bodies: Object.keys(ART4.body), holders: Object.keys(ART4.holder), patterns: ART4.pattern, decors: Object.keys(ART4.decor) };
