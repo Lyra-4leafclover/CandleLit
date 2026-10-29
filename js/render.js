@@ -399,7 +399,7 @@ const blossom = (x, y, s, col, mid = '#ffd98a') => {
   for (let k = 0; k < 5; k++) p += `<ellipse cy="-4.2" rx="3" ry="4.4" fill="${col}" transform="rotate(${k * 72})"/>`;
   return `<g transform="translate(${x.toFixed(1)},${y.toFixed(1)}) scale(${s})">${p}<circle r="2" fill="${mid}"/></g>`;
 };
-const sparkle = (x, y, s, col, delay) => `<path class="twinkle" style="animation-delay:${delay.toFixed(2)}s" transform="translate(${x.toFixed(1)},${y.toFixed(1)}) scale(${s.toFixed(2)})" d="M0 -6 C.6 -1.4 1.4 -.6 6 0 C1.4 .6 .6 1.4 0 6 C-.6 1.4 -1.4 .6 -6 0 C-1.4 -.6 -.6 -1.4 0 -6Z" fill="${col}"/>`;
+const sparkle = (x, y, s, col, delay) => `<path class="twinkle" style="${phase(2.4, delay)}" transform="translate(${x.toFixed(1)},${y.toFixed(1)}) scale(${s.toFixed(2)})" d="M0 -6 C.6 -1.4 1.4 -.6 6 0 C1.4 .6 .6 1.4 0 6 C-.6 1.4 -1.4 .6 -6 0 C-1.4 -.6 -.6 -1.4 0 -6Z" fill="${col}"/>`;
 const heartPath = 'M0 7 C-13 -2 -13 -13 -6.5 -13 C-3 -13 -1 -10.5 0 -8.5 C1 -10.5 3 -13 6.5 -13 C13 -13 13 -2 0 7Z';
 const bow = (x, y, s, col) => `<g transform="translate(${x},${y}) scale(${s})">
   <path d="M0 0 C-6 -9 -16 -9 -15 -1 C-14 5 -6 4 0 0Z" fill="${col}"/><path d="M0 0 C6 -9 16 -9 15 -1 C14 5 6 4 0 0Z" fill="${col}"/>

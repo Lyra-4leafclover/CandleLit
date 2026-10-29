@@ -369,13 +369,13 @@ VIEWS.bakery = () => {
   view.innerHTML = `
   <section class="grid">
     <div class="bakery-top">
-      <div class="card scene-card scene-${state.settings.scene || 'plain'}">${sceneSVG(state.settings.scene)}
+      <div class="card scene-card scene-${state.settings.scene || 'plain'}">${sceneBg(state.settings.scene)}
         <h2>Cake in the oven</h2>
         ${cakeSVG(getCake(cake.design), cake.candles, cake.toppers, cakeOpts({ seed: cake.id }))}
         <p style="text-align:center" class="muted">${cake.candles.length}/${CAKE_SLOTS} candles · started ${cake.started}</p>
       </div>
       <div class="card">
-        <div class="row" style="margin-bottom:14px"><h3 style="margin:0">Cake style</h3><span class="spacer"></span><div class="seg">${[['painted', 'Painted'], ['new', '3D'], ['classic', 'Classic']].map(([k, l]) => `<button class="${(state.settings.cakeStyle || 'painted') === k ? 'on' : ''}" data-act="cakeStyle" data-id="${k}">${l}</button>`).join('')}</div></div>
+        <div class="row" style="margin-bottom:14px"><h3 style="margin:0">Cake style</h3><span class="spacer"></span><div class="seg">${[['painted', 'Watercolor'], ['new', '3D'], ['classic', 'Classic']].map(([k, l]) => `<button class="${(state.settings.cakeStyle || 'painted') === k ? 'on' : ''}" data-act="cakeStyle" data-id="${k}">${l}</button>`).join('')}</div></div>
         <div class="row" style="margin-bottom:14px"><h3 style="margin:0">Scene</h3><span class="spacer"></span><div class="chips">${['plain', 'gingham', 'window', 'garden', 'night'].map((k) => `<button class="chip sm ${(state.settings.scene || 'plain') === k ? 'on' : ''}" data-act="scene" data-id="${k}">${k[0].toUpperCase() + k.slice(1)}</button>`).join('')}</div></div>
         <h3>Cake design</h3>
         <div class="chips">${ownedCakes.map((c) => `<button class="chip ${cake.design === c.id ? 'on' : ''}" data-act="cakeDesign" data-id="${c.id}">${esc(c.name)}</button>`).join('')}</div>
@@ -418,6 +418,13 @@ function candleLog(candles) {
 }
 
 /* ---------- share card ---------- */
+const PAINTED_SCENES = ['gingham', 'window', 'garden', 'night'];
+const sceneBg = (name) => (getArtMode() === 'painted' && PAINTED_SCENES.includes(name) ? `<img class="scene-bg" src="/art5/scene_${name}.webp" alt="">` : sceneSVG(name));
+function cardBackground(name) {
+  if (getArtMode() === 'painted' && PAINTED_SCENES.includes(name)) return `<image href="/art5/scene_${name}.webp" x="0" y="0" width="1080" height="1350" preserveAspectRatio="xMidYMid slice"/>`;
+  const svg = sceneSVG(name);
+  return svg ? svg.replace('<svg class="scene-bg"', '<svg x="0" y="0" width="1080" height="1350"') : '';
+}
 async function inlineArt(svg) {
   const urls = [...new Set([...svg.matchAll(/href="(\/art\d?\/[^"]+)"/g)].map((m) => m[1]))];
   const data = await Promise.all(urls.map((u) => fetch(u).then((r) => r.blob()).then((b) => new Promise((ok) => { const fr = new FileReader(); fr.onload = () => ok(fr.result); fr.readAsDataURL(b); })).catch(() => u)));
@@ -438,7 +445,8 @@ async function shareCard(cakeId) {
     <defs><radialGradient id="bgG" cx="50%" cy="45%" r="70%"><stop offset="0" stop-color="#fdf3ec"/><stop offset="1" stop-color="#f4e6dc"/></radialGradient>
     <radialGradient id="glowG" cx="50%" cy="50%" r="50%"><stop offset="0" stop-color="#ffd9a8" stop-opacity=".6"/><stop offset="1" stop-color="#ffd9a8" stop-opacity="0"/></radialGradient></defs>
     <rect width="1080" height="1350" fill="url(#bgG)"/>
-    <circle cx="540" cy="700" r="520" fill="url(#glowG)"/>
+    ${cardBackground(state.settings.scene) || '<circle cx="540" cy="700" r="520" fill="url(#glowG)"/>'}
+    ${cardBackground(state.settings.scene) ? '<rect x="110" y="95" width="860" height="250" rx="40" fill="#fffaf5" opacity=".86"/><rect x="230" y="1192" width="620" height="72" rx="36" fill="#fffaf5" opacity=".86"/>' : ''}
     <rect x="40" y="40" width="1000" height="1270" rx="56" fill="none" stroke="#1f1a1c" stroke-opacity=".08" stroke-width="3"/>
     <text x="540" y="${getArtMode() === 'painted' ? 178 : 150}" text-anchor="middle" font-family="Georgia, serif" font-style="italic" font-size="46" fill="#e2668e">Candlelit</text>
     <text x="540" y="250" text-anchor="middle" font-family="Helvetica, Arial, sans-serif" font-weight="bold" font-size="64" fill="#1f1a1c">${esc(headline)}</text>
@@ -446,7 +454,7 @@ async function shareCard(cakeId) {
     ${inner}
     <text x="540" y="1240" text-anchor="middle" font-family="Helvetica, Arial, sans-serif" font-size="32" fill="#8a7f82">${esc(getCake(cake.design).name)} · ${streak()}-day streak</text>
   </svg>`;
-  if (getArtMode() === 'painted') {
+  if (getArtMode() === 'painted' && !cardBackground(state.settings.scene)) {
     const deco = `<image href="/art4/dec_roses.webp" x="40" y="1040" width="230" height="249"/><image href="/art4/dec_roses.webp" x="1040" y="1040" width="230" height="249" transform="translate(2080,0) scale(-1,1)"/><image href="/art4/dec_bow.webp" x="495" y="34" width="90" height="108"/><image href="/art4/dec_butterfly.webp" x="830" y="70" width="150" height="110"/>`;
     card = card.replace(/<\/svg>\s*$/, `${deco}</svg>`);
   }
@@ -1018,7 +1026,7 @@ const actions = {
   loadPreset: ({ id }) => { const p = state.studioPresets[+id]; if (p) { ui.studio = { ...ui.studio, ...p }; route(); } },
   scene: ({ id }) => { state.settings.scene = id; save(); route(); },
   setPalette: ({ id }) => { localStorage.setItem('candlelit-palette', id); applyTheme(); },
-  setArtMode: ({ id }) => { state.settings.artMode = id; setArtMode(id); save(); route(); },
+  setArtMode: ({ id }) => { state.settings.artMode = id; setArtMode(id); save(); renderAccount(); route(); },
   toggleTheme: () => { localStorage.setItem('candlelit-theme', document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark'); applyTheme(); },
   setTheme: ({ id }) => { localStorage.setItem('candlelit-theme', id); applyTheme(); },
   accountMenu: () => { ui.menuOpen = !ui.menuOpen; renderAccount(); },
@@ -1190,11 +1198,10 @@ function renderAccount() {
   if (!el) return;
   const dark = document.documentElement.dataset.theme === 'dark';
   const u = auth.user;
-  el.innerHTML = `<button class="icon-btn" data-act="toggleTheme" aria-label="Switch to ${dark ? 'light' : 'dark'} mode" title="${dark ? 'Light' : 'Dark'} mode">${dark ? SUN : MOON}</button>
+  el.innerHTML = `<div class="seg seg-sm mode-switch" role="group" aria-label="Art style">${[['painted', 'Watercolor'], ['drawn', 'Classic']].map(([k, l]) => `<button class="${getArtMode() === k ? 'on' : ''}" data-act="setArtMode" data-id="${k}" aria-pressed="${getArtMode() === k}">${l}</button>`).join('')}</div><button class="icon-btn" data-act="toggleTheme" aria-label="Switch to ${dark ? 'light' : 'dark'} mode" title="${dark ? 'Light' : 'Dark'} mode">${dark ? SUN : MOON}</button>
     ${u ? `<button class="avatar" data-act="accountMenu" aria-label="Account menu" aria-expanded="${!!ui.menuOpen}">${esc((u.name || '?')[0].toUpperCase())}</button>` : '<button class="btn sm" data-act="signIn">Sign in</button>'}
     ${ui.menuOpen && u ? `<div class="menu" role="menu"><div class="menu-head"><b>${esc(u.name)}</b><span class="muted">@${esc(u.username)}</span></div>
       <div class="menu-label">Theme</div><div class="seg seg-sm">${['light', 'dark', 'system'].map((t) => `<button class="${themePref() === t ? 'on' : ''}" data-act="setTheme" data-id="${t}">${t[0].toUpperCase() + t.slice(1)}</button>`).join('')}</div>
-      <div class="menu-label">Art style</div><div class="seg seg-sm">${[['painted', 'Painted'], ['drawn', 'Drawn']].map(([k, l]) => `<button class="${getArtMode() === k ? 'on' : ''}" data-act="setArtMode" data-id="${k}">${l}</button>`).join('')}</div>
       <div class="menu-label">Accent</div><div class="swatches">${PALETTES.map(([k, c]) => `<button class="swatch ${palettePref() === k ? 'on' : ''}" style="background:${c}" data-act="setPalette" data-id="${k}" aria-label="${k} accent" title="${k}"></button>`).join('')}</div>
       <button class="menu-item" data-act="goStats">Stats &amp; settings</button>
       <button class="menu-item danger" data-act="signOut">Sign out</button></div>` : ''}`;

@@ -142,7 +142,7 @@ label.field { display: block; font-size: 0.75rem; font-weight: 600; letter-spaci
 @keyframes flickHard { 0% { transform: rotate(-9deg) scale(0.9, 1.08); } 25% { transform: rotate(7deg) scale(1.08, 0.88); } 50% { transform: rotate(-5deg) scale(0.95, 1.1); } 75% { transform: rotate(10deg) scale(1.05, 0.9); } 100% { transform: rotate(-9deg) scale(0.9, 1.08); } }
 @keyframes glow { 0%, 100% { opacity: 0.9; transform: scale(1); } 50% { opacity: 1; transform: scale(1.06); } }
 .twinkle { transform-box: fill-box; transform-origin: center; animation: twinkle 2.4s ease-in-out infinite; }
-@keyframes twinkle { 0%, 100% { opacity: 0.25; } 50% { opacity: 1; } }
+@keyframes twinkle { 0%, 100% { opacity: 0.25; transform: scale(.75) rotate(0deg); } 50% { opacity: 1; transform: scale(1.12) rotate(18deg); } }
 .smoke { animation: smoke 2.6s ease-out infinite; }
 @keyframes smoke { 0% { opacity: 0.7; transform: translateY(0); } 100% { opacity: 0; transform: translateY(-24px); } }
 .flame, .glow { animation-delay: var(--ph, 0s); }
@@ -512,3 +512,50 @@ body.auth-mode main { max-width: none; padding: 0; }
 @keyframes pflame { 0% { opacity: 0; } 15% { opacity: 1; } 30% { opacity: 1; } 45% { opacity: 0; } 100% { opacity: 0; } }
 .pflame-g { mix-blend-mode: normal; }
 .pflame-blue { filter: hue-rotate(185deg) saturate(1.2) brightness(1.05); }
+
+.studio-grid > .card:last-child { position: sticky; top: 92px; }
+img.scene-bg { object-fit: cover; pointer-events: none; }
+.mode-switch button { white-space: nowrap; }
+
+/* topbar: two rows once the nav, wallet and switches no longer fit on one */
+@media (max-width: 1480px) {
+  #topbar { flex-wrap: wrap; row-gap: 10px; }
+  .brand { margin-right: auto; }
+  #nav { order: 3; flex: 0 1 auto; margin: 0 auto; max-width: 100%; overflow-x: auto; scrollbar-width: none; }
+  #nav::-webkit-scrollbar { display: none; }
+}
+@media (max-width: 1480px) and (min-width: 901px) { #topbar { justify-content: flex-end; } #nav { flex-basis: 100%; justify-content: center; width: fit-content; } }
+@media (max-width: 640px) {
+  #topbar { padding: 10px 12px; gap: 8px; }
+  .brand { font-size: 1.15rem; gap: 7px; }
+  .brand-mark { transform: scale(.85); }
+  #wallet { order: 2; width: 100%; justify-content: center; gap: 6px; }
+  .pill { padding: 5px 9px; font-size: 0.8rem; }
+  #account { gap: 6px; }
+  .mode-switch button { padding: 5px 9px; font-size: 0.76rem; }
+  #nav { width: 100%; justify-content: flex-start; }
+  #nav a { padding: 7px 10px; font-size: 0.84rem; white-space: nowrap; }
+  #view { padding-left: 12px; padding-right: 12px; }
+  .card { padding: 18px; }
+  .seg { max-width: 100%; overflow-x: auto; }
+  .modal-card { width: calc(100vw - 24px); max-height: calc(100vh - 24px); overflow-y: auto; }
+  img, svg { max-width: 100%; }
+}
+@media (max-width: 900px) { .studio-grid > .card:last-child { position: static; order: -1; } .studio-preview { height: 260px; } .studio-preview svg { height: 250px; } }
+@media (max-width: 900px) {
+  #wallet { order: 2; width: 100%; justify-content: center; }
+  .scene-card .cake-svg { max-width: 560px; max-height: 62vh; margin: 0 auto; display: block; }
+}
+@media (max-width: 640px) {
+  #topbar { position: static; }
+  .wheel-wrap { flex-direction: column; align-items: stretch; }
+  .wheel { align-self: center; }
+  .wheel-side { min-width: 0; }
+  .chips { flex-wrap: wrap; }
+}
+.studio-grid > *, .focus-grid > *, .bakery-top > *, .done-grid > * { min-width: 0; }
+@media (max-width: 900px) { .studio-grid, .focus-grid, .done-grid, .bakery-top { grid-template-columns: minmax(0, 1fr); } }
+.color-slots { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.color-slot { min-width: 0; }
+.color-slot .cs-text { min-width: 0; overflow: hidden; }
+.color-slot .cs-text b { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }

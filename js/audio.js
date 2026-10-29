@@ -26,35 +26,7 @@ function noiseBuffer(kind = 'white', seconds = 3) {
   return buf;
 }
 
-function loopNoise(kind, filters, gain, out) {
-  const src = ctx.createBufferSource();
-  src.buffer = noiseBuffer(kind);
-  src.loop = true;
-  let node = src;
-  filters.forEach(([type, freq, q]) => {
-    const f = ctx.createBiquadFilter();
-    f.type = type; f.frequency.value = freq; if (q) f.Q.value = q;
-    node.connect(f); node = f;
-  });
-  const g = ctx.createGain();
-  g.gain.value = gain;
-  node.connect(g); g.connect(out);
-  src.start();
-  return src;
-}
 
-function pop(out, { freq = 2500, dur = 0.03, gain = 0.4, type = 'highpass' } = {}) {
-  const src = ctx.createBufferSource();
-  src.buffer = noiseBuffer('white', dur + 0.02);
-  const f = ctx.createBiquadFilter();
-  f.type = type; f.frequency.value = freq;
-  const g = ctx.createGain();
-  const t = ctx.currentTime;
-  g.gain.setValueAtTime(gain, t);
-  g.gain.exponentialRampToValueAtTime(0.001, t + dur);
-  src.connect(f); f.connect(g); g.connect(out);
-  src.start(t); src.stop(t + dur + 0.05);
-}
 
 function tone(out, freq, { type = 'sine', dur = 1, gain = 0.2, at = 0, attack = 0.01 } = {}) {
   const o = ctx.createOscillator();
@@ -68,123 +40,38 @@ function tone(out, freq, { type = 'sine', dur = 1, gain = 0.2, at = 0, attack = 
   o.start(t); o.stop(t + dur + 0.05);
 }
 
-const BUILDERS = {
-  crackle(out) {
-    const src = loopNoise('brown', [['lowpass', 500]], 0.35, out);
-    let alive = true;
-    const tick = () => {
+const TRACKS = ['crackle', 'rain', 'cafe', 'lofi', 'ocean', 'thunder', 'library', 'forest'];
+const buffers = {};
+const loadBuf = (k) => buffers[k] || (buffers[k] = fetch(`/audio/${k}.mp3`).then((r) => r.arrayBuffer()).then((b) => ctx.decodeAudioData(b)));
+/* Recorded loop: each pass overlaps the next by a few seconds so the faded ends crossfade. */
+function loopTrack(k, out) {
+  let alive = true, timer = null, srcs = [];
+  const g = ctx.createGain();
+  g.gain.value = 0.9;
+  g.connect(out);
+  loadBuf(k).then((buf) => {
+    if (!alive) return;
+    const ov = Math.min(2.5, buf.duration / 4);
+    const play = (at) => {
       if (!alive) return;
-      const n = 1 + Math.floor(Math.random() * 3);
-      for (let i = 0; i < n; i++) setTimeout(() => alive && pop(out, { freq: 1500 + Math.random() * 3000, dur: 0.01 + Math.random() * 0.04, gain: 0.15 + Math.random() * 0.5 }), i * 30);
-      setTimeout(tick, 60 + Math.random() * 400);
+      const s = ctx.createBufferSource();
+      s.buffer = buf;
+      s.connect(g);
+      s.start(at);
+      srcs.push(s);
+      s.onended = () => { srcs = srcs.filter((x) => x !== s); };
+      const next = at + buf.duration - ov;
+      timer = setTimeout(() => play(next), Math.max(0, (next - ctx.currentTime - 1) * 1000));
     };
-    tick();
-    return () => { alive = false; src.stop(); };
-  },
-  rain(out) {
-    const a = loopNoise('white', [['highpass', 900], ['lowpass', 7000]], 0.12, out);
-    const b = loopNoise('brown', [['lowpass', 900]], 0.25, out);
-    let alive = true;
-    const drop = () => {
-      if (!alive) return;
-      pop(out, { freq: 3000 + Math.random() * 3000, dur: 0.015, gain: 0.08 + Math.random() * 0.12, type: 'bandpass' });
-      setTimeout(drop, 20 + Math.random() * 120);
-    };
-    drop();
-    return () => { alive = false; a.stop(); b.stop(); };
-  },
-  cafe(out) {
-    const a = loopNoise('brown', [['lowpass', 380]], 0.5, out);
-    const b = loopNoise('white', [['bandpass', 550, 0.8]], 0.05, out);
-    let alive = true;
-    const clink = () => {
-      if (!alive) return;
-      const f = 2200 + Math.random() * 1800;
-      tone(out, f, { dur: 0.6, gain: 0.05 }); tone(out, f * 1.5, { dur: 0.4, gain: 0.025 });
-      setTimeout(clink, 1500 + Math.random() * 5000);
-    };
-    setTimeout(clink, 1200);
-    return () => { alive = false; a.stop(); b.stop(); };
-  },
-  ocean(out) {
-    const g = ctx.createGain(); g.gain.value = 0.3; g.connect(out);
-    const src = loopNoise('brown', [['lowpass', 700]], 1, g);
-    const lfo = ctx.createOscillator(); const depth = ctx.createGain();
-    lfo.frequency.value = 0.09; depth.gain.value = 0.25; lfo.connect(depth); depth.connect(g.gain); lfo.start();
-    const hiss = loopNoise('white', [['bandpass', 2500, 0.5]], 0.03, out);
-    return () => { src.stop(); hiss.stop(); lfo.stop(); };
-  },
-  thunder(out) {
-    const stopRain = BUILDERS.rain(out);
-    let alive = true;
-    const rumble = () => {
-      if (!alive) return;
-      const g = ctx.createGain(); const t = ctx.currentTime;
-      g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(0.9, t + 0.4); g.gain.exponentialRampToValueAtTime(0.0001, t + 4.5);
-      g.connect(out);
-      const n = ctx.createBufferSource(); n.buffer = noiseBuffer('brown', 5);
-      const f = ctx.createBiquadFilter(); f.type = 'lowpass'; f.frequency.value = 160;
-      n.connect(f); f.connect(g); n.start(t); n.stop(t + 5);
-      setTimeout(rumble, 9000 + Math.random() * 16000);
-    };
-    setTimeout(rumble, 2500);
-    return () => { alive = false; stopRain(); };
-  },
-  library(out) {
-    const room = loopNoise('brown', [['lowpass', 240]], 0.18, out);
-    let alive = true;
-    const page = () => {
-      if (!alive) return;
-      for (let i = 0; i < 6; i++) setTimeout(() => alive && pop(out, { freq: 1800 + Math.random() * 2500, dur: 0.05, gain: 0.03, type: 'bandpass' }), i * 35);
-      setTimeout(page, 6000 + Math.random() * 12000);
-    };
-    setTimeout(page, 3000);
-    return () => { alive = false; room.stop(); };
-  },
-  forest(out) {
-    const wind = loopNoise('brown', [['bandpass', 500, 0.4]], 0.12, out);
-    let alive = true;
-    const chirp = () => {
-      if (!alive) return;
-      const base = 2500 + Math.random() * 2000; const n = 2 + Math.floor(Math.random() * 4);
-      for (let i = 0; i < n; i++) {
-        const o = ctx.createOscillator(); const g = ctx.createGain(); const t = ctx.currentTime + i * 0.13;
-        o.frequency.setValueAtTime(base, t); o.frequency.exponentialRampToValueAtTime(base * 1.5, t + 0.08);
-        g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(0.05, t + 0.02); g.gain.exponentialRampToValueAtTime(0.0001, t + 0.1);
-        o.connect(g); g.connect(out); o.start(t); o.stop(t + 0.12);
-      }
-      setTimeout(chirp, 1500 + Math.random() * 5000);
-    };
-    chirp();
-    return () => { alive = false; wind.stop(); };
-  },
-  lofi(out) {
-    const vinyl = loopNoise('white', [['highpass', 3000]], 0.015, out);
-    const lp = ctx.createBiquadFilter();
-    lp.type = 'lowpass'; lp.frequency.value = 1300;
-    lp.connect(out);
-    const chords = [[261.6, 329.6, 392, 493.9], [220, 261.6, 329.6, 392], [293.7, 349.2, 440, 523.3], [196, 246.9, 293.7, 349.2]];
-    const beat = 60 / 72;
-    let bar = 0, alive = true;
-    const play = () => {
-      if (!alive) return;
-      const ch = chords[bar % 4];
-      ch.forEach((f, i) => tone(lp, f, { type: 'triangle', dur: beat * 4, gain: 0.05, attack: 0.08, at: i * 0.02 }));
-      tone(lp, ch[0] / 2, { type: 'sine', dur: beat * 2, gain: 0.12 });
-      tone(lp, ch[0] / 2, { type: 'sine', dur: beat * 1.5, gain: 0.1, at: beat * 2.5 });
-      for (let b = 0; b < 4; b++) {
-        if (b % 2 === 0) tone(out, 55, { dur: 0.25, gain: 0.25, at: b * beat });
-        setTimeout(() => alive && pop(out, { freq: 7000, dur: 0.03, gain: 0.05 }), (b * beat + beat / 2) * 1000);
-      }
-      const mel = ch[Math.floor(Math.random() * 4)] * 2;
-      if (Math.random() > 0.3) tone(lp, mel, { type: 'sine', dur: beat * 1.2, gain: 0.04, at: beat * (1 + Math.floor(Math.random() * 2)) });
-      bar++;
-    };
-    play();
-    const iv = setInterval(play, beat * 4000);
-    return () => { alive = false; clearInterval(iv); vinyl.stop(); };
-  },
-};
+    play(ctx.currentTime + 0.05);
+  }).catch(() => { delete buffers[k]; });
+  return () => {
+    alive = false;
+    clearTimeout(timer);
+    g.gain.setTargetAtTime(0, ctx.currentTime, 0.25);
+    setTimeout(() => { srcs.forEach((s) => { try { s.stop(); } catch { /* already stopped */ } }); g.disconnect(); }, 1500);
+  };
+}
 
 export function setAmbience(list) {
   if (list.length) ensure();
@@ -192,7 +79,7 @@ export function setAmbience(list) {
     if (!list.includes(k)) { channels[k](); delete channels[k]; }
   });
   list.forEach((k) => {
-    if (!channels[k] && BUILDERS[k]) channels[k] = BUILDERS[k](master);
+    if (!channels[k] && TRACKS.includes(k)) channels[k] = loopTrack(k, master);
   });
 }
 
