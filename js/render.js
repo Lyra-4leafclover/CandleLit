@@ -125,6 +125,7 @@ function decorMarkup(d, w, h, R) {
     return o;
   };
   const band = (y, hh, col) => `<rect x="${-w / 2}" y="${y}" width="${w}" height="${hh}" fill="${col}"/><rect x="${-w / 2}" y="${y}" width="${w}" height="1.4" fill="#fff" opacity=".35"/>`;
+  if (d.engrave) s += `<text x="0" y="${-h * 0.2}" text-anchor="middle" font-family="Georgia, serif" font-style="italic" font-size="${Math.max(5, Math.min(11, (w * 1.6) / Math.max(4, d.engrave.length)))}" fill="${dark(mix(d.c1, d.c2, 0.5), 0.35)}" stroke="${light(d.c1, 0.6)}" stroke-width=".3">${String(d.engrave).replace(/[<>&"]/g, '')}</text>`;
   (d.decor || []).forEach((k) => {
     switch (k) {
       case 'ribbon':
@@ -192,6 +193,75 @@ function decorMarkup(d, w, h, R) {
       case 'branch':
         s += `<path d="M${-w * 0.4} 0 C${w * 0.9} ${-h * 0.2} ${-w * 0.9} ${-h * 0.45} ${w * 0.3} ${-h * 0.75} M${-w * 0.2} ${-h * 0.32} l${-w * 0.5} ${-h * 0.06}" stroke="#7d5a4a" stroke-width="1.6" fill="none" stroke-linecap="round"/>`;
         [[0.25, 0.12], [-0.3, 0.3], [-0.65, 0.38], [0.2, 0.5], [-0.1, 0.62], [0.3, 0.74]].forEach(([fx, fy], i) => { s += blossom(fx * w, -h * fy, 0.8, i % 2 ? '#f7b6c9' : acc, '#fff1f4'); });
+        break;
+      case 'fairywings':
+        [-1, 1].forEach((sd) => {
+          s += `<g transform="translate(${sd * (w / 2 - 2)},${-h * 0.56}) scale(${sd},1)" opacity=".85"><path d="M0 0 C10 -26 34 -30 30 -10 C28 0 12 4 0 2Z" fill="#ffffff" fill-opacity=".55" stroke="${acc}" stroke-width=".9"/><path d="M0 3 C12 6 24 14 18 24 C12 30 4 18 0 6Z" fill="#ffffff" fill-opacity=".45" stroke="${acc}" stroke-width=".8"/><path d="M2 0 C10 -10 20 -18 26 -14 M2 4 C8 10 12 16 14 20" stroke="${acc}" stroke-width=".5" fill="none"/></g>`;
+        });
+        break;
+      case 'glow':
+        for (let i = 0; i < 9; i++) s += `<circle class="twinkle" style="animation-delay:${(R() * 2).toFixed(2)}s" cx="${((R() - 0.5) * (w + 30)).toFixed(1)}" cy="${(-h * (0.1 + R() * 0.85)).toFixed(1)}" r="${(1 + R() * 1.4).toFixed(1)}" fill="#fff6b0" stroke="#ffe066" stroke-opacity=".5" stroke-width="2.5"/>`;
+        break;
+      case 'mushrooms':
+        [[-0.28, 0.1, 1], [0.05, 0.07, 1.3], [0.3, 0.12, 0.85]].forEach(([fx, fy, sc]) => {
+          s += `<g transform="translate(${(fx * w).toFixed(1)},${(-h * fy).toFixed(1)}) scale(${(sc * w / 74).toFixed(2)})"><rect x="-2.5" y="-6" width="5" height="10" rx="2" fill="#fff6e8"/><path d="M-10 -5 C-10 -15 10 -15 10 -5 Z" fill="#e5484d"/><circle cx="-4" cy="-10" r="1.5" fill="#fff"/><circle cx="3" cy="-11" r="1.8" fill="#fff"/><circle cx="6" cy="-7" r="1" fill="#fff"/></g>`;
+        });
+        s += leaf(-w * 0.45, -h * 0.05, -20, 0.8, '#8fbf7f') + leaf(w * 0.2, -h * 0.03, 200, 0.7, '#8fbf7f');
+        break;
+      case 'scales': {
+        for (let row = 0, y = -h * 0.12; y > -h * 0.9; y -= 6, row++) {
+          for (let x = -w / 2 + (row % 2 ? 4 : 0); x < w / 2 + 4; x += 8) s += `<path d="M${(x - 4).toFixed(1)} ${y.toFixed(1)} a4 4 0 0 0 8 0" fill="${(row + Math.round(x)) % 3 ? light(acc, 0.35) : acc}" fill-opacity=".55" stroke="#fff" stroke-opacity=".6" stroke-width=".6"/>`;
+        }
+        break;
+      }
+      case 'tailfin':
+        s += `<g transform="translate(0,${-h * 0.2}) scale(${w / 30})"><path d="M0 0 C-4 -6 -14 -4 -16 4 C-10 2 -5 4 0 8 C5 4 10 2 16 4 C14 -4 4 -6 0 0Z" fill="${acc}" fill-opacity=".85"/><path d="M0 1 L-11 2 M0 1 L11 2 M0 1 L-6 5 M0 1 L6 5" stroke="#fff" stroke-opacity=".6" stroke-width=".5"/></g>`;
+        break;
+      case 'shells':
+        [[-0.2, 0.62, 1], [0.22, 0.35, 0.8], [-0.12, 0.2, 0.7]].forEach(([fx, fy, sc]) => {
+          s += `<g transform="translate(${(fx * w).toFixed(1)},${(-h * fy).toFixed(1)}) scale(${(sc * Math.max(0.6, w / 50)).toFixed(2)})"><path d="M0 6 L-9 -3 C-6 -10 6 -10 9 -3 Z" fill="#fde2e4" stroke="#e8a9b4" stroke-width=".7"/><path d="M0 6 L-5 -7 M0 6 L0 -8 M0 6 L5 -7 M0 6 L-8 -4 M0 6 L8 -4" stroke="#e8a9b4" stroke-width=".6"/><rect x="-3" y="5" width="6" height="2.5" rx="1" fill="#e8a9b4"/></g>`;
+        });
+        break;
+      case 'carvedrose': case 'carveddamask': case 'carvedmoon': {
+        const base = mix(d.c1, d.c2, 0.5);
+        const carve = (path) => `<path d="${path}" fill="none" stroke="${dark(base, 0.28)}" stroke-width="1.6" stroke-linecap="round" transform="translate(.7,.7)"/><path d="${path}" fill="none" stroke="${light(base, 0.55)}" stroke-width="1.2" stroke-linecap="round"/>`;
+        const sc = w / 74;
+        if (k === 'carvedrose') s += `<g transform="translate(0,${-h * 0.5}) scale(${sc})">${carve('M0 -2 C-4 -6 4 -10 7 -4 C10 2 2 8 -4 5 C-10 2 -8 -10 0 -12 C8 -14 16 -4 12 6 C8 14 -8 14 -13 6 M-13 6 C-20 14 -22 26 -14 32 M12 6 C20 12 22 24 14 32 M-2 14 L-2 40 M-2 26 C-12 22 -18 26 -20 30 C-12 32 -6 30 -2 26 M-2 32 C8 28 14 30 16 34 C8 36 2 34 -2 32')}</g>`;
+        else if (k === 'carveddamask') for (let i = 0; i < 3; i++) s += `<g transform="translate(0,${-h * (0.22 + i * 0.26)}) scale(${sc * 1.6})">${carve('M0 -10 C-6 -6 -6 0 0 4 C6 0 6 -6 0 -10 M0 4 L0 10 M-8 2 C-12 -2 -10 -8 -5 -7 M8 2 C12 -2 10 -8 5 -7 M-6 10 L6 10')}</g>`;
+        else s += `<g transform="translate(0,${-h * 0.55}) scale(${sc})">${carve('M8 -18 A20 20 0 1 0 8 18 A15 15 0 1 1 8 -18 M20 -26 l2 5 5 2 -5 2 -2 5 -2 -5 -5 -2 5 -2z M24 10 l1.5 3.5 3.5 1.5 -3.5 1.5 -1.5 3.5 -1.5 -3.5 -3.5 -1.5 3.5 -1.5z M-22 30 l1.5 3.5 3.5 1.5 -3.5 1.5 -1.5 3.5 -1.5 -3.5 -3.5 -1.5 3.5 -1.5z')}</g>`;
+        break;
+      }
+      case 'honeycomb': {
+        const hx = (cx0, cy0, r) => Array.from({ length: 6 }, (_, q) => `${(cx0 + r * Math.cos((Math.PI / 3) * q)).toFixed(1)},${(cy0 + r * Math.sin((Math.PI / 3) * q)).toFixed(1)}`).join(' ');
+        for (let row = 0, y = -h * 0.08; y > -h * 0.95; y -= 7, row++) for (let x = -w / 2 + (row % 2 ? 6 : 0); x < w / 2 + 6; x += 12) s += `<polygon points="${hx(x, y, 4.2)}" fill="none" stroke="${dark(d.c2, 0.18)}" stroke-opacity=".55" stroke-width="1"/>`;
+        s += `<g transform="translate(${w * 0.18},${-h * 0.6}) scale(${Math.max(0.7, w / 74)})"><ellipse cx="-3" cy="-5" rx="4" ry="3" fill="#fff" fill-opacity=".8" transform="rotate(-20)"/><ellipse cx="3" cy="-5" rx="4" ry="3" fill="#fff" fill-opacity=".8" transform="rotate(20)"/><ellipse rx="5.5" ry="3.8" fill="#f6c343"/><path d="M-1.5 -3.5 v7 M1.8 -3.5 v7" stroke="#3a2a1a" stroke-width="1.3"/><circle cx="5.5" r="2" fill="#3a2a1a"/></g>`;
+        break;
+      }
+      case 'crystals':
+        [[-0.32, 0.02, 1.2, -12], [-0.05, 0.02, 1.6, 4], [0.28, 0.02, 1.1, 16], [0.12, 0.55, 0.8, 8]].forEach(([fx, fy, sc, rot]) => {
+          s += `<g transform="translate(${(fx * w).toFixed(1)},${(-h * fy).toFixed(1)}) rotate(${rot}) scale(${(sc * w / 74).toFixed(2)})"><polygon points="-5,0 -5,-18 0,-26 5,-18 5,0" fill="${light(acc, 0.35)}" fill-opacity=".9"/><polygon points="0,-26 5,-18 5,0 0,0" fill="${acc}" fill-opacity=".7"/><path d="M-3 -16 L-3 -4" stroke="#fff" stroke-opacity=".7" stroke-width="1"/></g>`;
+        });
+        break;
+      case 'feathers':
+        [[-0.15, 0.5, -25], [0.18, 0.32, 20]].forEach(([fx, fy, rot]) => {
+          s += `<g transform="translate(${(fx * w).toFixed(1)},${(-h * fy).toFixed(1)}) rotate(${rot}) scale(${Math.max(0.6, w / 40).toFixed(2)})"><path d="M0 14 C-6 4 -6 -8 0 -16 C6 -8 6 4 0 14Z" fill="#ffffff" stroke="#e3dcea" stroke-width=".6"/><path d="M0 16 L0 -14" stroke="#cfc6d8" stroke-width=".7"/><path d="M0 -6 l-4 -3 M0 0 l-4 -3 M0 6 l-3 -3 M0 -6 l4 -3 M0 0 l4 -3 M0 6 l3 -3" stroke="#e3dcea" stroke-width=".5"/></g>`;
+        });
+        break;
+      case 'daisies':
+        [[-0.22, 0.6, 1], [0.2, 0.45, 0.8], [-0.1, 0.28, 0.9], [0.25, 0.15, 0.7]].forEach(([fx, fy, sc]) => {
+          let pet = '';
+          for (let q = 0; q < 10; q++) pet += `<ellipse cy="-5" rx="1.6" ry="4" fill="#ffffff" transform="rotate(${q * 36})"/>`;
+          s += `<g transform="translate(${(fx * w).toFixed(1)},${(-h * fy).toFixed(1)}) scale(${(sc * Math.max(0.6, w / 60)).toFixed(2)})">${pet}<circle r="2.6" fill="#f6c343"/></g>`;
+        });
+        break;
+      case 'nebula':
+        s += `<ellipse cx="${-w * 0.1}" cy="${-h * 0.6}" rx="${w * 0.5}" ry="${h * 0.12}" fill="#f29de0" opacity=".35"/><ellipse cx="${w * 0.15}" cy="${-h * 0.35}" rx="${w * 0.45}" ry="${h * 0.1}" fill="#7fd1ff" opacity=".3"/>`;
+        for (let i = 0; i < 14; i++) s += `<circle cx="${((R() - 0.5) * w).toFixed(1)}" cy="${(-h * (0.05 + R() * 0.9)).toFixed(1)}" r="${(0.4 + R() * 0.9).toFixed(1)}" fill="#fff"/>`;
+        break;
+      case 'clouds':
+        [[-0.15, 0.65, 1], [0.2, 0.42, 0.8], [-0.1, 0.2, 0.9]].forEach(([fx, fy, sc]) => {
+          s += `<g transform="translate(${(fx * w).toFixed(1)},${(-h * fy).toFixed(1)}) scale(${(sc * Math.max(0.55, w / 60)).toFixed(2)})" fill="#ffffff"><circle cx="-6" r="5"/><circle cx="0" cy="-3" r="6.5"/><circle cx="7" r="5"/><rect x="-11" y="0" width="23" height="5" rx="2.5"/></g>`;
+        });
         break;
       default: break;
     }

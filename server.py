@@ -20,7 +20,7 @@ COOKIE = "cl_session"
 SESSION_DAYS = 30
 MEMBER_TIMEOUT = 30
 ROOM_TIMEOUT = 900
-MAX_MEMBERS = 8
+MAX_MEMBERS = 16
 MAX_BODY = 2_000_000
 USERNAME_RE = re.compile(r"^[a-z0-9_.]{3,24}$")
 
@@ -52,6 +52,12 @@ def init_db():
               token TEXT PRIMARY KEY,
               user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
               expires REAL NOT NULL
+            );
+            CREATE TABLE IF NOT EXISTS saved_rooms (
+              code TEXT PRIMARY KEY,
+              owner INTEGER NOT NULL,
+              name TEXT NOT NULL,
+              cake TEXT NOT NULL
             );
             CREATE TABLE IF NOT EXISTS states (
               user_id INTEGER PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
@@ -109,6 +115,10 @@ def public_room(code, uid=None):
         "you": uid,
         "members": [{"id": mid, **{k: v for k, v in m.items() if k != "lastSeen"}} for mid, m in room["members"].items()],
         "chat": room["chat"][-50:],
+        "cake": room.get("cake", "funfetti"),
+        "saved": room.get("saved", False),
+        "name": room.get("name", ""),
+        "board": sorted(room.get("board", {}).values(), key=lambda b: -b["minutes"])[:10],
     }
 
 
@@ -309,9 +319,14 @@ class Handler(SimpleHTTPRequestHandler):
                         rooms[old]["host"] = next(iter(rooms[old]["members"]))
                 if path == "/api/party/create":
                     code = new_code()
-                    rooms[code] = {"members": {}, "host": uid, "session": None, "chat": [], "updated": time.time()}
+                    rooms[code] = {"members": {}, "host": uid, "session": None, "chat": [], "updated": time.time(), "cake": str(body.get("cake") or "funfetti")[:40], "board": {}}
                 else:
                     code = str(body.get("code") or "").strip().upper()
+                    if code not in rooms:
+                        with db() as c:
+                            saved = c.execute("SELECT * FROM saved_rooms WHERE code = ?", (code,)).fetchone()
+                        if saved:
+                            rooms[code] = {"members": {}, "host": uid, "session": None, "chat": [], "updated": time.time(), "cake": saved["cake"], "board": {}, "saved": True, "name": saved["name"]}
                     if code not in rooms:
                         return self.send_json({"error": "No party with that code. Check it and try again."}, 404)
                     if len(rooms[code]["members"]) >= MAX_MEMBERS:
@@ -340,6 +355,10 @@ class Handler(SimpleHTTPRequestHandler):
                     m["status"] = "burning"
                 room["chat"].append({"system": True, "text": f"{user['name']} lit everyone's candles · {minutes} min", "at": time.time() * 1000})
             elif path == "/api/party/status":
+                if body.get("status") == "done" and member["status"] == "burning" and room["session"]:
+                    entry = room.setdefault("board", {}).setdefault(str(uid), {"name": user["name"], "minutes": 0, "sessions": 0})
+                    entry["minutes"] += room["session"]["minutes"]
+                    entry["sessions"] += 1
                 for key in ("status", "design", "subject"):
                     if key in body:
                         member[key] = str(body[key])[:40]
@@ -350,6 +369,17 @@ class Handler(SimpleHTTPRequestHandler):
                     room["session"] = None
                     for m in room["members"].values():
                         m["status"] = "idle"
+            elif path == "/api/party/cake":
+                if uid != room["host"]:
+                    return self.send_json({"error": "Only the host picks the party cake"}, 403)
+                room["cake"] = str(body.get("cake") or "funfetti")[:40]
+            elif path == "/api/party/save":
+                if uid != room["host"]:
+                    return self.send_json({"error": "Only the host can save the room"}, 403)
+                room["saved"] = True
+                room["name"] = str(body.get("name") or f"{user['name']}'s study room")[:40]
+                with db() as c:
+                    c.execute("INSERT OR REPLACE INTO saved_rooms VALUES (?, ?, ?, ?)", (code, uid, room["name"], room["cake"]))
             elif path == "/api/party/chat":
                 text = str(body.get("text") or "").strip()[:240]
                 if text:

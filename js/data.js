@@ -45,6 +45,21 @@ export const CANDLES = [
   { id: 'butterfly', name: 'Butterfly Dream', rarity: 'legendary', price: 650, shape: 'taper', c1: '#f5ecff', c2: '#dbc9f6', drip: '#faf5ff', holder: 'ornate', hc: '#f6f0e6', decor: ['butterflies'], accent: '#b48be8' },
   { id: 'garden', name: 'Secret Garden Jar', rarity: 'legendary', price: 720, shape: 'jar', c1: '#fffaf0', c2: '#f4e6cc', drip: '#fffdf6', decor: ['pressed'], accent: '#e98aa5' },
   { id: 'cherub', name: "Cherub's Wish", rarity: 'legendary', price: 800, shape: 'pillar', c1: '#fffaf4', c2: '#f3e5d4', drip: '#fffdf9', holder: 'ceramic', hc: '#fdf3e3', decor: ['wings', 'pearls'], topper: 'cherub', accent: '#e2b65c' },
+  { id: 'faeriewing', name: 'Faerie Glow Taper', collection: 'Faerie', rarity: 'rare', price: 340, shape: 'taper', c1: '#e9f7ef', c2: '#d7c9f3', drip: '#f6f2ff', holder: 'ornate', hc: '#f3ead6', decor: ['fairywings', 'glow'], accent: '#a98be0', drop: true },
+  { id: 'faeriemush', name: 'Mushroom Ring Pillar', collection: 'Faerie', rarity: 'rare', price: 300, shape: 'pillar', c1: '#fbf3e4', c2: '#e9dcc0', drip: '#fffaf0', holder: 'wood', decor: ['mushrooms', 'glow'], accent: '#e5484d' },
+  { id: 'faeriecrown', name: 'Faerie Queen', collection: 'Faerie', rarity: 'legendary', price: 760, shape: 'spiral', c1: '#f3ecff', c2: '#dcd0f7', c3: '#c8f0dc', drip: '#faf7ff', holder: 'ornate', hc: '#efe6d4', decor: ['fairywings', 'blossoms', 'glow'], accent: '#c79be8' },
+  { id: 'mermaidscale', name: 'Mermaid Scales', collection: 'Mermaid', rarity: 'rare', price: 340, shape: 'pillar', c1: '#d6f3f1', c2: '#c9c6f2', drip: '#eefbfa', holder: 'ceramic', hc: '#e3f6f3', decor: ['scales', 'shells'], accent: '#6cc7c1', drop: true },
+  { id: 'mermaidtail', name: 'Siren Tail Taper', collection: 'Mermaid', rarity: 'legendary', price: 680, shape: 'taper', c1: '#c8f1ee', c2: '#9fd8e6', drip: '#e6fbfa', holder: 'glass', decor: ['scales', 'tailfin', 'pearls'], accent: '#7a8fe6' },
+  { id: 'seashell', name: 'Seashell Pearl Pillar', collection: 'Mermaid', rarity: 'common', price: 160, shape: 'pillar', c1: '#fff1ee', c2: '#f8d8d4', drip: '#fff7f5', holder: 'ceramic', hc: '#fdf0ec', decor: ['shells', 'pearls'], accent: '#e8a9b4' },
+  { id: 'carvedrose', name: 'Carved Rose Pillar', collection: 'Carved', rarity: 'rare', price: 380, shape: 'pillar', c1: '#f6c9d4', c2: '#e79cb0', drip: '#fbe3ea', holder: 'wood', decor: ['carvedrose'], accent: '#c9466b' },
+  { id: 'carveddamask', name: 'Carved Damask Taper', collection: 'Carved', rarity: 'rare', price: 320, shape: 'taper', c1: '#fbf4e6', c2: '#efdfc0', drip: '#fffaf0', holder: 'ornate', hc: '#f1e3c4', decor: ['carveddamask'], accent: '#d8ad5e' },
+  { id: 'carvedmoon', name: 'Carved Celestial', collection: 'Carved', rarity: 'legendary', price: 700, shape: 'pillar', c1: '#c3c8ef', c2: '#8f97d8', drip: '#dde0fa', holder: 'brass', decor: ['carvedmoon'], accent: '#e7c46f' },
+  { id: 'honeycomb', name: 'Honeycomb Beeswax', collection: 'Cottage', rarity: 'common', price: 150, shape: 'pillar', c1: '#fbe3a0', c2: '#f1c35c', drip: '#fdeec4', holder: 'wood', decor: ['honeycomb'], accent: '#d9952b' },
+  { id: 'daisy', name: 'Cottagecore Daisy', collection: 'Cottage', rarity: 'common', price: 130, shape: 'pillar', c1: '#fff8dc', c2: '#f7e7a8', drip: '#fffbea', holder: 'wood', decor: ['daisies', 'twine'], accent: '#f6c343' },
+  { id: 'quartz', name: 'Rose Quartz Crystal', collection: 'Crystal', rarity: 'rare', price: 360, shape: 'pillar', c1: '#fde4ea', c2: '#f4c1cf', drip: '#fff0f3', holder: 'ceramic', hc: '#fbeef1', decor: ['crystals'], accent: '#ee9ab2' },
+  { id: 'swan', name: 'Swan Lake Taper', collection: 'Ballet', rarity: 'rare', price: 300, shape: 'taper', c1: '#ffffff', c2: '#ece8f2', drip: '#ffffff', holder: 'glass', decor: ['feathers', 'pearls', 'bow'], accent: '#f2b8c8' },
+  { id: 'nebula', name: 'Nebula Taper', collection: 'Celestial', rarity: 'legendary', price: 720, shape: 'taper', c1: '#4a3a8a', c2: '#241c4f', drip: '#7a68c8', holder: 'brass', decor: ['nebula'], accent: '#f29de0' },
+  { id: 'cloudnine', name: 'Cloud Nine Pillar', collection: 'Celestial', rarity: 'common', price: 140, shape: 'pillar', c1: '#e3f1fb', c2: '#c7e2f5', drip: '#f2f9fe', holder: 'ceramic', hc: '#eef6fc', decor: ['clouds'], accent: '#9fc9ea' },
   { id: 'pumpkin', name: 'Pumpkin Spice', rarity: 'seasonal', price: 280, shape: 'pillar', c1: '#fcd6ad', c2: '#f0a464', drip: '#fde5ca', holder: 'wood', decor: ['leaves', 'twine'], accent: '#b5532a', available: isHalloween, season: 'Halloween' },
   { id: 'sakura', name: 'Sakura Branch', rarity: 'seasonal', price: 280, shape: 'taper', c1: '#fff1f5', c2: '#ffd3e0', drip: '#fff7f9', holder: 'ornate', hc: '#fdfaf6', decor: ['branch'], accent: '#f28cab', available: isSpring, season: 'Spring' },
 ];
@@ -76,9 +91,9 @@ export const TOPPERS = [
 ];
 
 export const STUDIO = {
-  shapes: ['taper', 'pillar', 'spiral'],
+  shapes: ['taper', 'pillar', 'spiral', 'jar', 'teacup'],
   holders: ['glass', 'wood', 'ceramic', 'brass', 'ornate'],
-  decors: ['none', 'heart', 'bow', 'pearls', 'roses', 'moon', 'butterflies', 'blossoms', 'lavender', 'strawberries'],
+  decors: ['none', 'heart', 'bow', 'pearls', 'roses', 'moon', 'butterflies', 'blossoms', 'lavender', 'strawberries', 'fairywings', 'mushrooms', 'scales', 'shells', 'carvedrose', 'carveddamask', 'honeycomb', 'crystals', 'daisies', 'clouds', 'nebula'],
   patterns: ['solid', 'stripes', 'spiral', 'polka', 'ombre', 'sparkle'],
   scents: ['Vanilla Bean', 'Old Library', 'Rain on Stone', 'Burnt Sugar', 'Fig & Cedar', 'Midnight Espresso', 'Pink Peppercorn', 'Strawberry Milk'],
 };
@@ -88,6 +103,10 @@ export const AMBIENCE = [
   { id: 'rain', label: 'Rain' },
   { id: 'cafe', label: 'Café' },
   { id: 'lofi', label: 'Lo-fi' },
+  { id: 'ocean', label: 'Ocean' },
+  { id: 'thunder', label: 'Thunderstorm' },
+  { id: 'library', label: 'Library' },
+  { id: 'forest', label: 'Forest birds' },
 ];
 
 export const DEFAULT_SUBJECTS = ['General', 'Math', 'Chem', 'Essay', 'Reading', 'Coding'];

@@ -106,6 +106,58 @@ const BUILDERS = {
     setTimeout(clink, 1200);
     return () => { alive = false; a.stop(); b.stop(); };
   },
+  ocean(out) {
+    const g = ctx.createGain(); g.gain.value = 0.3; g.connect(out);
+    const src = loopNoise('brown', [['lowpass', 700]], 1, g);
+    const lfo = ctx.createOscillator(); const depth = ctx.createGain();
+    lfo.frequency.value = 0.09; depth.gain.value = 0.25; lfo.connect(depth); depth.connect(g.gain); lfo.start();
+    const hiss = loopNoise('white', [['bandpass', 2500, 0.5]], 0.03, out);
+    return () => { src.stop(); hiss.stop(); lfo.stop(); };
+  },
+  thunder(out) {
+    const stopRain = BUILDERS.rain(out);
+    let alive = true;
+    const rumble = () => {
+      if (!alive) return;
+      const g = ctx.createGain(); const t = ctx.currentTime;
+      g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(0.9, t + 0.4); g.gain.exponentialRampToValueAtTime(0.0001, t + 4.5);
+      g.connect(out);
+      const n = ctx.createBufferSource(); n.buffer = noiseBuffer('brown', 5);
+      const f = ctx.createBiquadFilter(); f.type = 'lowpass'; f.frequency.value = 160;
+      n.connect(f); f.connect(g); n.start(t); n.stop(t + 5);
+      setTimeout(rumble, 9000 + Math.random() * 16000);
+    };
+    setTimeout(rumble, 2500);
+    return () => { alive = false; stopRain(); };
+  },
+  library(out) {
+    const room = loopNoise('brown', [['lowpass', 240]], 0.18, out);
+    let alive = true;
+    const page = () => {
+      if (!alive) return;
+      for (let i = 0; i < 6; i++) setTimeout(() => alive && pop(out, { freq: 1800 + Math.random() * 2500, dur: 0.05, gain: 0.03, type: 'bandpass' }), i * 35);
+      setTimeout(page, 6000 + Math.random() * 12000);
+    };
+    setTimeout(page, 3000);
+    return () => { alive = false; room.stop(); };
+  },
+  forest(out) {
+    const wind = loopNoise('brown', [['bandpass', 500, 0.4]], 0.12, out);
+    let alive = true;
+    const chirp = () => {
+      if (!alive) return;
+      const base = 2500 + Math.random() * 2000; const n = 2 + Math.floor(Math.random() * 4);
+      for (let i = 0; i < n; i++) {
+        const o = ctx.createOscillator(); const g = ctx.createGain(); const t = ctx.currentTime + i * 0.13;
+        o.frequency.setValueAtTime(base, t); o.frequency.exponentialRampToValueAtTime(base * 1.5, t + 0.08);
+        g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(0.05, t + 0.02); g.gain.exponentialRampToValueAtTime(0.0001, t + 0.1);
+        o.connect(g); g.connect(out); o.start(t); o.stop(t + 0.12);
+      }
+      setTimeout(chirp, 1500 + Math.random() * 5000);
+    };
+    chirp();
+    return () => { alive = false; wind.stop(); };
+  },
   lofi(out) {
     const vinyl = loopNoise('white', [['highpass', 3000]], 0.015, out);
     const lp = ctx.createBiquadFilter();

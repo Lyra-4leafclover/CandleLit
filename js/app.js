@@ -2,7 +2,7 @@ import { CANDLES, CAKES, TOPPERS, KINDS, DURATIONS, RARITY, STUDIO, STUDIO_COST,
 import {
   state, save, resetAll, dayKey, newId, allCandles, getCandle, getCake, ownsCandle, streak, isBlue,
   replaceState, loadLocal, GUEST_KEY, setSync, flushSync,
-  currentCake, serveCake, rolloverIfNewDay, addCandleToCake, spend, totals, encodeGift, decodeGift,
+  currentCake, serveCake, rolloverIfNewDay, applyStreakFreeze, addCandleToCake, spend, totals, encodeGift, decodeGift,
 } from './store.js';
 import { candleSVG, cakeSVG, sculptureSVG, setCakeStyle } from './render.js';
 import * as audio from './audio.js';
@@ -25,7 +25,7 @@ const DROP = '<svg class="ico" viewBox="0 0 24 24"><path fill="currentColor" d="
 const cakeOpts = (extra = {}) => ({ getDesign: getCandle, ...extra });
 
 const ui = {
-  view: 'focus', shopTab: 'candles', statsPeriod: 'week', statsOffset: 0, taskTitle: '', taskTag: '', taskEst: 1, taskFilter: 'all', agitatedUntil: 0, lastRem: -1, lastAgitated: false,
+  view: 'focus', shopTab: 'candles', shopCol: 'All', statsPeriod: 'week', statsOffset: 0, taskTitle: '', taskTag: '', taskEst: 1, taskFilter: 'all', agitatedUntil: 0, lastRem: -1, lastAgitated: false,
   studio: { name: '', c1: '#fde4ec', c2: '#f6c6d6', c3: '#e2668e', pattern: 'solid', shape: 'taper', holder: 'ornate', decor: 'roses', scent: STUDIO.scents[0] },
   joinCode: '', blown: false, newSubject: '',
 };
@@ -67,7 +67,7 @@ function renderWallet() {
   $('#wallet').innerHTML = `
     <span class="pill ${s >= 7 ? 'blue' : ''}" title="Flames${s >= 7 ? ' — blue flame streak: 2x' : ''}">${FLAME} ${state.flames}</span>
     <span class="pill drop" title="Wax drips">${DROP} ${state.wax}</span>
-    <span class="pill" title="Day streak">${s}-day streak</span>`;
+    <span class="pill" title="Day streak · ${state.freeze?.left ?? 3} streak freezes left this month">${s}-day streak <span class="frz">❄${state.freeze?.left ?? 3}</span></span>`;
 }
 
 /* ---------- router ---------- */
@@ -263,7 +263,7 @@ function finishSession(completed) {
   let partyMembers = null;
   if (a.party && party.room) {
     partyMembers = party.room.members.map((m) => ({ name: m.name, design: m.design, status: m.id === party.memberId ? (completed ? 'done' : 'quit') : m.status, me: m.id === party.memberId }));
-    if (completed) state.partyCakes.unshift({ id: newId(), date: dayKey(), code: party.code, minutes: a.minutes, members: partyMembers, design: 'funfetti' });
+    if (completed) state.partyCakes.unshift({ id: newId(), date: dayKey(), code: party.code, minutes: a.minutes, members: partyMembers, design: party.room?.cake || 'funfetti' });
     party.status({ status: completed ? 'done' : 'quit' });
   }
   state.pending = { candle, flames, wax, served: res.served, cakeId: res.cake.id, completed, partyMembers, design: a.design, task: a.task || null };
@@ -366,13 +366,14 @@ VIEWS.bakery = () => {
   view.innerHTML = `
   <section class="grid">
     <div class="bakery-top">
-      <div class="card">
+      <div class="card scene-${state.settings.scene || 'plain'}">
         <h2>Cake in the oven</h2>
         ${cakeSVG(getCake(cake.design), cake.candles, cake.toppers, cakeOpts({ seed: cake.id }))}
         <p style="text-align:center" class="muted">${cake.candles.length}/${CAKE_SLOTS} candles · started ${cake.started}</p>
       </div>
       <div class="card">
         <div class="row" style="margin-bottom:14px"><h3 style="margin:0">Cake style</h3><span class="spacer"></span><div class="seg">${[['new', '3D'], ['classic', 'Classic']].map(([k, l]) => `<button class="${(state.settings.cakeStyle || 'new') === k ? 'on' : ''}" data-act="cakeStyle" data-id="${k}">${l}</button>`).join('')}</div></div>
+        <div class="row" style="margin-bottom:14px"><h3 style="margin:0">Scene</h3><span class="spacer"></span><div class="chips">${['plain', 'gingham', 'window', 'garden', 'night'].map((k) => `<button class="chip sm ${(state.settings.scene || 'plain') === k ? 'on' : ''}" data-act="scene" data-id="${k}">${k[0].toUpperCase() + k.slice(1)}</button>`).join('')}</div></div>
         <h3>Cake design</h3>
         <div class="chips">${ownedCakes.map((c) => `<button class="chip ${cake.design === c.id ? 'on' : ''}" data-act="cakeDesign" data-id="${c.id}">${esc(c.name)}</button>`).join('')}</div>
         <h3 style="margin-top:18px">Toppers</h3>
@@ -460,10 +461,10 @@ VIEWS.shop = () => {
   const tab = ui.shopTab;
   let items = '';
   if (tab === 'candles') {
-    items = CANDLES.map((c) => {
+    items = CANDLES.filter((c) => ui.shopCol === 'All' || (ui.shopCol === 'New drop' ? c.drop : c.collection === ui.shopCol)).map((c) => {
       const owned = ownsCandle(c.id);
       const unavailable = c.available === false;
-      return `<div class="item-card ${c.rarity}">${candleThumb(c, 'taper')}${rarityBadge(c.rarity)}<b>${esc(c.name)}</b>
+      return `<div class="item-card ${c.rarity}">${candleThumb(c, 'taper')}<div class="row" style="gap:6px">${rarityBadge(c.rarity)}${c.drop ? '<span class="badge new">New drop</span>' : ''}${c.collection ? `<span class="muted" style="font-size:.75rem">${c.collection}</span>` : ''}</div><b>${esc(c.name)}</b>
         ${owned ? `<button class="btn sm ${state.settings.design === c.id ? 'ghost' : ''}" data-act="equipCandle" data-id="${c.id}">${state.settings.design === c.id ? 'Equipped' : 'Use'}</button>`
           : unavailable ? `<span class="muted">Returns in ${c.season}</span>`
           : `<button class="btn sm" data-act="buy" data-type="candle" data-id="${c.id}" ${state.flames < c.price ? 'disabled' : ''}>${FLAME} ${c.price}</button>`}
@@ -495,6 +496,7 @@ VIEWS.shop = () => {
       <div class="row"><h1 style="margin:0">The Candle Shop</h1><span class="spacer"></span>
         <input type="text" placeholder="Got a gift code? Paste it here" data-change="redeem" style="width:280px"><button class="btn sm" data-act="redeem">Redeem</button></div>
       <div class="tabs">${['candles', 'cakes', 'toppers'].map((t) => `<button class="chip ${tab === t ? 'on' : ''}" data-act="shopTab" data-id="${t}">${t[0].toUpperCase() + t.slice(1)}</button>`).join('')}</div>
+      ${tab === 'candles' ? `<div class="chips" style="margin-top:14px">${['All', 'New drop', ...new Set(CANDLES.map((c) => c.collection).filter(Boolean))].map((c) => `<button class="chip sm ${ui.shopCol === c ? 'on' : ''}" data-act="shopCol" data-id="${c}">${c}</button>`).join('')}</div>` : ''}
       <div class="shop-grid">${items}</div>
     </div>
   </section>`;
@@ -506,7 +508,7 @@ const catalog = (type, id) => (type === 'candle' ? CANDLES : type === 'cake' ? C
 const mixLight = (c) => '#' + [1, 3, 5].map((i) => Math.round(parseInt(c.slice(i, i + 2), 16) + (255 - parseInt(c.slice(i, i + 2), 16)) * 0.5).toString(16).padStart(2, '0')).join('');
 function studioDesign() {
   const s = ui.studio;
-  return { id: 'preview', name: s.name || 'Untitled candle', pattern: s.pattern === 'solid' ? undefined : s.pattern, c1: s.c1, c2: s.c2, c3: s.c3, accent: s.c3, hc: s.holder === 'ornate' ? '#f6f0e6' : '#fbf3ea', drip: mixLight(s.c1), shape: s.shape, holder: s.holder, decor: s.decor === 'none' ? [] : [s.decor], rarity: 'custom' };
+  return { id: 'preview', name: s.name || 'Untitled candle', pattern: s.pattern === 'solid' ? undefined : s.pattern, c1: s.c1, c2: s.c2, c3: s.c3, accent: s.c3, hc: s.holder === 'ornate' ? '#f6f0e6' : '#fbf3ea', drip: mixLight(s.c1), shape: s.shape, holder: s.holder, engrave: (s.engrave || '').slice(0, 18), decor: s.decor === 'none' ? [] : [s.decor], rarity: 'custom' };
 }
 function renderStudioPreview() {
   const el = $('#studio-preview');
@@ -520,10 +522,12 @@ VIEWS.studio = () => {
       <h1>Wax Studio</h1>
       <p class="muted">Pour your own candle with the wax drips you collect from sessions and breaks. Each pour costs <b>${STUDIO_COST} drips</b>. You have ${state.wax}.</p>
       <label class="field">Name</label><input type="text" data-studio="name" value="${esc(s.name)}" placeholder="e.g. Exam Season Survivor" style="width:100%">
+      <label class="field">Engraving</label><input type="text" data-studio="engrave" value="${esc(s.engrave || '')}" maxlength="18" placeholder="e.g. you got this" style="width:100%">
       <label class="field">Colours</label><div class="row"><input type="color" data-studio="c1" value="${s.c1}"><input type="color" data-studio="c2" value="${s.c2}"><input type="color" data-studio="c3" value="${s.c3}"><span class="muted">top · bottom · accent</span></div>
       ${[['shape', 'Shape', STUDIO.shapes], ['holder', 'Holder', STUDIO.holders], ['decor', 'Decoration', STUDIO.decors]].map(([k, label, list]) => `<label class="field">${label}</label><div class="chips">${list.map((x) => `<button class="chip ${s[k] === x ? 'on' : ''}" data-act="studioOpt" data-key="${k}" data-id="${x}">${x}</button>`).join('')}</div>`).join('')}
       <label class="field">Pattern</label><div class="chips">${STUDIO.patterns.map((p) => `<button class="chip ${s.pattern === p ? 'on' : ''}" data-act="studioPattern" data-id="${p}">${p}</button>`).join('')}</div>
       <label class="field">Scent</label><select data-studio="scent">${STUDIO.scents.map((x) => `<option ${x === s.scent ? 'selected' : ''}>${x}</option>`).join('')}</select>
+      <label class="field">Presets</label><div class="chips">${state.studioPresets.map((p, i) => `<button class="chip" data-act="loadPreset" data-id="${i}">${esc(p.name || 'Preset ' + (i + 1))}</button>`).join('')}<button class="chip" data-act="savePreset">+ Save current design</button></div>
       <div class="row" style="margin-top:22px"><button class="btn big" data-act="pour" ${state.wax < STUDIO_COST ? 'disabled' : ''}>Pour candle · ${DROP} ${STUDIO_COST}</button></div>
     </div>
     <div class="card">
@@ -561,13 +565,31 @@ function partyControlsHTML(room) {
     <p class="muted">Everyone uses their own equipped candle and tag${state.settings.demo ? ' · demo speed is on' : ''}.</p>
     <button class="btn big" data-act="partyStart">Light together</button>`;
 }
+function partySetupHTML(room) {
+  const sess = room.session;
+  if (sess && party.serverNow() < sess.startAt + sess.durationMs) return '';
+  const me = room.members.find((m) => m.id === room.you);
+  const owned = allCandles().filter((c) => ownsCandle(c.id));
+  const cakes = CAKES.filter((c) => state.owned.cakes.includes(c.id) || c.id === room.cake);
+  const pc = getCake(room.cake);
+  const preview = cakeSVG(pc, room.members.map((m) => ({ design: m.design, kind: 'taper', minutes: 25, subject: m.name })), [], cakeOpts({ seed: room.code, cls: 'cake-svg party-cake-preview' }));
+  return `<div class="party-setup"><div class="party-setup-cake">${preview}<div class="muted" style="font-size:.85rem">Party cake: <b>${esc(pc.name)}</b></div></div>
+    <div class="party-setup-pick"><label class="field">Your candle for this party</label><div class="mini-picker">${owned.map((c) => `<button class="mini-candle ${me?.design === c.id ? 'on' : ''}" data-act="partyCandle" data-id="${c.id}" title="${esc(c.name)}" aria-label="${esc(c.name)}">${candleSVG(c, 'taper', 1, { lit: false, cls: 'mini-thumb' })}</button>`).join('')}</div>
+    ${party.isHost ? `<label class="field">Party cake</label><div class="chips">${cakes.map((c) => `<button class="chip sm ${room.cake === c.id ? 'on' : ''}" data-act="partyCake" data-id="${c.id}">${esc(c.name)}</button>`).join('')}</div>` : '<p class="muted" style="font-size:.85rem;margin-top:14px">The host picks the party cake.</p>'}</div></div>`;
+}
+function partyBoardHTML(room) {
+  if (!room.board?.length) return '';
+  return `<h3 style="margin-top:22px">Room leaderboard</h3><ol class="board">${room.board.map((b) => `<li><span>${esc(b.name)}</span><span class="muted">${b.sessions} session${b.sessions === 1 ? '' : 's'}</span><b>${fmtMin(b.minutes)}</b></li>`).join('')}</ol>`;
+}
 const lobbyCache = {};
 function setIf(sel, html) { const el = $(sel); if (el && lobbyCache[sel] !== html) { lobbyCache[sel] = html; el.innerHTML = html; return true; } return false; }
 function updatePartyLobby() {
   const room = party.room;
   if (!room) return;
   setIf('#party-members', partyMembersHTML(room));
+  setIf('#party-setup', partySetupHTML(room));
   setIf('#party-controls', partyControlsHTML(room));
+  setIf('#party-board', partyBoardHTML(room));
   const log = $('#chat-log');
   if (log) {
     const atBottom = log.scrollHeight - log.scrollTop - log.clientHeight < 60;
@@ -595,6 +617,7 @@ VIEWS.party = () => {
         <h2>Join a party</h2>
         <p class="muted">Got a code from a friend?</p>
         <div class="row"><input type="text" data-change="joinCode" value="${esc(ui.joinCode)}" placeholder="ABCDE" maxlength="5" class="code-input" aria-label="Party code"><button class="btn rose" data-act="joinParty">Join</button></div>
+        ${state.savedRooms.length ? `<label class="field">Your permanent rooms</label><div class="chips">${state.savedRooms.map((r) => `<button class="chip" data-act="openRoom" data-id="${r.code}">${esc(r.name)} · ${r.code}</button>`).join('')}</div>` : ''}
       </div>
     </section>`;
     return;
@@ -605,9 +628,11 @@ VIEWS.party = () => {
     <div class="card" style="text-align:center">
       <p class="eyebrow">Party code</p>
       <div class="party-code">${party.code}</div>
-      <div class="row" style="justify-content:center"><button class="btn ghost sm" data-act="copy" data-text="${esc(link)}">Copy invite link</button><button class="btn ghost sm" data-act="leaveParty">Leave party</button></div>
+      <div class="row" style="justify-content:center"><button class="btn ghost sm" data-act="copy" data-text="${esc(link)}">Copy invite link</button><button class="btn ghost sm" data-act="leaveParty">Leave party</button>${party.room.saved ? '<span class="tag" style="align-self:center">Permanent room</span>' : party.isHost ? '<button class="btn ghost sm" data-act="saveRoom">Save as permanent room</button>' : ''}</div>
       <div class="members" id="party-members" style="justify-content:center"></div>
+      <div id="party-setup"></div>
       <div id="party-controls"></div>
+      <div id="party-board"></div>
     </div>
     <div class="card chat-card">
       <h3>Party chat</h3>
@@ -660,6 +685,7 @@ VIEWS.stats = () => {
       <div><h1 style="margin:0">Stats</h1><p class="muted" style="margin:2px 0 0">${esc(st.range.label)}</p></div>
       <span class="spacer"></span>
       <div class="seg">${['week', 'month', 'year'].map((x) => `<button class="${P === x ? 'on' : ''}" data-act="statsPeriod" data-id="${x}">${x[0].toUpperCase() + x.slice(1)}</button>`).join('')}</div>
+      <button class="btn ghost sm" data-act="exportCsv">Export CSV</button>
       <div class="row" style="gap:6px"><button class="icon-btn" data-act="statsShift" data-id="1" aria-label="Previous ${P}">‹</button><button class="icon-btn" data-act="statsShift" data-id="-1" ${off === 0 ? 'disabled' : ''} aria-label="Next ${P}">›</button></div>
     </div>
     <div class="stats">
@@ -669,9 +695,11 @@ VIEWS.stats = () => {
       ${stat('Completion', st.rate + '%', 'sessions finished')}
       ${stat('Tasks done', st.tasksDone.length, `${Object.keys(st.tasksByTag).length} tag${Object.keys(st.tasksByTag).length === 1 ? '' : 's'}`)}
       ${stat('Cakes served', st.cakes, `${st.flames} flames earned`)}
-      ${stat('Streak', `${streak()} day${streak() === 1 ? '' : 's'}`, streak() >= 7 ? 'blue flame active' : `${7 - streak()} to blue flame`)}
+      ${stat('Streak', `${streak()} day${streak() === 1 ? '' : 's'}`, (streak() >= 7 ? 'blue flame active' : `${7 - streak()} to blue flame`) + ` · ❄ ${state.freeze?.left ?? 3} freezes left`)}
       ${stat('Distractions', st.distractions, 'tab switches')}
     </div>
+    ${insightHTML(st, prev, P)}
+    ${P === 'week' ? goalsHTML(st) : ''}
     <div class="card"><div class="row"><h2 style="margin:0">Focus time</h2><span class="spacer"></span><span class="muted">${st.best?.total ? `Best ${P === 'year' ? 'month' : 'day'}: ${esc(st.best.full)} · ${fmtMin(st.best.total)}` : ''}</span></div>${barChart(st.buckets, { labelEvery: P === 'month' ? 3 : 1 })}</div>
     <div class="two">
       <div class="card"><h2>By tag</h2>${donut(st.byTag)}</div>
@@ -687,6 +715,39 @@ VIEWS.stats = () => {
     </div>
   </section>`;
 };
+
+function insightHTML(st, prev, P) {
+  if (!st.done.length) return `<div class="card insight"><div class="eyebrow">Your ${P} in review</div><p>No finished candles yet this ${P}. Light one and your summary shows up here.</p></div>`;
+  const top = Object.entries(st.byTag).sort((a, b) => b[1] - a[1])[0];
+  const peak = st.hours.indexOf(Math.max(...st.hours));
+  const hl = (h) => (h === 0 ? '12am' : h < 12 ? h + 'am' : h === 12 ? '12pm' : h - 12 + 'pm');
+  const lines = [`You focused for <b>${fmtMin(st.minutes)}</b> across <b>${st.done.length}</b> candle${st.done.length === 1 ? '' : 's'}${prev.minutes ? `, ${st.minutes >= prev.minutes ? 'up' : 'down'} <b>${Math.abs(Math.round(((st.minutes - prev.minutes) / prev.minutes) * 100))}%</b> from last ${P}` : ''}.`];
+  if (top) lines.push(`Most of it went to <b>${esc(top[0])}</b> (${Math.round((top[1] / st.minutes) * 100)}%).`);
+  if (Math.max(...st.hours)) lines.push(`Your sweet spot is around <b>${hl(peak)}</b>, so try putting hard tasks there.`);
+  if (st.best?.total) lines.push(`Best ${P === 'year' ? 'month' : 'day'}: <b>${esc(st.best.full)}</b>.`);
+  lines.push(st.rate >= 90 ? 'You almost never blow out early. Impressive.' : st.blown ? `${st.blown} candle${st.blown === 1 ? '' : 's'} got blown out early. Shorter sessions might help.` : '');
+  return `<div class="card insight"><div class="eyebrow">Your ${P} in review</div><p>${lines.filter(Boolean).join(' ')}</p></div>`;
+}
+function goalsHTML(st) {
+  const goals = Object.entries(state.goals).filter(([t, m]) => m > 0 && state.subjects.includes(t));
+  return `<div class="card"><div class="row"><h2 style="margin:0">Weekly goals</h2><span class="spacer"></span><button class="btn ghost sm" data-act="editGoals">${goals.length ? 'Edit goals' : 'Set goals'}</button></div>
+    ${goals.length ? goals.map(([t, m]) => { const done = st.byTag[t] || 0; const pct = Math.min(100, Math.round((done / m) * 100)); return `<div class="goal"><span class="legend-row"><i style="background:${tagColor(t)}"></i>${esc(t)}</span><div class="track"><div class="fill" style="width:${pct}%;background:${tagColor(t)}"></div></div><span class="muted">${fmtMin(done)} / ${fmtMin(m)}</span>${pct >= 100 ? '<span class="tag">done</span>' : ''}</div>`; }).join('') : '<p class="muted">Give a tag a weekly target, like 5 hours of Chem, and track it here.</p>'}</div>`;
+}
+function goalsEditor() {
+  modal(`<h2>Weekly goals</h2><p class="muted" style="margin-top:-4px">Hours per week for each tag. Leave a tag at 0 for no goal.</p>
+    <div class="tag-edit-list">${state.subjects.map((t) => `<div class="tag-edit" style="grid-template-columns:auto 1fr 110px"><span class="dot-btn" style="background:${tagColor(t)}"></span><span>${esc(t)}</span><input type="number" min="0" max="80" step="0.5" value="${(state.goals[t] || 0) / 60}" data-goal="${esc(t)}" aria-label="${esc(t)} hours per week"></div>`).join('')}</div>
+    <div class="row" style="margin-top:16px"><button class="btn" data-act="closeModal">Done</button></div>`);
+}
+function exportCsv() {
+  const rows = [['date', 'time', 'tag', 'task', 'minutes', 'completed', 'flames', 'distractions']];
+  state.sessions.forEach((x) => rows.push([x.date, x.ts ? new Date(x.ts).toTimeString().slice(0, 5) : '', x.subject, state.tasks.find((t) => t.id === x.task)?.title || '', x.minutes, x.completed ? 'yes' : 'no', x.flames || 0, x.distractions || 0]));
+  const csv = rows.map((r) => r.map((v) => `"${String(v).replace(/"/g, '""')}"`).join(',')).join('\n');
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv' }));
+  a.download = `candlelit-sessions-${dayKey()}.csv`;
+  a.click();
+  setTimeout(() => URL.revokeObjectURL(a.href), 2000);
+}
 
 /* ---------- to-do ---------- */
 VIEWS.tasks = () => {
@@ -873,6 +934,20 @@ const actions = {
   cheer: ({ id }) => party.cheer(+id).then(() => toast('Cheer sent')).catch((e) => toast(esc(e.message))),
   cheerAll: () => party.chat('🔥 Keep going, everyone!').catch(() => {}),
   makeHost: ({ id }) => party.makeHost(+id).catch((e) => toast(esc(e.message))),
+  partyCandle: ({ id }) => { state.settings.design = id; save(); party.status({ design: id }); },
+  partyCake: ({ id }) => party.send('/api/party/cake', { cake: id }).catch((e) => toast(esc(e.message))),
+  saveRoom: () => party.send('/api/party/save', { name: `${auth.user.name}'s study room` }).then(() => {
+    if (!state.savedRooms.some((r) => r.code === party.code)) state.savedRooms.push({ code: party.code, name: party.room.name });
+    save(); toast('Saved. Rejoin this room any time with the same code.'); route();
+  }).catch((e) => toast(esc(e.message))),
+  openRoom: ({ id }) => party.join(id, state.settings.design, state.settings.subject).then(route).catch((e) => toast(esc(e.message))),
+  shopCol: ({ id }) => { ui.shopCol = id; route(); },
+  exportCsv: () => exportCsv(),
+  editGoals: () => goalsEditor(),
+  savePreset: () => { state.studioPresets.push({ ...ui.studio, name: ui.studio.name || `Preset ${state.studioPresets.length + 1}` }); state.studioPresets = state.studioPresets.slice(-12); save(); route(); toast('Preset saved'); },
+  loadPreset: ({ id }) => { const p = state.studioPresets[+id]; if (p) { ui.studio = { ...ui.studio, ...p }; route(); } },
+  scene: ({ id }) => { state.settings.scene = id; save(); route(); },
+  setPalette: ({ id }) => { localStorage.setItem('candlelit-palette', id); applyTheme(); },
   toggleTheme: () => { localStorage.setItem('candlelit-theme', document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark'); applyTheme(); },
   setTheme: ({ id }) => { localStorage.setItem('candlelit-theme', id); applyTheme(); },
   accountMenu: () => { ui.menuOpen = !ui.menuOpen; renderAccount(); },
@@ -982,13 +1057,14 @@ $('#modal').addEventListener('click', (e) => { if (e.target.id === 'modal') clos
 
 document.addEventListener('change', (e) => {
   const k = e.target.dataset.change;
-  if (!k && e.target.dataset.tagrename === undefined) return;
+  if (!k && e.target.dataset.tagrename === undefined && e.target.dataset.goal === undefined) return;
   const v = e.target.type === 'checkbox' ? e.target.checked : e.target.value;
   if (k === 'customMin') { const n = Math.max(1, Math.min(180, parseInt(v, 10) || 25)); state.settings.minutes = n; save(); route(); }
   if (k === 'newSubject' && v.trim()) { const s = v.trim().slice(0, 24); if (!state.subjects.includes(s)) state.subjects.push(s); state.settings.subject = s; save(); route(); }
   if (k === 'demo') { state.settings.demo = v; save(); route(); }
   if (e.target.dataset.tagrename !== undefined) { if (renameTag(e.target.dataset.tagrename, v)) { route(); tagEditor(); } return; }
   if (k === 'newTagModal' && v.trim()) { const s = v.trim().slice(0, 24); if (!state.subjects.includes(s)) state.subjects.push(s); save(); route(); tagEditor(); return; }
+  if (e.target.dataset.goal !== undefined) { state.goals[e.target.dataset.goal] = Math.max(0, Math.round((parseFloat(v) || 0) * 60)); save(); route(); return; }
   if (k === 'linkTask') { const t = state.tasks.find((x) => x.id === v); state.settings.taskId = t ? t.id : null; if (t) state.settings.subject = t.tag; save(); route(); }
   if (k === 'newTag' && v.trim()) { const s = v.trim().slice(0, 24); if (!state.subjects.includes(s)) state.subjects.push(s); ui.taskTag = s; save(); route(); }
   if (k === 'name') { state.name = v.trim().slice(0, 24); save(); }
@@ -1028,10 +1104,13 @@ document.addEventListener('visibilitychange', () => {
 const SUN = '<svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="4.2"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>';
 const MOON = '<svg class="ico" viewBox="0 0 24 24" fill="currentColor"><path d="M20.5 14.6A8.5 8.5 0 0 1 9.4 3.5a8.5 8.5 0 1 0 11.1 11.1z"/></svg>';
 const themePref = () => localStorage.getItem('candlelit-theme') || 'system';
+const PALETTES = [['blush', '#f2b8cf'], ['lavender', '#b9b5f0'], ['matcha', '#a9d6a0'], ['ocean', '#9fd3e6'], ['peach', '#f5b48a']];
+const palettePref = () => localStorage.getItem('candlelit-palette') || 'blush';
 function applyTheme() {
   const t = themePref();
   const d = t === 'dark' || (t === 'system' && matchMedia('(prefers-color-scheme: dark)').matches);
   document.documentElement.dataset.theme = d ? 'dark' : 'light';
+  document.documentElement.dataset.palette = palettePref();
   renderAccount();
 }
 matchMedia('(prefers-color-scheme: dark)').addEventListener('change', applyTheme);
@@ -1044,6 +1123,7 @@ function renderAccount() {
     ${u ? `<button class="avatar" data-act="accountMenu" aria-label="Account menu" aria-expanded="${!!ui.menuOpen}">${esc((u.name || '?')[0].toUpperCase())}</button>` : '<button class="btn sm" data-act="signIn">Sign in</button>'}
     ${ui.menuOpen && u ? `<div class="menu" role="menu"><div class="menu-head"><b>${esc(u.name)}</b><span class="muted">@${esc(u.username)}</span></div>
       <div class="menu-label">Theme</div><div class="seg seg-sm">${['light', 'dark', 'system'].map((t) => `<button class="${themePref() === t ? 'on' : ''}" data-act="setTheme" data-id="${t}">${t[0].toUpperCase() + t.slice(1)}</button>`).join('')}</div>
+      <div class="menu-label">Accent</div><div class="swatches">${PALETTES.map(([k, c]) => `<button class="swatch ${palettePref() === k ? 'on' : ''}" style="background:${c}" data-act="setPalette" data-id="${k}" aria-label="${k} accent" title="${k}"></button>`).join('')}</div>
       <button class="menu-item" data-act="goStats">Stats &amp; settings</button>
       <button class="menu-item danger" data-act="signOut">Sign out</button></div>` : ''}`;
 }
@@ -1096,6 +1176,8 @@ function startApp() {
   setCakeStyle(state.settings.cakeStyle);
   audio.setVolume(state.settings.volume);
   rolloverIfNewDay();
+  const froze = applyStreakFreeze();
+  if (froze) setTimeout(() => toast(`A streak freeze covered ${froze} missed day${froze === 1 ? '' : 's'}. Your ${streak()}-day streak is safe.`), 600);
   if (ui.joinCode && !state.active) location.hash = '#/party';
   route();
   if (auth.user) party.resume().then(() => { if (ui.view === 'party') route(); });

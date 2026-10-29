@@ -21,10 +21,15 @@ function fresh() {
     sessions: [],
     tasks: [],
     tagColors: {},
+    goals: {},
+    freeze: { month: '', left: 3 },
+    frozenDays: [],
+    studioPresets: [],
+    savedRooms: [],
     subjects: [...DEFAULT_SUBJECTS],
     redeemed: [],
     name: '',
-    settings: { volume: 0.5, ambience: [], demo: false, design: 'classic', cakeDesign: 'vanilla', minutes: 25, subject: 'General', breakMin: 5, taskId: null, cakeStyle: 'new' },
+    settings: { volume: 0.5, ambience: [], demo: false, design: 'classic', cakeDesign: 'vanilla', minutes: 25, subject: 'General', breakMin: 5, taskId: null, cakeStyle: 'new', scene: 'plain' },
     active: null,
     pending: null,
   };
@@ -82,8 +87,25 @@ export const getCake = (id) => CAKES.find((c) => c.id === id) || CAKES[0];
 export const getTopper = (id) => TOPPERS.find((t) => t.id === id);
 export const ownsCandle = (id) => state.owned.candles.includes(id) || state.custom.some((c) => c.id === id);
 
+export const FREEZES_PER_MONTH = 3;
+/** Refill monthly freezes and spend them to cover missed days since the last study day. */
+export function applyStreakFreeze() {
+  const month = dayKey().slice(0, 7);
+  if (state.freeze.month !== month) state.freeze = { month, left: FREEZES_PER_MONTH };
+  const active = new Set([...state.sessions.filter((s) => s.completed).map((s) => s.date), ...state.frozenDays]);
+  if (!active.size) return 0;
+  const d = new Date(); d.setDate(d.getDate() - 1);
+  const gap = [];
+  while (!active.has(dayKey(d)) && gap.length <= state.freeze.left) { gap.push(dayKey(d)); d.setDate(d.getDate() - 1); }
+  if (!gap.length || gap.length > state.freeze.left || !active.has(dayKey(d))) return 0;
+  state.frozenDays.push(...gap);
+  state.freeze.left -= gap.length;
+  save();
+  return gap.length;
+}
+
 export function streak() {
-  const days = new Set(state.sessions.filter((s) => s.completed).map((s) => s.date));
+  const days = new Set([...state.sessions.filter((s) => s.completed).map((s) => s.date), ...(state.frozenDays || [])]);
   let d = new Date();
   if (!days.has(dayKey(d))) d.setDate(d.getDate() - 1);
   let n = 0;
