@@ -624,3 +624,22 @@ a.btn, a.btn:hover { color: var(--on-ink); text-decoration: none; }
   .stage, .stage .candle-big { height: clamp(200px, calc(91vh - 380px), 360px); }
 }
 @supports (height: 100dvh) { @media (max-width: 900px) { .stage, .stage .candle-big { height: clamp(200px, calc(91dvh - 380px), 360px); } } }
+
+/* scale the whole interface down proportionally on smaller screens; --z keeps vh-based sizes honest under zoom */
+:root { --z: 1; }
+body { zoom: var(--z); }
+@media (min-width: 901px) and (max-width: 1700px), (min-width: 901px) and (max-height: 900px) { :root { --z: 0.9; } main { max-width: 1300px; } }
+@media (min-width: 901px) and (max-width: 1500px), (min-width: 901px) and (max-height: 800px) { :root { --z: 0.8; } main { max-width: 1440px; } }
+@media (min-width: 901px) and (max-height: 680px) { :root { --z: 0.72; } }
+@media (max-width: 480px) { :root { --z: 0.92; } }
+.stage, .stage .candle-big { height: clamp(200px, calc(91vh / var(--z) - 330px), 470px); }
+.altar { min-height: clamp(380px, calc(100vh / var(--z) - 140px), 600px); }
+.altar .candle-svg { height: clamp(220px, calc(100vh / var(--z) - 330px), 470px); }
+.studio-preview { height: clamp(220px, calc(100vh / var(--z) - 400px), 380px); }
+.chat-card { height: min(560px, calc(100vh / var(--z) - 160px)); }
+@media (max-width: 900px) {
+  .stage, .stage .candle-big { height: clamp(200px, calc(91vh / var(--z) - 380px), 360px); }
+  .altar { min-height: 0; }
+  .altar .candle-svg { height: clamp(220px, calc(42vh / var(--z)), 340px); }
+}
+.bakery-top .cake-svg, .done-grid .cake-svg { max-height: calc(66vh / var(--z)); margin: 0 auto; }
