@@ -7,7 +7,7 @@
   ],
   "functions": {
     "api/index.py": {
-      "excludeFiles": "{art,art3,art4,art5,art6,art7,audio,css,js,data,docs,memory}/**"
+      "excludeFiles": "{art,art3,art4,art5,art6,art7,audio,css,js,data,docs}/**"
     }
   }
 }
