@@ -389,7 +389,7 @@ VIEWS.bakery = () => {
         <p style="text-align:center" class="muted">${cake.candles.length}/${CAKE_SLOTS} candles · started ${cake.started}</p>
       </div>
       <div class="card">
-        <div class="row" style="margin-bottom:14px"><h3 style="margin:0">Cake style</h3><span class="spacer"></span><div class="seg">${[['painted', 'Watercolor'], ['new', '3D'], ['classic', 'Classic']].map(([k, l]) => `<button class="${(state.settings.cakeStyle || 'painted') === k ? 'on' : ''}" data-act="cakeStyle" data-id="${k}">${l}</button>`).join('')}</div></div>
+        ${getArtMode() === 'drawn' ? `<div class="row" style="margin-bottom:14px"><h3 style="margin:0">Cake style</h3><span class="spacer"></span><div class="seg">${[['new', '3D'], ['classic', 'Classic']].map(([k, l]) => `<button class="${(state.settings.cakeStyle === 'classic' ? 'classic' : 'new') === k ? 'on' : ''}" data-act="cakeStyle" data-id="${k}">${l}</button>`).join('')}</div></div>` : ''}
         <div class="row" style="margin-bottom:14px"><h3 style="margin:0">Scene</h3><span class="spacer"></span><div class="chips">${SCENE_LIST.map(([k, l]) => `<button class="chip sm ${(state.settings.scene || 'plain') === k ? 'on' : ''}" data-act="scene" data-id="${k}">${l}</button>`).join('')}</div></div>
         <h3>Cake design</h3>
         <div class="chips">${ownedCakes.map((c) => `<button class="chip ${cake.design === c.id ? 'on' : ''}" data-act="cakeDesign" data-id="${c.id}">${esc(c.name)}</button>`).join('')}</div>

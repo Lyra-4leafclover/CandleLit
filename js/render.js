@@ -1018,7 +1018,7 @@ export function sculptureSVG(s, growth = 1) {
 let CAKE_STYLE = 'painted';
 export const setCakeStyle = (s) => { CAKE_STYLE = s === 'classic' || s === 'new' ? s : 'painted'; };
 export function cakeSVG(design, candles = [], toppers = [], opts = {}) {
-  if (ART_MODE === 'painted' && CAKE_STYLE === 'painted' && CAKE_ART[design.id]) return cakeSVGPainted(design, candles, toppers, opts);
+  if (ART_MODE === 'painted' && CAKE_ART[design.id]) return cakeSVGPainted(design, candles, toppers, opts);
   return CAKE_STYLE === 'classic' ? cakeSVGClassic(design, candles, toppers, opts) : cakeSVG3D(design, candles, toppers, opts);
 }
 
