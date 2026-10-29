@@ -11,8 +11,8 @@ export async function api(path, body, method) {
 export const auth = {
   user: null,
   async me() { this.user = (await api('/api/auth/me')).user; return this.user; },
-  async login(username, password) { this.user = (await api('/api/auth/login', { username, password })).user; return this.user; },
-  async signup(username, password, name) { this.user = (await api('/api/auth/signup', { username, password, name })).user; return this.user; },
+  async login(email, password) { this.user = (await api('/api/auth/login', { email, password })).user; return this.user; },
+  async signup(email, password, name) { this.user = (await api('/api/auth/signup', { email, password, name })).user; return this.user; },
   async logout() { await api('/api/auth/logout', {}).catch(() => {}); this.user = null; },
   async rename(name) { this.user = (await api('/api/auth/profile', { name })).user; return this.user; },
 };

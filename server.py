@@ -25,6 +25,7 @@ ROOM_TIMEOUT = 900
 MAX_MEMBERS = 16
 MAX_BODY = 2_000_000
 USERNAME_RE = re.compile(r"^[a-z0-9_.]{3,24}$")
+EMAIL_RE = re.compile(r"^[^@\s]+@[^@\s]+\.[^@\s]+$")
 
 rooms = {}
 lock = threading.Lock()
@@ -270,12 +271,12 @@ class Handler(SimpleHTTPRequestHandler):
                 with db() as c:
                     c.execute("DELETE FROM sessions WHERE token = ?", (morsel.value,))
             return self.send_json({"ok": True}, cookie=self.session_cookie("", 0))
-        username = str(body.get("username") or "").strip().lower()
+        username = str(body.get("email") or body.get("username") or "").strip().lower()[:254]
         password = str(body.get("password") or "")
         if path == "/api/auth/signup":
-            name = str(body.get("name") or "").strip()[:24] or username
-            if not USERNAME_RE.match(username):
-                return self.send_json({"error": "Usernames are 3–24 characters: letters, numbers, _ or ."}, 400)
+            if not EMAIL_RE.match(username):
+                return self.send_json({"error": "Enter a valid email address"}, 400)
+            name = str(body.get("name") or "").strip()[:24] or username.split("@")[0][:24]
             if len(password) < 8:
                 return self.send_json({"error": "Use at least 8 characters for your password"}, 400)
             salt = secrets.token_hex(16)
@@ -287,14 +288,14 @@ class Handler(SimpleHTTPRequestHandler):
                     )
                     uid = cur.lastrowid
             except sqlite3.IntegrityError:
-                return self.send_json({"error": "That username is taken"}, 409)
+                return self.send_json({"error": "An account with that email already exists. Try signing in."}, 409)
             return self.send_json({"user": {"id": uid, "username": username, "name": name}}, cookie=self.start_session(uid))
         if path == "/api/auth/login":
             with db() as c:
                 row = c.execute("SELECT * FROM users WHERE username = ?", (username,)).fetchone()
             if not row or not hmac.compare_digest(row["pw_hash"], hash_pw(password, row["salt"])):
                 time.sleep(0.4)
-                return self.send_json({"error": "Wrong username or password"}, 401)
+                return self.send_json({"error": "Wrong email or password"}, 401)
             return self.send_json({"user": public_user(row)}, cookie=self.start_session(row["id"]))
         if path == "/api/auth/profile":
             user = self.current_user()

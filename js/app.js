@@ -1218,7 +1218,7 @@ function renderAccount() {
   const u = auth.user;
   el.innerHTML = `<div class="seg seg-sm mode-switch" role="group" aria-label="Art style">${[['painted', 'Watercolor'], ['drawn', 'Classic']].map(([k, l]) => `<button class="${getArtMode() === k ? 'on' : ''}" data-act="setArtMode" data-id="${k}" aria-pressed="${getArtMode() === k}">${l}</button>`).join('')}</div><button class="icon-btn" data-act="toggleTheme" aria-label="Switch to ${dark ? 'light' : 'dark'} mode" title="${dark ? 'Light' : 'Dark'} mode">${dark ? SUN : MOON}</button>
     ${u ? `<button class="avatar" data-act="accountMenu" aria-label="Account menu" aria-expanded="${!!ui.menuOpen}">${esc((u.name || '?')[0].toUpperCase())}</button>` : '<button class="btn sm" data-act="signIn">Sign in</button>'}
-    ${ui.menuOpen && u ? `<div class="menu" role="menu"><div class="menu-head"><b>${esc(u.name)}</b><span class="muted">@${esc(u.username)}</span></div>
+    ${ui.menuOpen && u ? `<div class="menu" role="menu"><div class="menu-head"><b>${esc(u.name)}</b><span class="muted">${u.username.includes("@") ? "" : "@"}${esc(u.username)}</span></div>
       <div class="menu-label">Theme</div><div class="seg seg-sm">${['light', 'dark', 'system'].map((t) => `<button class="${themePref() === t ? 'on' : ''}" data-act="setTheme" data-id="${t}">${t[0].toUpperCase() + t.slice(1)}</button>`).join('')}</div>
       <div class="menu-label">Accent</div><div class="swatches">${PALETTES.map(([k, c]) => `<button class="swatch ${palettePref() === k ? 'on' : ''}" style="background:${c}" data-act="setPalette" data-id="${k}" aria-label="${k} accent" title="${k}"></button>`).join('')}</div>
       <button class="menu-item" data-act="goStats">Stats &amp; settings</button>
@@ -1243,8 +1243,8 @@ function showAuth(mode = ui.authMode || 'login') {
       <h2>${mode === 'login' ? 'Welcome back' : 'Make your account'}</h2>
       <p class="muted">${mode === 'login' ? 'Sign in to pick up where you left off.' : 'Your candles, cakes, tasks and stats save to your account.'}</p>
       <form id="authForm" novalidate>
-        ${mode === 'signup' ? '<label class="field" for="f-name">Display name</label><input id="f-name" type="text" name="name" placeholder="Annika" maxlength="24" autocomplete="nickname">' : ''}
-        <label class="field" for="f-user">Username</label><input id="f-user" type="text" name="username" maxlength="24" autocomplete="username" autocapitalize="off" spellcheck="false" placeholder="${mode === 'signup' ? 'letters, numbers, _ or .' : ''}">
+        ${mode === 'signup' ? '<label class="field" for="f-name">Display name <span class="muted">(optional)</span></label><input id="f-name" type="text" name="name" placeholder="Annika" maxlength="24" autocomplete="nickname">' : ''}
+        <label class="field" for="f-user">Email</label><input id="f-user" type="email" name="email" maxlength="254" autocomplete="${mode === 'signup' ? 'email' : 'username'}" autocapitalize="off" spellcheck="false" placeholder="you@example.com">
         <label class="field" for="f-pass">Password</label><input id="f-pass" type="password" name="password" autocomplete="${mode === 'login' ? 'current-password' : 'new-password'}" placeholder="${mode === 'signup' ? 'at least 8 characters' : ''}">
         <p class="auth-error" id="authError" role="alert"></p>
         <button class="btn big" type="submit" style="width:100%">${mode === 'login' ? 'Sign in' : 'Create account'}</button>
@@ -1301,8 +1301,10 @@ document.addEventListener('submit', async (e) => {
     const f = new FormData(e.target);
     const err = $('#authError');
     const btn = e.target.querySelector('button[type=submit]');
-    const username = String(f.get('username') || '').trim(), password = String(f.get('password') || '');
-    if (!username || !password) { err.textContent = 'Enter your username and password.'; return; }
+    const username = String(f.get('email') || '').trim(), password = String(f.get('password') || '');
+    if (!username || !password) { err.textContent = 'Enter your email and password.'; return; }
+    if (ui.authMode === 'signup' && !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(username)) { err.textContent = 'Enter a valid email address.'; return; }
+    if (ui.authMode === 'signup' && password.length < 8) { err.textContent = 'Use at least 8 characters for your password.'; return; }
     btn.disabled = true;
     try {
       const user = ui.authMode === 'signup' ? await auth.signup(username, password, String(f.get('name') || '').trim()) : await auth.login(username, password);
