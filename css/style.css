@@ -574,3 +574,6 @@ a.btn, a.btn:hover { color: var(--on-ink); text-decoration: none; }
 
 .scene-gothic h2, .scene-emo h2, .scene-halloween2 h2, .scene-christmas h2, .scene-cottagecore h2, .scene-gamer h2, .scene-minecraft h2 { background: rgba(255, 252, 248, 0.86); color: #1f1a1c; display: inline-block; padding: 6px 14px; border-radius: 999px; font-size: 1.15rem; }
 .scene-gothic .muted, .scene-emo .muted, .scene-halloween2 .muted, .scene-christmas .muted, .scene-cottagecore .muted, .scene-gamer .muted, .scene-minecraft .muted { background: rgba(255, 252, 248, 0.86); border-radius: 999px; padding: 4px 12px; width: fit-content; margin: 8px auto 0; color: #6a5f62; }
+
+.scene-chess h2, .scene-soccer h2, .scene-basketball h2, .scene-tennis h2, .scene-baseball h2, .scene-volleyball h2, .scene-golf h2 { background: rgba(255, 252, 248, 0.86); color: #1f1a1c; display: inline-block; padding: 6px 14px; border-radius: 999px; font-size: 1.15rem; }
+.scene-chess .muted, .scene-soccer .muted, .scene-basketball .muted, .scene-tennis .muted, .scene-baseball .muted, .scene-volleyball .muted, .scene-golf .muted { background: rgba(255, 252, 248, 0.86); border-radius: 999px; padding: 4px 12px; width: fit-content; margin: 8px auto 0; color: #6a5f62; }

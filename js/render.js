@@ -1,6 +1,7 @@
 import { ART3, CAKE_ART } from './art3.js';
 import { ART4 } from './art4.js';
 import { ART6, CAKE_ART6 } from './art6.js';
+import { ART7, CAKE_ART7 } from './art7.js';
 
 let uidN = 0;
 const uid = () => `u${++uidN}${Math.random().toString(36).slice(2, 5)}`;
@@ -77,6 +78,16 @@ function patternDefs(d, P, h) {
     case 'argyle': return pat(20, 28, `<rect width="20" height="28" fill="${c1}"/><polygon points="10,0 20,14 10,28 0,14" fill="${c2}" opacity=".6"/><path d="M0 0 L20 28 M20 0 L0 28" stroke="#fff" stroke-width=".7" stroke-dasharray="2 2" opacity=".8"/>`);
     case 'strawberry': return pat(20, 20, `<rect width="20" height="20" fill="${c1}"/><path d="M6 13 C1 9 2 4 6 5 C10 4 11 9 6 13Z" fill="#ef5f6e"/><path d="M4 5 l2 -2 l2 2z" fill="#5a9a4f"/><circle cx="5" cy="8" r=".5" fill="#fff6d6"/><circle cx="7" cy="9" r=".5" fill="#fff6d6"/><circle cx="15" cy="16" r="1" fill="${c2}"/>`);
     case 'tiedye': return `<radialGradient id="${P}" gradientUnits="userSpaceOnUse" cx="0" cy="${-h * 0.5}" r="${h * 0.6}" spreadMethod="reflect"><stop offset="0" stop-color="${c1}"/><stop offset=".33" stop-color="${c2}"/><stop offset=".66" stop-color="${c3 === c2 ? light(c1, 0.4) : c3}"/><stop offset="1" stop-color="${c1}"/></radialGradient>`;
+    case 'pixelheart': { const q = 2; const H = ['.XX.XX.', 'XXXXXXX', 'XXXXXXX', '.XXXXX.', '..XXX..', '...X...']; let o = ''; H.forEach((r, y) => [...r].forEach((ch, x) => { if (ch === 'X') o += `<rect x="${3 + x * q}" y="${3 + y * q}" width="${q}" height="${q}" fill="${c2}"/>`; })); return pat(22, 20, `<rect width="22" height="20" fill="${c1}"/>${o}<rect x="18" y="15" width="2" height="2" fill="${c3}"/><rect x="1" y="16" width="2" height="2" fill="${c3}"/>`); }
+    case 'controller': return pat(30, 22, `<rect width="30" height="22" fill="${c1}"/><rect x="4" y="6" width="22" height="11" rx="5.5" fill="${c3}"/><rect x="8" y="10.4" width="5" height="1.6" fill="${c1}"/><rect x="9.7" y="8.7" width="1.6" height="5" fill="${c1}"/><circle cx="20" cy="10" r="1.3" fill="${c2}"/><circle cx="22.5" cy="12.5" r="1.3" fill="${c2}"/>`);
+    case 'rgb': return `<linearGradient id="${P}" gradientUnits="userSpaceOnUse" x1="0" y1="0" x2="0" y2="${-h}"><stop offset="0" stop-color="#ff7ab6"/><stop offset=".33" stop-color="#b48cff"/><stop offset=".66" stop-color="#6fe3ff"/><stop offset="1" stop-color="#7affc1"/></linearGradient>`;
+    case 'soccer': return pat(26, 26, `<rect width="26" height="26" fill="${c1}"/><polygon points="13,8 17.5,11 16,16 10,16 8.5,11" fill="${c2}"/><path d="M13 8 V2 M17.5 11 L23 9 M16 16 L19 21 M10 16 L7 21 M8.5 11 L3 9" stroke="${c2}" stroke-width=".9"/>`);
+    case 'pitch': return pat(40, 60, `<rect width="40" height="60" fill="${c1}"/><rect width="40" height="15" fill="#000" opacity=".06"/><rect y="30" width="40" height="15" fill="#000" opacity=".06"/><path d="M0 30 H40" stroke="${c2}" stroke-width="1.2"/><circle cx="20" cy="30" r="7" fill="none" stroke="${c2}" stroke-width="1.2"/>`);
+    case 'basketball': return pat(34, 34, `<rect width="34" height="34" fill="${c1}"/><path d="M17 0 V34 M0 17 H34" stroke="${c2}" stroke-width="1.2"/><path d="M5 0 C12 10 12 24 5 34 M29 0 C22 10 22 24 29 34" stroke="${c2}" stroke-width="1.2" fill="none"/>`);
+    case 'tennis': return pat(34, 34, `<rect width="34" height="34" fill="${c1}"/><path d="M0 8 C12 8 12 26 0 26 M34 8 C22 8 22 26 34 26" stroke="${c2}" stroke-width="2" fill="none"/>`);
+    case 'baseball': return pat(28, 28, `<rect width="28" height="28" fill="${c1}"/><path d="M6 0 C12 8 12 20 6 28 M22 0 C16 8 16 20 22 28" stroke="${c2}" stroke-width="1" fill="none"/>${[4, 9, 14, 19, 24].map((y) => `<path d="M${8.5} ${y} l2.5 -1.2 M${19.5} ${y} l-2.5 -1.2" stroke="${c2}" stroke-width=".9"/>`).join('')}`);
+    case 'volleyball': return pat(30, 30, `<rect width="30" height="30" fill="${c1}"/><path d="M0 10 C10 6 20 6 30 10 V14 C20 10 10 10 0 14Z" fill="${c2}"/><path d="M0 22 C10 18 20 18 30 22 V26 C20 22 10 22 0 26Z" fill="${c3}"/>`);
+    case 'golf': { let o = ''; for (let y = 0; y < 3; y++) for (let x = 0; x < 3; x++) o += `<circle cx="${3 + x * 6 + (y % 2) * 3}" cy="${3 + y * 6}" r="1.6" fill="${c2}"/>`; return pat(18, 18, `<rect width="18" height="18" fill="${c1}"/>${o}`); }
     case 'scallop': return pat(16, 10, `<rect width="16" height="10" fill="${c1}"/><path d="M0 10 a8 8 0 0 1 16 0" fill="none" stroke="${c2}" stroke-width="1.6"/>`);
     default: return `<linearGradient id="${P}" x1="0" x2="1"><stop offset="0" stop-color="${c1}"/><stop offset="1" stop-color="${c2 || c1}"/></linearGradient>`;
   }
@@ -257,8 +268,8 @@ const ART = {
   conch: { ar: 0.527, h: 150, drip: '#f9c2a4', molded: true, st: [[0.463, 0.006, 0.08], [0.447, 0.12, 0.16], [0.451, 0.143, 0.2], [0.453, 0.259, 0.26], [0.452, 0.462, 0.28], [0.469, 0.728, 0.3]] },
   abalone: { ar: 1.295, h: 82, drip: '#bfe8da', st: [[0.502, 0.29, 0.4], [0.507, 0.364, 0.4], [0.508, 0.364, 0.4], [0.506, 0.413, 0.4], [0.506, 0.495, 0.38], [0.524, 0.54, 0.36]] },
 };
-Object.assign(ART, ART3, ART6);
-Object.assign(CAKE_ART, CAKE_ART6);
+Object.assign(ART, ART3, ART6, ART7);
+Object.assign(CAKE_ART, CAKE_ART6, CAKE_ART7);
 const BODY_H = { pillar: 120, taper: 150, votive: 78 };
 for (const [k, b] of Object.entries(ART4.body)) ART['b_' + k] = { file: 'body_' + k, dir: 'art4', ar: b.ar, h: BODY_H[k], st: b.st, drip: '#fff8ee', molded: 1, baseW: b.baseW };
 const artSize = (d) => { const a = ART[d.art]; return { w: Math.round(a.h * a.ar), h: a.h }; };

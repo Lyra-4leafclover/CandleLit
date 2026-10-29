@@ -432,8 +432,8 @@ function candleLog(candles) {
 }
 
 /* ---------- share card ---------- */
-const SCENE_LIST = [['plain', 'Plain'], ['gingham', 'Gingham'], ['window', 'Window'], ['garden', 'Garden'], ['night', 'Night'], ['gothic', 'Gothic'], ['emo', 'Emo'], ['halloween2', 'Halloween'], ['christmas', 'Christmas'], ['cottagecore', 'Cottagecore'], ['gamer', 'Gamer'], ['minecraft', 'Minecraft']];
-const SCENE_DIR = { gingham: 'art5', window: 'art5', garden: 'art5', night: 'art5', gothic: 'art6', emo: 'art6', halloween2: 'art6', christmas: 'art6', cottagecore: 'art6', gamer: 'art6', minecraft: 'art6' };
+const SCENE_LIST = [['plain', 'Plain'], ['gingham', 'Gingham'], ['window', 'Window'], ['garden', 'Garden'], ['night', 'Night'], ['gothic', 'Gothic'], ['emo', 'Emo'], ['halloween2', 'Halloween'], ['christmas', 'Christmas'], ['cottagecore', 'Cottagecore'], ['gamer', 'Gamer'], ['minecraft', 'Minecraft'], ['chess', 'Chess'], ['soccer', 'Soccer'], ['basketball', 'Basketball'], ['tennis', 'Tennis'], ['baseball', 'Baseball'], ['volleyball', 'Volleyball'], ['golf', 'Golf']];
+const SCENE_DIR = { gingham: 'art5', window: 'art5', garden: 'art5', night: 'art5', gothic: 'art6', emo: 'art6', halloween2: 'art6', christmas: 'art6', cottagecore: 'art6', gamer: 'art6', minecraft: 'art6', chess: 'art7', soccer: 'art7', basketball: 'art7', tennis: 'art7', baseball: 'art7', volleyball: 'art7', golf: 'art7' };
 const PAINTED_SCENES = Object.keys(SCENE_DIR);
 const sceneBg = (name) => (getArtMode() === 'painted' && PAINTED_SCENES.includes(name) ? `<img class="scene-bg" src="/${SCENE_DIR[name]}/scene_${name}.webp" alt="">` : sceneSVG(name));
 function cardBackground(name) {
