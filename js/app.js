@@ -4,7 +4,7 @@ import {
   replaceState, loadLocal, GUEST_KEY, setSync, flushSync,
   currentCake, serveCake, rolloverIfNewDay, applyStreakFreeze, addCandleToCake, spend, totals, encodeGift, decodeGift,
 } from './store.js';
-import { candleSVG, cakeSVG, sculptureSVG, setCakeStyle } from './render.js';
+import { candleSVG, cakeSVG, sculptureSVG, setCakeStyle, setArtMode, getArtMode, PSTUDIO } from './render.js';
 import * as audio from './audio.js';
 import { party } from './party.js';
 import { api, auth } from './api.js';
@@ -418,6 +418,12 @@ function candleLog(candles) {
 }
 
 /* ---------- share card ---------- */
+async function inlineArt(svg) {
+  const urls = [...new Set([...svg.matchAll(/href="(\/art\d?\/[^"]+)"/g)].map((m) => m[1]))];
+  const data = await Promise.all(urls.map((u) => fetch(u).then((r) => r.blob()).then((b) => new Promise((ok) => { const fr = new FileReader(); fr.onload = () => ok(fr.result); fr.readAsDataURL(b); })).catch(() => u)));
+  urls.forEach((u, i) => { svg = svg.split(`href="${u}"`).join(`href="${data[i]}"`); });
+  return svg;
+}
 async function shareCard(cakeId) {
   const cake = cakeId === state.cake?.id ? state.cake : state.gallery.find((c) => c.id === cakeId);
   if (!cake) return;
@@ -428,18 +434,23 @@ async function shareCard(cakeId) {
   const headline = `I studied ${lit.length} candle${lit.length === 1 ? '' : 's'} ${isToday ? 'today' : 'on ' + day}`;
   let inner = cakeSVG(getCake(cake.design), cake.candles, cake.toppers, cakeOpts({ seed: cake.id }));
   inner = inner.replace('<svg ', '<svg x="90" y="330" width="900" height="760" ');
-  const card = `<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="1350" viewBox="0 0 1080 1350">
+  let card = `<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="1350" viewBox="0 0 1080 1350">
     <defs><radialGradient id="bgG" cx="50%" cy="45%" r="70%"><stop offset="0" stop-color="#fdf3ec"/><stop offset="1" stop-color="#f4e6dc"/></radialGradient>
     <radialGradient id="glowG" cx="50%" cy="50%" r="50%"><stop offset="0" stop-color="#ffd9a8" stop-opacity=".6"/><stop offset="1" stop-color="#ffd9a8" stop-opacity="0"/></radialGradient></defs>
     <rect width="1080" height="1350" fill="url(#bgG)"/>
     <circle cx="540" cy="700" r="520" fill="url(#glowG)"/>
     <rect x="40" y="40" width="1000" height="1270" rx="56" fill="none" stroke="#1f1a1c" stroke-opacity=".08" stroke-width="3"/>
-    <text x="540" y="150" text-anchor="middle" font-family="Georgia, serif" font-style="italic" font-size="46" fill="#e2668e">Candlelit</text>
+    <text x="540" y="${getArtMode() === 'painted' ? 178 : 150}" text-anchor="middle" font-family="Georgia, serif" font-style="italic" font-size="46" fill="#e2668e">Candlelit</text>
     <text x="540" y="250" text-anchor="middle" font-family="Helvetica, Arial, sans-serif" font-weight="bold" font-size="64" fill="#1f1a1c">${esc(headline)}</text>
     <text x="540" y="310" text-anchor="middle" font-family="Helvetica, Arial, sans-serif" font-size="34" fill="#8a7f82">${Math.floor(mins / 60)}h ${mins % 60}m · studying until my candle melts</text>
     ${inner}
     <text x="540" y="1240" text-anchor="middle" font-family="Helvetica, Arial, sans-serif" font-size="32" fill="#8a7f82">${esc(getCake(cake.design).name)} · ${streak()}-day streak</text>
   </svg>`;
+  if (getArtMode() === 'painted') {
+    const deco = `<image href="/art4/dec_roses.webp" x="40" y="1040" width="230" height="249"/><image href="/art4/dec_roses.webp" x="1040" y="1040" width="230" height="249" transform="translate(2080,0) scale(-1,1)"/><image href="/art4/dec_bow.webp" x="495" y="34" width="90" height="108"/><image href="/art4/dec_butterfly.webp" x="830" y="70" width="150" height="110"/>`;
+    card = card.replace(/<\/svg>\s*$/, `${deco}</svg>`);
+  }
+  card = await inlineArt(card.replace(/<image class="pflame"[^>]*\/>/g, ''));
   const url = URL.createObjectURL(new Blob([card], { type: 'image/svg+xml' }));
   const img = new Image();
   img.onload = () => {
@@ -547,11 +558,19 @@ function initWheel() {
 const mixLight = (c) => '#' + [1, 3, 5].map((i) => Math.round(parseInt(c.slice(i, i + 2), 16) + (255 - parseInt(c.slice(i, i + 2), 16)) * 0.5).toString(16).padStart(2, '0')).join('');
 function studioDesign() {
   const s = ui.studio;
+  if (getArtMode() === 'painted') return { id: 'preview', name: s.name || 'Untitled candle', shape: 'pstudio', body: s.pbody || 'pillar', holder: s.pholder || 'slice', pattern: s.ppattern && s.ppattern !== 'none' ? s.ppattern : undefined, decor: s.pdecor && s.pdecor !== 'none' ? s.pdecor : undefined, c1: s.c1, c2: s.c2, c3: s.c3, accent: s.c3, drip: mixLight(s.c1), rarity: 'custom' };
   return { id: 'preview', name: s.name || 'Untitled candle', pattern: s.pattern === 'solid' ? undefined : s.pattern, c1: s.c1, c2: s.c2, c3: s.c3, accent: s.c3, hc: s.holder === 'ornate' ? '#f6f0e6' : '#fbf3ea', drip: mixLight(s.c1), shape: s.shape, holder: s.holder, engrave: (s.engrave || '').slice(0, 18), decor: s.decor === 'none' ? [] : [s.decor], rarity: 'custom' };
+}
+const PNAMES = { pillar: 'Pillar', taper: 'Taper', votive: 'Votive', brass: 'Brass candlestick', rococo: 'Rococo porcelain', glass: 'Cut glass', pinkscroll: 'Pink scroll', silver: 'Silver', woodstick: 'Wood candlestick', chamber: 'Brass chamberstick', slice: 'Birch slice', pinkdish: 'Pink scallop dish', goldplate: 'Gold-rim plate', floralsaucer: 'Floral saucer', shelldish: 'Shell dish' };
+const pname = (x) => PNAMES[x] || x[0].toUpperCase() + x.slice(1);
+function paintedStudioOpts(s) {
+  const body = s.pbody || 'pillar';
+  const rows = [['pbody', 'Candle', PSTUDIO.bodies, body], ['pholder', 'Holder', PSTUDIO.holders, s.pholder || 'slice'], ['ppattern', 'Pattern', ['none', ...PSTUDIO.patterns], s.ppattern || 'none'], ['pdecor', 'Decoration', ['none', ...PSTUDIO.decors], s.pdecor || 'none']];
+  return rows.map(([k, label, list, cur]) => `<label class="field">${label}</label><div class="chips">${list.map((x) => `<button class="chip ${cur === x ? 'on' : ''}" data-act="studioOpt" data-key="${k}" data-id="${x}">${pname(x)}</button>`).join('')}</div>`).join('') + (body !== 'taper' ? '<p class="muted" style="font-size:12px;margin:4px 0 0">Candlesticks fit taper candles; pillars and votives sit on dishes.</p>' : '');
 }
 function renderStudioPreview() {
   const el = $('#studio-preview');
-  if (el) el.innerHTML = ['birthday', 'taper', 'pillar'].map((k) => candleSVG(studioDesign(), k, 1, { lit: true, cls: '' })).join('');
+  if (el) el.innerHTML = getArtMode() === 'painted' ? [1, 0.55].map((r) => candleSVG(studioDesign(), 'pillar', r, { lit: true, cls: '' })).join('') : ['birthday', 'taper', 'pillar'].map((k) => candleSVG(studioDesign(), k, 1, { lit: true, cls: '' })).join('');
 }
 VIEWS.studio = () => {
   const s = ui.studio;
@@ -572,8 +591,8 @@ VIEWS.studio = () => {
           <div class="swatches">${SWATCHES.map((c) => `<button class="swatch" data-act="swatch" data-id="${c}" style="background:${c}" aria-label="${c}"></button>`).join('')}</div>
         </div>
       </div>
-      ${[['shape', 'Shape', STUDIO.shapes], ['holder', 'Holder', STUDIO.holders], ['decor', 'Decoration', STUDIO.decors]].map(([k, label, list]) => `<label class="field">${label}</label><div class="chips">${list.map((x) => `<button class="chip ${s[k] === x ? 'on' : ''}" data-act="studioOpt" data-key="${k}" data-id="${x}">${x}</button>`).join('')}</div>`).join('')}
-      <label class="field">Pattern</label><div class="chips">${STUDIO.patterns.map((p) => `<button class="chip ${s.pattern === p ? 'on' : ''}" data-act="studioPattern" data-id="${p}">${p}</button>`).join('')}</div>
+      ${getArtMode() === 'painted' ? paintedStudioOpts(s) : `${[['shape', 'Shape', STUDIO.shapes], ['holder', 'Holder', STUDIO.holders], ['decor', 'Decoration', STUDIO.decors]].map(([k, label, list]) => `<label class="field">${label}</label><div class="chips">${list.map((x) => `<button class="chip ${s[k] === x ? 'on' : ''}" data-act="studioOpt" data-key="${k}" data-id="${x}">${x}</button>`).join('')}</div>`).join('')}
+      <label class="field">Pattern</label><div class="chips">${STUDIO.patterns.map((p) => `<button class="chip ${s.pattern === p ? 'on' : ''}" data-act="studioPattern" data-id="${p}">${p}</button>`).join('')}</div>`}
       <label class="field">Scent</label><select data-studio="scent">${STUDIO.scents.map((x) => `<option ${x === s.scent ? 'selected' : ''}>${x}</option>`).join('')}</select>
       <label class="field">Presets</label><div class="chips">${state.studioPresets.map((p, i) => `<button class="chip" data-act="loadPreset" data-id="${i}">${esc(p.name || 'Preset ' + (i + 1))}</button>`).join('')}<button class="chip" data-act="savePreset">+ Save current design</button></div>
       <div class="row" style="margin-top:22px"><button class="btn big" data-act="pour" ${state.wax < STUDIO_COST ? 'disabled' : ''}>Pour candle · ${DROP} ${STUDIO_COST}</button></div>
@@ -999,6 +1018,7 @@ const actions = {
   loadPreset: ({ id }) => { const p = state.studioPresets[+id]; if (p) { ui.studio = { ...ui.studio, ...p }; route(); } },
   scene: ({ id }) => { state.settings.scene = id; save(); route(); },
   setPalette: ({ id }) => { localStorage.setItem('candlelit-palette', id); applyTheme(); },
+  setArtMode: ({ id }) => { state.settings.artMode = id; setArtMode(id); save(); route(); },
   toggleTheme: () => { localStorage.setItem('candlelit-theme', document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark'); applyTheme(); },
   setTheme: ({ id }) => { localStorage.setItem('candlelit-theme', id); applyTheme(); },
   accountMenu: () => { ui.menuOpen = !ui.menuOpen; renderAccount(); },
@@ -1174,6 +1194,7 @@ function renderAccount() {
     ${u ? `<button class="avatar" data-act="accountMenu" aria-label="Account menu" aria-expanded="${!!ui.menuOpen}">${esc((u.name || '?')[0].toUpperCase())}</button>` : '<button class="btn sm" data-act="signIn">Sign in</button>'}
     ${ui.menuOpen && u ? `<div class="menu" role="menu"><div class="menu-head"><b>${esc(u.name)}</b><span class="muted">@${esc(u.username)}</span></div>
       <div class="menu-label">Theme</div><div class="seg seg-sm">${['light', 'dark', 'system'].map((t) => `<button class="${themePref() === t ? 'on' : ''}" data-act="setTheme" data-id="${t}">${t[0].toUpperCase() + t.slice(1)}</button>`).join('')}</div>
+      <div class="menu-label">Art style</div><div class="seg seg-sm">${[['painted', 'Painted'], ['drawn', 'Drawn']].map(([k, l]) => `<button class="${getArtMode() === k ? 'on' : ''}" data-act="setArtMode" data-id="${k}">${l}</button>`).join('')}</div>
       <div class="menu-label">Accent</div><div class="swatches">${PALETTES.map(([k, c]) => `<button class="swatch ${palettePref() === k ? 'on' : ''}" style="background:${c}" data-act="setPalette" data-id="${k}" aria-label="${k} accent" title="${k}"></button>`).join('')}</div>
       <button class="menu-item" data-act="goStats">Stats &amp; settings</button>
       <button class="menu-item danger" data-act="signOut">Sign out</button></div>` : ''}`;
@@ -1226,6 +1247,7 @@ function startApp() {
   document.body.classList.remove('auth-mode');
   if (!state.settings.v3art) { state.settings.v3art = true; state.settings.cakeStyle = 'painted'; }
   setCakeStyle(state.settings.cakeStyle);
+  setArtMode(state.settings.artMode);
   audio.setVolume(state.settings.volume);
   rolloverIfNewDay();
   const froze = applyStreakFreeze();

@@ -1,4 +1,5 @@
 import { ART3, CAKE_ART } from './art3.js';
+import { ART4 } from './art4.js';
 
 let uidN = 0;
 const uid = () => `u${++uidN}${Math.random().toString(36).slice(2, 5)}`;
@@ -87,6 +88,20 @@ function flameMarkup(blue, agitated, id) {
       <path d="M0,-42 C4,-29 11,-18 9,-8 C7.5,-1 3.5,2 0,2 C-3.5,2 -7.5,-1 -9,-8 C-11,-18 -4,-29 0,-42Z" fill="url(#${id}f)"/>
       <path d="M0,-23 C3,-15 5,-9 4,-4 C3,-.5 1.5,1 0,1 C-1.5,1 -3,-.5 -4,-4 C-5,-9 -3,-15 0,-23Z" fill="${c.inn}"/>
     </g>`;
+}
+
+let ART_MODE = 'painted';
+export const setArtMode = (m) => { ART_MODE = m === 'drawn' ? 'drawn' : 'painted'; };
+export const getArtMode = () => ART_MODE;
+const modeDesign = (d) => (ART_MODE === 'drawn' && d.shape0 ? { ...d, shape: d.shape0, art: undefined } : d);
+const PFLAME = { ar: ART4.flame.ar, h: 54 };
+function paintedFlameMarkup(blue, agitated, id) {
+  const h = PFLAME.h, w = h * PFLAME.ar;
+  const glow = blue ? '#9fd3ff' : '#ffc875';
+  const frames = [0, 1, 2, 3].map((i) => `<image class="pflame" style="${phase(1.6, i * 0.4)}" href="/art4/flame_${i}.webp" x="${(-w / 2).toFixed(1)}" y="${(-h + 4).toFixed(1)}" width="${w.toFixed(1)}" height="${h}"/>`).join('');
+  return `<defs><radialGradient id="${id}h"><stop offset="0" stop-color="${glow}" stop-opacity=".5"/><stop offset=".45" stop-color="${glow}" stop-opacity=".14"/><stop offset="1" stop-color="${glow}" stop-opacity="0"/></radialGradient></defs>
+    <circle class="glow" style="${phaseVar(3)}" cy="-18" r="48" fill="url(#${id}h)"/>
+    <g class="flame pflame-g ${agitated ? 'agitated' : ''} ${blue ? 'pflame-blue' : ''}" style="${phaseVar(2.6)}"><image href="/art4/flame_0.webp" x="${(-w / 2).toFixed(1)}" y="${(-h + 4).toFixed(1)}" width="${w.toFixed(1)}" height="${h}"/>${frames}</g>`;
 }
 
 function cherubMarkup(y) {
@@ -236,6 +251,8 @@ const ART = {
   abalone: { ar: 1.295, h: 82, drip: '#bfe8da', st: [[0.502, 0.29, 0.4], [0.507, 0.364, 0.4], [0.508, 0.364, 0.4], [0.506, 0.413, 0.4], [0.506, 0.495, 0.38], [0.524, 0.54, 0.36]] },
 };
 Object.assign(ART, ART3);
+const BODY_H = { pillar: 120, taper: 150, votive: 78 };
+for (const [k, b] of Object.entries(ART4.body)) ART['b_' + k] = { file: 'body_' + k, dir: 'art4', ar: b.ar, h: BODY_H[k], st: b.st, drip: '#fff8ee', molded: 1, baseW: b.baseW };
 const artSize = (d) => { const a = ART[d.art]; return { w: Math.round(a.h * a.ar), h: a.h }; };
 const artStops = (a) => a.rs || (a.rs = a.st.map(([, y]) => (a.st[a.st.length - 1][1] - y) / (a.st[a.st.length - 1][1] - a.st[0][1])).map((v, i, arr) => Math.min(v, ...arr.slice(0, i + 1)) - i * 0.01).map((v, i, arr) => (i === arr.length - 1 ? 0 : v)));
 const phaseVar = (dur, off = 0) => `--ph:${(-((Date.now() / 1000 + off) % dur)).toFixed(2)}s`;
@@ -273,7 +290,7 @@ function paintedCandle(d, r, id, opts) {
       });
     }
   }
-  return { out, tip: wy, x: wx };
+  return { out, tip: wy, x: wx, art };
 }
 
 /* ---- vessel candles: wax poured into a ceramic pumpkin / real shell; the wax level sinks as it burns ---- */
@@ -652,15 +669,16 @@ function bodyMarkup(d, shape, w, h, r, opts, id, R) {
 
 /** Candle with its base at (0,0). rem = fraction of wax remaining. opts: lit, blue, agitated, smoke, bare (no holder, for cakes), sparkles */
 export function candleGroup(d, kind, rem, opts = {}) {
+  d = modeDesign(d);
   const id = uid();
   const R = rng(d.id + kind);
   const r = Math.max(0, Math.min(1, rem));
   let shape = d.shape || (d.pattern === 'spiral' ? 'taper' : 'taper');
   if (opts.bare && (shape === 'jar' || shape === 'teacup')) shape = 'pillar';
-  const S = d.art && ART[d.art] ? artSize(d) : SHAPES[shape];
+  const S = shape === 'pstudio' ? pstudioSize(d) : d.art && ART[d.art] ? artSize(d) : SHAPES[shape];
   const w = S.w;
-  const h = FIGURES[shape] || shape === 'painted' ? S.h : S.h * (KMUL[kind] || 1);
-  const holder = opts.bare || FIGURES[shape] || shape === 'painted' || shape === 'jar' || shape === 'teacup' ? null : holderMarkup(d, w, id);
+  const h = FIGURES[shape] || shape === 'painted' || shape === 'pstudio' ? S.h : S.h * (KMUL[kind] || 1);
+  const holder = opts.bare || FIGURES[shape] || shape === 'painted' || shape === 'pstudio' || shape === 'pstudio' || shape === 'jar' || shape === 'teacup' ? null : holderMarkup(d, w, id);
   let defs = holder ? holder.defs : '';
   let out = holder ? holder.back : '';
   let wickBase, flameDrawnEarly = false;
@@ -678,6 +696,11 @@ export function candleGroup(d, kind, rem, opts = {}) {
       <rect x="${-w / 2 + 8}" y="${-h + 12}" width="5" height="${h - 30}" rx="2.5" fill="#fff" opacity=".7"/>
       <ellipse cy="${-h}" rx="${w / 2 - 1}" ry="5" fill="none" stroke="#fff" stroke-width="2"/>
       <g transform="translate(0,${-h * 0.42})"><rect x="-22" y="-14" width="44" height="30" rx="6" fill="#fffaf2" stroke="#ead9c4" stroke-width=".8"/>${leaf(-14, 6, -50, 0.7)}${blossom(-8, -2, 0.9, d.accent)}${blossom(9, 4, 0.7, '#f7d27a')}${leaf(6, 8, 20, 0.6)}</g>`;
+  } else if (shape === 'pstudio') {
+    const p = studioPainted(d, r, id, opts);
+    out += p.out;
+    wickBase = p.tip + 9;
+    var paintedX = p.x;
   } else if (shape === 'painted' && ART[d.art]) {
     const p = paintedCandle(d, r, id, opts);
     out += p.out;
@@ -720,19 +743,20 @@ export function candleGroup(d, kind, rem, opts = {}) {
   const figK = d.topper && FIGS[d.topper] ? 1.5 : 1;
   if (d.topper && (shape === 'pillar' || shape === 'taper' || shape === 'spiral')) { topper = FIGS[d.topper] ? `<g transform="translate(0,${wickBase}) scale(${figK})">${FIGS[d.topper](0)}</g>` : cherubMarkup(wickBase); wickTop = wickBase - 40 * figK; }
   const wick = topper ? `<path d="M0 ${wickBase - 33 * figK} q1.5 -4 0 -${8 * figK}" stroke="#3a2a22" stroke-width="1.6" fill="none"/>` : `<path d="M0 ${wickBase} q1.6 -4.5 0 -9" stroke="#3a2a22" stroke-width="1.7" fill="none" stroke-linecap="round"/>`;
-  const fl = opts.lit ? `<g transform="translate(${shape === 'painted' ? (paintedX || 0).toFixed(1) : 0},${wickTop + 1})">${flameMarkup(opts.blue, opts.agitated, id)}</g>` : '';
+  const fl = opts.lit ? `<g transform="translate(${shape === 'painted' || shape === 'pstudio' ? (paintedX || 0).toFixed(1) : 0},${wickTop + 1})">${(ART_MODE === 'painted' ? paintedFlameMarkup : flameMarkup)(opts.blue, opts.agitated, id)}</g>` : '';
   const smoke = opts.smoke ? `<path class="smoke" d="M0 ${wickTop} c-6 -10 6 -16 0 -26 c-6 -10 6 -16 0 -26" stroke="#cfc6cc" stroke-width="2" fill="none" opacity=".7"/>` : '';
   const sp = opts.sparkles ? sparkles(w, h + (holder ? 0 : 0), R, d.accent || '#e7a8b8') : '';
   const fr = holder ? holder.front : '';
-  const body = shape === 'painted' ? `${out}${fl}${smoke}` : flameDrawnEarly ? `${out}${topper}${wick}${fl}${front}${smoke}` : `${out}${fr}${front}${topper}${wick}${fl}${smoke}`;
+  const body = shape === 'painted' || shape === 'pstudio' ? `${out}${fl}${smoke}` : flameDrawnEarly ? `${out}${topper}${wick}${fl}${front}${smoke}` : `${out}${fr}${front}${topper}${wick}${fl}${smoke}`;
   return `<defs>${defs}</defs><g class="candle">${sp}${body}</g>`;
 }
 
 export function candleMetrics(d, kind, bare = false) {
+  d = modeDesign(d);
   let shape = d.shape || 'taper';
   if (bare && (shape === 'jar' || shape === 'teacup')) shape = 'pillar';
-  const S = d.art && ART[d.art] ? artSize(d) : SHAPES[shape];
-  const h = FIGURES[shape] || shape === 'painted' ? S.h : S.h * (KMUL[kind] || 1);
+  const S = shape === 'pstudio' ? pstudioSize(d) : d.art && ART[d.art] ? artSize(d) : SHAPES[shape];
+  const h = FIGURES[shape] || shape === 'painted' || shape === 'pstudio' ? S.h : S.h * (KMUL[kind] || 1);
   const hold = bare || FIGURES[shape] || shape === 'painted' || shape === 'jar' || shape === 'teacup' ? { h: shape === 'teacup' || shape === 'jar' ? 12 : 0, hw: S.w + 60 } : ({ ornate: { h: 150, hw: 120 }, brass: { h: 22, hw: S.w + 84 }, wood: { h: 18, hw: S.w + 48 }, ceramic: { h: 16, hw: S.w + 44 } }[d.holder] || { h: 14, hw: S.w + 40 });
   return { w: S.w, h, holderH: hold.h, holderW: hold.hw, extraTop: d.topper ? (FIGS[d.topper] ? 60 : 40) : 0 };
 }
@@ -986,7 +1010,7 @@ export function sculptureSVG(s, growth = 1) {
 let CAKE_STYLE = 'painted';
 export const setCakeStyle = (s) => { CAKE_STYLE = s === 'classic' || s === 'new' ? s : 'painted'; };
 export function cakeSVG(design, candles = [], toppers = [], opts = {}) {
-  if (CAKE_STYLE === 'painted' && CAKE_ART[design.id]) return cakeSVGPainted(design, candles, toppers, opts);
+  if (ART_MODE === 'painted' && CAKE_STYLE === 'painted' && CAKE_ART[design.id]) return cakeSVGPainted(design, candles, toppers, opts);
   return CAKE_STYLE === 'classic' ? cakeSVGClassic(design, candles, toppers, opts) : cakeSVG3D(design, candles, toppers, opts);
 }
 
@@ -1229,4 +1253,39 @@ function cakeSVGPainted(design, candles = [], toppers = [], opts = {}) {
   });
   const body = items.sort((a, b) => a.y - b.y).map((it) => it.s).join('');
   return `<svg class="${opts.cls || 'cake-svg'}" viewBox="0 0 400 ${Y0 + H + 12}" xmlns="http://www.w3.org/2000/svg"><ellipse cx="200" cy="${Y0 + H - 4}" rx="${W * 0.3}" ry="9" fill="#3a2420" opacity=".1"/><image href="/art3/cake_${design.id}.webp" x="${X0}" y="${Y0}" width="${W}" height="${H}"/>${body}</svg>`;
+}
+
+export const PSTUDIO = { bodies: Object.keys(ART4.body), holders: Object.keys(ART4.holder), patterns: ART4.pattern, decors: Object.keys(ART4.decor) };
+function studioPainted(d, r, id, opts) {
+  const body = ART4.body[d.body] ? d.body : 'pillar';
+  const bd = { ...d, art: 'b_' + body, id: d.id || 'studio' };
+  const a = ART['b_' + body], bw = Math.round(a.h * a.ar), bh = a.h, basePx = a.baseW * bw;
+  let hk = ART4.holder[d.holder] ? d.holder : 'slice';
+  if (body !== 'taper' && ART4.holder[hk].stick) hk = 'slice';
+  const H = ART4.holder[hk];
+  const hw = H.stick ? Math.min(150, (basePx * 1.15) / Math.max(0.15, H.topW)) : Math.max(basePx * 1.9, 70), hh = hw / H.ar;
+  const yb = H.stick ? -hh + hh * (hk === 'chamber' ? 0.12 : 0.05) : -hh * 0.42;
+  const himg = `<image href="/art4/holder_${hk}.webp" x="${(-hw / 2).toFixed(1)}" y="${(-hh).toFixed(1)}" width="${hw.toFixed(1)}" height="${hh.toFixed(1)}"/>`;
+  const p = paintedCandle(bd, r, id, opts);
+  const tint = d.c1 || '#fdf6ec';
+  let defs = `<filter id="${id}tn" x="-20%" y="-20%" width="140%" height="140%"><feFlood flood-color="${tint}" result="f"/><feBlend in="f" in2="SourceGraphic" mode="multiply" result="b"/><feComposite in="b" in2="SourceGraphic" operator="in"/></filter>`;
+  let bodyG = `<g filter="url(#${id}tn)">${p.out}</g>`;
+  if (d.pattern && ART4.pattern.includes(d.pattern)) {
+    const ps = 84;
+    defs += `<pattern id="${id}pp" patternUnits="userSpaceOnUse" width="${ps}" height="${ps}"><image href="/art4/pat_${d.pattern}.webp" width="${ps}" height="${ps}"/></pattern><mask id="${id}pm" mask-type="alpha" maskUnits="userSpaceOnUse" x="${-bw}" y="${-bh * 1.1}" width="${bw * 2}" height="${bh * 1.2}"><g>${p.art}</g></mask>`;
+    bodyG += `<g mask="url(#${id}pm)" style="mix-blend-mode:multiply"><rect x="${-bw}" y="${-bh * 1.1}" width="${bw * 2}" height="${bh * 1.2}" fill="url(#${id}pp)" opacity=".85"/></g>`;
+  }
+  if (d.decor && ART4.decor[d.decor]) {
+    const D = ART4.decor[d.decor], dw = Math.max(bw * (body === 'taper' ? 1.5 : 0.62), 26), dh = dw / D.ar;
+    const dy = -bh * (body === 'taper' ? 0.3 : 0.4), topY = dy - dh / 2, vis = Math.max(0, Math.min(1, (topY - p.tip) / (bh * 0.08) + 1));
+    if (vis > 0) bodyG += `<image href="/art4/dec_${d.decor}.webp" x="${(-dw / 2).toFixed(1)}" y="${(dy - dh / 2).toFixed(1)}" width="${dw.toFixed(1)}" height="${dh.toFixed(1)}" opacity="${vis.toFixed(2)}"/>`;
+  }
+  const bodyT = `<g transform="translate(0,${yb.toFixed(1)})">${bodyG}</g>`;
+  return { out: `<defs>${defs}</defs>` + (H.stick ? bodyT + himg : himg + bodyT), tip: p.tip + yb, x: p.x, w: Math.max(hw, bw), h: bh - yb };
+}
+function pstudioSize(d) {
+  const a = ART['b_' + (ART4.body[d.body] ? d.body : 'pillar')];
+  const hk = ART4.holder[d.holder] ? d.holder : 'slice', H = ART4.holder[hk];
+  const extra = H.stick && d.body === 'taper' ? 110 : 24;
+  return { w: Math.round(Math.max(a.h * a.ar, 90)), h: a.h + extra };
 }
