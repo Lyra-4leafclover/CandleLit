@@ -688,51 +688,12 @@ function updatePartyLobby() {
   }
 }
 VIEWS.party = () => {
-  Object.keys(lobbyCache).forEach((k) => delete lobbyCache[k]);
-  if (!auth.user) {
-    view.innerHTML = `<section class="grid" style="max-width:640px;margin:0 auto"><div class="card" style="text-align:center">
-      <h1>Study Party</h1><p class="muted">Study parties need an account so your friends can see your candle burning.</p>
-      <button class="btn big" data-act="signIn">Sign in or create an account</button></div></section>`;
-    return;
-  }
-  if (!party.active) {
-    view.innerHTML = `
-    <section class="party-start">
-      <div class="card">
-        <h1>Study Party</h1>
-        <p class="muted">Light candles with friends. Everyone's candle burns at the same time; at the end you blow them out together and each get a party cake.</p>
-        <p class="muted" style="margin-top:14px">You'll appear as <b>${esc(auth.user.name)}</b>.</p>
-        <button class="btn big" data-act="createParty">Start a party</button>
-      </div>
-      <div class="card">
-        <h2>Join a party</h2>
-        <p class="muted">Got a code from a friend?</p>
-        <div class="row"><input type="text" data-change="joinCode" value="${esc(ui.joinCode)}" placeholder="ABCDE" maxlength="5" class="code-input" aria-label="Party code"><button class="btn rose" data-act="joinParty">Join</button></div>
-        ${state.savedRooms.length ? `<label class="field">Your permanent rooms</label><div class="chips">${state.savedRooms.map((r) => `<button class="chip" data-act="openRoom" data-id="${r.code}">${esc(r.name)} · ${r.code}</button>`).join('')}</div>` : ''}
-      </div>
-    </section>`;
-    return;
-  }
-  const link = `${location.origin}${location.pathname}?party=${party.code}`;
-  view.innerHTML = `
-  <section class="party-grid">
-    <div class="card" style="text-align:center">
-      <p class="eyebrow">Party code</p>
-      <div class="party-code">${party.code}</div>
-      <div class="row" style="justify-content:center"><button class="btn ghost sm" data-act="copy" data-text="${esc(link)}">Copy invite link</button><button class="btn ghost sm" data-act="leaveParty">Leave party</button>${party.room.saved ? '<span class="tag" style="align-self:center">Permanent room</span>' : party.isHost ? '<button class="btn ghost sm" data-act="saveRoom">Save as permanent room</button>' : ''}</div>
-      <div class="members" id="party-members" style="justify-content:center"></div>
-      <div id="party-setup"></div>
-      <div id="party-controls"></div>
-      <div id="party-board"></div>
-    </div>
-    <div class="card chat-card">
-      <h3>Party chat</h3>
-      <div id="chat-log" class="chat-log"></div>
-      <form class="chat-form"><input type="text" maxlength="240" placeholder="Message the party…" aria-label="Party message"><button class="btn sm" type="submit">Send</button></form>
-    </div>
-  </section>`;
-  updatePartyLobby();
-  const log = $('#chat-log'); if (log) log.scrollTop = log.scrollHeight;
+  view.innerHTML = `<section class="grid" style="max-width:640px;margin:0 auto"><div class="card" style="text-align:center;padding:48px 32px">
+    <p class="eyebrow">Coming soon</p>
+    <h1>Study Party</h1>
+    <p class="muted">Soon you'll be able to light candles with friends: everyone's candle burns together, then you blow them out at the same time and each get a party cake.</p>
+    <a class="btn big" href="#/focus" style="margin-top:12px">Light a candle on your own</a>
+  </div></section>`;
 };
 
 party.onChange((room) => {
@@ -1323,9 +1284,7 @@ function startApp() {
   rolloverIfNewDay();
   const froze = applyStreakFreeze();
   if (froze) setTimeout(() => toast(`A streak freeze covered ${froze} missed day${froze === 1 ? '' : 's'}. Your ${streak()}-day streak is safe.`), 600);
-  if (ui.joinCode && !state.active) location.hash = '#/party';
   route();
-  if (auth.user) party.resume().then(() => { if (ui.view === 'party') route(); });
   if (!started) {
     started = true;
     setInterval(tick, 250);
@@ -1364,10 +1323,7 @@ window.addEventListener('beforeunload', () => { flushSync(); });
 
 /* ---------- boot ---------- */
 const params = new URLSearchParams(location.search);
-if (params.get('party')) {
-  ui.joinCode = params.get('party').toUpperCase().slice(0, 5);
-  history.replaceState(null, '', location.pathname + '#/party');
-}
+if (params.get('party')) history.replaceState(null, '', location.pathname + '#/party');
 applyTheme();
 (async () => {
   let user = null;
