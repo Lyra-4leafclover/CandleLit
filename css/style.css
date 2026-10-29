@@ -569,3 +569,5 @@ img.scene-bg { object-fit: cover; pointer-events: none; }
 .opt-del:hover { opacity: 1; color: #c0395f; }
 
 .scene-gingham h2, .scene-window h2, .scene-garden h2 { color: #1f1a1c; }
+
+a.btn, a.btn:hover { color: var(--on-ink); text-decoration: none; }
