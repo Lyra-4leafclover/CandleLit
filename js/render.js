@@ -81,8 +81,8 @@ function flameMarkup(blue, agitated, id) {
   const c = blue ? { halo: '#9fd3ff', o1: '#5aa8ff', o2: '#dff2ff', inn: '#ffffff' } : { halo: '#ffc875', o1: '#ffab45', o2: '#fff0c4', inn: '#fffdf4' };
   return `<defs><radialGradient id="${id}h"><stop offset="0" stop-color="${c.halo}" stop-opacity=".55"/><stop offset=".45" stop-color="${c.halo}" stop-opacity=".16"/><stop offset="1" stop-color="${c.halo}" stop-opacity="0"/></radialGradient>
     <linearGradient id="${id}f" x1="0" y1="1" x2="0" y2="0"><stop offset="0" stop-color="${c.o1}"/><stop offset=".55" stop-color="${c.o2}"/><stop offset="1" stop-color="${c.o2}" stop-opacity=".85"/></linearGradient></defs>
-    <circle class="glow" cy="-18" r="48" fill="url(#${id}h)"/>
-    <g class="flame ${agitated ? 'agitated' : ''}">
+    <circle class="glow" style="${phaseVar(3)}" cy="-18" r="48" fill="url(#${id}h)"/>
+    <g class="flame ${agitated ? 'agitated' : ''}" style="${phaseVar(2.6)}">
       <path d="M0,-42 C4,-29 11,-18 9,-8 C7.5,-1 3.5,2 0,2 C-3.5,2 -7.5,-1 -9,-8 C-11,-18 -4,-29 0,-42Z" fill="url(#${id}f)"/>
       <path d="M0,-23 C3,-15 5,-9 4,-4 C3,-.5 1.5,1 0,1 C-1.5,1 -3,-.5 -4,-4 C-5,-9 -3,-15 0,-23Z" fill="${c.inn}"/>
     </g>`;
@@ -226,24 +226,44 @@ const FIGURES = {
   },
 };
 
-/* ---- painted candles: watercolor melt-stage images crossfaded by remaining wax ---- */
+/* ---- painted candles: 6 watercolor melt stages crossfaded by remaining wax, plus live wax animation ---- */
 const ART = {
-  scallop: { ar: 0.864, h: 110, wick: [[0.497, 0.006], [0.5, 0.11], [0.499, 0.328]] },
-  pumpkin: { ar: 1.011, h: 96, wick: [[0.471, 0.166], [0.474, 0.268], [0.473, 0.44]] },
-  clam: { ar: 0.82, h: 120, wick: [[0.471, 0.531], [0.474, 0.606], [0.482, 0.704]] },
-  conch: { ar: 0.488, h: 150, wick: [[0.471, 0.006], [0.464, 0.144], [0.464, 0.464]] },
-  abalone: { ar: 1.299, h: 80, wick: [[0.502, 0.29], [0.505, 0.367], [0.505, 0.5]] },
+  scallop: { ar: 0.921, h: 112, drip: '#f9b3c3', molded: true, st: [[0.471, 0.004, 0.12], [0.474, 0.096, 0.2], [0.473, 0.107, 0.2], [0.473, 0.122, 0.22], [0.471, 0.326, 0.33], [0.473, 0.604, 0.42]] },
+  pumpkin: { ar: 1.069, h: 98, drip: '#f7a53e', molded: true, st: [[0.475, 0.166, 0.18], [0.469, 0.271, 0.28], [0.48, 0.268, 0.3], [0.481, 0.336, 0.33], [0.477, 0.436, 0.36], [0.479, 0.639, 0.44]] },
+  clam: { ar: 0.82, h: 120, drip: '#fff6ea', st: [[0.471, 0.531, 0.4], [0.47, 0.594, 0.4], [0.465, 0.605, 0.4], [0.469, 0.624, 0.4], [0.488, 0.705, 0.36], [0.483, 0.727, 0.34]] },
+  conch: { ar: 0.527, h: 150, drip: '#f9c2a4', molded: true, st: [[0.463, 0.006, 0.08], [0.447, 0.12, 0.16], [0.451, 0.143, 0.2], [0.453, 0.259, 0.26], [0.452, 0.462, 0.28], [0.469, 0.728, 0.3]] },
+  abalone: { ar: 1.295, h: 82, drip: '#bfe8da', st: [[0.502, 0.29, 0.4], [0.507, 0.364, 0.4], [0.508, 0.364, 0.4], [0.506, 0.413, 0.4], [0.506, 0.495, 0.38], [0.524, 0.54, 0.36]] },
 };
-const ART_STAGES = [1, 0.55, 0.12];
 const artSize = (d) => { const a = ART[d.art]; return { w: Math.round(a.h * a.ar), h: a.h }; };
-function paintedCandle(d, r, id) {
-  const a = ART[d.art], { w, h } = artSize(d);
-  const k = r >= ART_STAGES[1] ? 0 : 1;
-  const t = Math.max(0, Math.min(1, (r - ART_STAGES[k + 1]) / (ART_STAGES[k] - ART_STAGES[k + 1])));
+const artStops = (a) => a.rs || (a.rs = a.st.map(([, y]) => (a.st[a.st.length - 1][1] - y) / (a.st[a.st.length - 1][1] - a.st[0][1])));
+const phaseVar = (dur, off = 0) => `--ph:${(-((Date.now() / 1000 + off) % dur)).toFixed(2)}s`;
+const phase = (dur, off = 0) => `animation-duration:${dur}s;animation-delay:${(-((Date.now() / 1000 + off) % dur)).toFixed(2)}s`;
+function paintedCandle(d, r, id, opts) {
+  const a = ART[d.art], { w, h } = artSize(d), rs = artStops(a), n = rs.length;
+  let k = 0;
+  while (k < n - 2 && r < rs[k + 1]) k++;
+  const t = Math.max(0, Math.min(1, (r - rs[k + 1]) / (rs[k] - rs[k + 1] || 1)));
+  const up = t * t * (3 - 2 * t) > 0 ? Math.min(1, t / 0.4) : 0;
   const img = (i, op) => `<image href="/art/${d.art}_${i}.webp" x="${-w / 2}" y="${-h}" width="${w}" height="${h}" preserveAspectRatio="xMidYMax meet"${op < 1 ? ` opacity="${op.toFixed(2)}"` : ''}/>`;
-  const wy = a.wick[k][1] * t + a.wick[k + 1][1] * (1 - t), wx = a.wick[k][0] * t + a.wick[k + 1][0] * (1 - t);
-  const out = `<ellipse cy="1" rx="${w * 0.4}" ry="4" fill="#3a2420" opacity=".1"/>${img(k + 1, 1)}${t > 0.01 ? img(k, t) : ''}`;
-  return { out, tip: -h + wy * h, x: (wx - 0.5) * w };
+  const lerp = (j) => a.st[k][j] * t + a.st[k + 1][j] * (1 - t);
+  const wx = (lerp(0) - 0.5) * w, wy = -h + lerp(1) * h, span = lerp(2) * w;
+  let out = `<ellipse cy="1" rx="${w * 0.4}" ry="4" fill="#3a2420" opacity=".1"/>${img(k + 1, 1)}${up > 0.01 ? img(k, up * up * (3 - 2 * up)) : ''}`;
+  if (opts.lit && r > 0.01) {
+    const py = wy + h * 0.05, ry = Math.max(2, span * 0.3), u = h / 110;
+    out += `<defs><radialGradient id="${id}wg"><stop offset="0" stop-color="#fff2c8" stop-opacity=".75"/><stop offset=".5" stop-color="#ffd38a" stop-opacity=".3"/><stop offset="1" stop-color="#ffc070" stop-opacity="0"/></radialGradient></defs>`;
+    out += `<ellipse class="wax-glow" style="${phase(2.6)}" cx="${wx.toFixed(1)}" cy="${py.toFixed(1)}" rx="${(span * 1.15 + 8).toFixed(1)}" ry="${(ry * 1.4 + 6).toFixed(1)}" fill="url(#${id}wg)"/>`;
+    out += `<ellipse class="wax-ripple" style="${phase(3.4)}" cx="${wx.toFixed(1)}" cy="${py.toFixed(1)}" rx="${(span * 0.6 + 3).toFixed(1)}" ry="${(ry * 0.6 + 1).toFixed(1)}" fill="none" stroke="#fff" stroke-width="${(0.9 * u).toFixed(2)}"/>`;
+    out += `<ellipse class="wax-ripple" style="${phase(3.4, 1.7)}" cx="${wx.toFixed(1)}" cy="${py.toFixed(1)}" rx="${(span * 0.6 + 3).toFixed(1)}" ry="${(ry * 0.6 + 1).toFixed(1)}" fill="none" stroke="#fff" stroke-width="${(0.8 * u).toFixed(2)}"/>`;
+    out += `<ellipse class="wax-sheen" style="${phase(5)}" cx="${(wx - span * 0.25).toFixed(1)}" cy="${(py - ry * 0.25).toFixed(1)}" rx="${(span * 0.22 + 1.5).toFixed(1)}" ry="${(ry * 0.25 + 0.6).toFixed(1)}" fill="#fff" opacity=".55"/>`;
+    if (a.molded && span > 6) {
+      const R = rng(d.id + 'drip');
+      [-0.72, -0.2, 0.34, 0.8].forEach((f, i) => {
+        const dx = wx + f * span, dy = py + ry * Math.sqrt(1 - f * f) - 0.6 * u, dur = +(6 + R() * 5).toFixed(1), off = R() * dur;
+        out += `<g transform="translate(${dx.toFixed(1)},${dy.toFixed(1)}) scale(${(u * (0.6 + R() * 0.35)).toFixed(2)})"><g class="wax-drip" style="${phase(dur, off)}"><path d="M-1.7 -1 C-1.5 2.5 -1 5.5 -1.3 7.6 a1.65 1.65 0 0 0 3.3 0 C1.7 5.5 1.9 2.5 2.1 -1Z" fill="${a.drip}" fill-opacity=".9"/><ellipse cx="-.1" cy="7.7" rx=".55" ry=".8" fill="#fff" opacity=".75"/></g></g>`;
+      });
+    }
+  }
+  return { out, tip: wy, x: wx };
 }
 
 /* ---- vessel candles: wax poured into a ceramic pumpkin / real shell; the wax level sinks as it burns ---- */
@@ -649,7 +669,7 @@ export function candleGroup(d, kind, rem, opts = {}) {
       <ellipse cy="${-h}" rx="${w / 2 - 1}" ry="5" fill="none" stroke="#fff" stroke-width="2"/>
       <g transform="translate(0,${-h * 0.42})"><rect x="-22" y="-14" width="44" height="30" rx="6" fill="#fffaf2" stroke="#ead9c4" stroke-width=".8"/>${leaf(-14, 6, -50, 0.7)}${blossom(-8, -2, 0.9, d.accent)}${blossom(9, 4, 0.7, '#f7d27a')}${leaf(6, 8, 20, 0.6)}</g>`;
   } else if (shape === 'painted' && ART[d.art]) {
-    const p = paintedCandle(d, r, id);
+    const p = paintedCandle(d, r, id, opts);
     out += p.out;
     wickBase = p.tip + 9;
     var paintedX = p.x;
