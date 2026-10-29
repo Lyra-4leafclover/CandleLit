@@ -505,7 +505,7 @@ function decoMarkup(design, tr, i, R) {
 }
 
 /** Renders a full cake SVG with candles on the top tier. */
-export function cakeSVG(design, candles = [], toppers = [], opts = {}) {
+function cakeSVGClassic(design, candles = [], toppers = [], opts = {}) {
   const R = rng(opts.seed || design.id);
   const cx = 200;
   const plateY = 380;
@@ -613,4 +613,223 @@ export function sculptureSVG(s, growth = 1) {
     size *= 0.84 + R() * 0.1;
   }
   return `<svg class="sculpture-svg" viewBox="0 0 120 120">${out}</svg>`;
+}
+
+/* ---------- 3D cake ---------- */
+let CAKE_STYLE = 'new';
+export const setCakeStyle = (s) => { CAKE_STYLE = s === 'classic' ? 'classic' : 'new'; };
+export function cakeSVG(design, candles = [], toppers = [], opts = {}) {
+  return CAKE_STYLE === 'classic' ? cakeSVGClassic(design, candles, toppers, opts) : cakeSVG3D(design, candles, toppers, opts);
+}
+
+const TILT = 0.2;
+const sideGrad = (id, c) => `<linearGradient id="${id}" x1="0" x2="1"><stop offset="0" stop-color="${dark(c, 0.2)}"/><stop offset=".1" stop-color="${dark(c, 0.05)}"/><stop offset=".3" stop-color="${light(c, 0.4)}"/><stop offset=".48" stop-color="${light(c, 0.14)}"/><stop offset=".78" stop-color="${c}"/><stop offset="1" stop-color="${dark(c, 0.26)}"/></linearGradient>`;
+const topGrad = (id, c) => `<radialGradient id="${id}" cx=".38" cy=".3" r=".9"><stop offset="0" stop-color="${light(c, 0.55)}"/><stop offset=".55" stop-color="${light(c, 0.18)}"/><stop offset="1" stop-color="${dark(c, 0.05)}"/></radialGradient>`;
+const ballGrad = (id, c) => `<radialGradient id="${id}" cx=".35" cy=".3" r=".75"><stop offset="0" stop-color="${light(c, 0.75)}"/><stop offset=".55" stop-color="${c}"/><stop offset="1" stop-color="${dark(c, 0.22)}"/></radialGradient>`;
+
+function ring(cx, yc, rx, ry, front, step, fn) {
+  let s = '';
+  const n = Math.max(6, Math.round((Math.PI * (rx + ry)) / 2 / step));
+  for (let k = 0; k <= n; k++) {
+    const th = (front ? 0 : Math.PI) + (k / n) * Math.PI;
+    const sin = Math.sin(th);
+    const x = cx - Math.cos(th) * rx, y = yc + sin * ry;
+    const depth = 0.78 + 0.22 * sin;
+    const ang = (Math.atan2(Math.cos(th) * ry, sin * rx) * 180) / Math.PI;
+    s += fn(x, y, depth, ang, th);
+  }
+  return s;
+}
+
+function pipingRing(style, cx, yc, rx, ry, front, size, G) {
+  if (style === 'pearl') return ring(cx, yc, rx, ry, front, size * 1.9, (x, y, d) => `<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="${(size * d).toFixed(2)}" fill="url(#${G})"/>`);
+  if (style === 'rosette') return ring(cx, yc, rx, ry, front, size * 2.1, (x, y, d, a) => `<g transform="translate(${x.toFixed(1)},${y.toFixed(1)}) scale(${(d * size / 6).toFixed(3)})"><circle r="6.6" fill="url(#${G})"/><path d="M0 -1.5 a1.5 1.5 0 1 1 -1.5 1.5 a3.2 3.2 0 1 1 3.2 3.2 a4.6 4.6 0 1 1 -4.6 -4.6" fill="none" stroke="#000" stroke-opacity=".12" stroke-width=".9" transform="rotate(${a.toFixed(0)})"/></g>`);
+  return ring(cx, yc, rx, ry, front, size * 1.55, (x, y, d, a) => `<g transform="translate(${x.toFixed(1)},${y.toFixed(1)}) rotate(${a.toFixed(1)}) scale(${(d * size / 6).toFixed(3)})"><path d="M-8 1 C-8 -6 4 -7 8 -1 C9 2 6 5 2 5 C-3 5 -8 4 -8 1Z" fill="url(#${G})"/><path d="M-5 0 C-2 -3 3 -3 5 0" stroke="#000" stroke-opacity=".1" stroke-width=".8" fill="none"/></g>`);
+}
+
+const sidePt = (t, th, f) => ({ x: 200 - Math.cos(th) * (t.w / 2), y: t.top + Math.sin(th) * t.ry + f * t.h, sx: Math.max(0.25, Math.sin(th)) });
+
+function strawberry3D(x, y, s) {
+  return `<g transform="translate(${x.toFixed(1)},${y.toFixed(1)}) scale(${s.toFixed(2)})"><ellipse cy="9" rx="8" ry="2.5" fill="#000" opacity=".12"/><path d="M0 10 C-11 3 -10 -8 0 -7 C10 -8 11 3 0 10Z" fill="#e8394d"/><path d="M-5 -4 C-3 -6 0 -6 1 -5" stroke="#fff" stroke-opacity=".55" stroke-width="1.6" fill="none" stroke-linecap="round"/><g fill="#ffe08a"><circle cx="-4" cy="0" r=".7"/><circle cx="3" cy="-1" r=".7"/><circle cx="0" cy="3" r=".7"/><circle cx="-2" cy="6" r=".6"/><circle cx="4" cy="4" r=".6"/></g><path d="M0 -7 l-6 -2 l3 3 l-4 2 l5 -1 l2 3 l2 -3 l5 1 l-4 -2 l3 -3z" fill="#3f8f4f"/></g>`;
+}
+const berry3D = (x, y, s) => `<g transform="translate(${x.toFixed(1)},${y.toFixed(1)}) scale(${s.toFixed(2)})"><ellipse cy="5" rx="6" ry="1.8" fill="#000" opacity=".12"/><circle r="5.5" fill="#5361c9"/><circle cx="-1.8" cy="-1.8" r="1.6" fill="#fff" opacity=".45"/><path d="M-1.5 -4.6 l1.5 1 l1.5 -1" stroke="#2c3480" stroke-width=".8" fill="none"/></g>`;
+const cherry3D = (x, y, s) => `<g transform="translate(${x.toFixed(1)},${y.toFixed(1)}) scale(${s.toFixed(2)})"><ellipse cy="6" rx="6" ry="1.8" fill="#000" opacity=".12"/><path d="M0 -4 q3 -9 9 -12" stroke="#5a7d2a" stroke-width="1.3" fill="none"/><circle r="6.5" fill="#c8102e"/><circle cx="-2.2" cy="-2.2" r="1.9" fill="#fff" opacity=".55"/></g>`;
+
+function sideDeco(design, t, i, R, G) {
+  let s = '';
+  const front = (n, f0 = 0.35, f1 = 0.65) => Array.from({ length: n }, (_, k) => sidePt(t, 0.22 + ((k + 0.5) / n) * (Math.PI - 0.44), f0 + R() * (f1 - f0)));
+  switch (design.deco) {
+    case 'confetti': {
+      const cols = ['#f48fb1', '#ffd166', '#8fd3b6', '#8fc7f0', '#c6a7f2'];
+      for (let k = 0; k < 46; k++) { const p = sidePt(t, 0.08 + R() * (Math.PI - 0.16), 0.15 + R() * 0.75); s += `<ellipse cx="${p.x.toFixed(1)}" cy="${p.y.toFixed(1)}" rx="${(2.2 * p.sx).toFixed(2)}" ry="2.2" fill="${cols[k % 5]}"/>`; }
+      break;
+    }
+    case 'gold':
+      front(7, 0.3, 0.7).forEach((p) => { s += `<path transform="translate(${p.x.toFixed(1)},${p.y.toFixed(1)}) scale(${p.sx.toFixed(2)},1)" d="M0 -7C.8 -1.8 1.8 -.8 7 0C1.8 .8 .8 1.8 0 7C-.8 1.8 -1.8 .8 -7 0C-1.8 -.8 -.8 -1.8 0 -7Z" fill="url(#${G}g)"/>`; });
+      break;
+    case 'bats':
+      if (i === 0) front(5).forEach((p) => { s += `<path transform="translate(${p.x.toFixed(1)},${p.y.toFixed(1)}) scale(${(0.9 * p.sx).toFixed(2)},.9)" d="M0 0 c-4 -6 -10 -6 -16 -2 c4 0 6 2 6 5 c2 -2 4 -2 5 0 c1 -2 3 -3 5 -3 c2 0 4 1 5 3 c1 -2 3 -2 5 0 c0 -3 2 -5 6 -5 c-6 -4 -12 -4 -16 2z" fill="#2a1f33"/>`; });
+      else front(4).forEach((p) => { s += `<g transform="translate(${p.x.toFixed(1)},${p.y.toFixed(1)}) scale(${p.sx.toFixed(2)},1)" fill="#5a3010"><polygon points="-8,-3 -3,-3 -5.5,-8"/><polygon points="8,-3 3,-3 5.5,-8"/><path d="M-9 3 q9 8 18 0 l-3 1 -2 -2 -2 2 -2 -2 -2 2 -2 -2 -2 2z"/></g>`; });
+      break;
+    case 'blossoms': {
+      const n = i === 0 ? 7 : 5;
+      for (let k = 0; k < n; k++) {
+        const th = 0.5 + (k / n) * 1.3 + R() * 0.2, p = sidePt(t, th, 0.15 + (k / n) * 0.7);
+        let pet = '';
+        for (let q = 0; q < 5; q++) pet += `<ellipse cy="-4.6" rx="3.4" ry="4.8" fill="url(#${G}bl)" transform="rotate(${q * 72})"/>`;
+        s += `<g transform="translate(${p.x.toFixed(1)},${p.y.toFixed(1)}) scale(${(p.sx * (0.9 + R() * 0.4)).toFixed(2)},${(0.9 + R() * 0.3).toFixed(2)})">${pet}<circle r="2.2" fill="#ffd36e"/></g>`;
+      }
+      break;
+    }
+    case 'bows':
+      [0.3, 0.5, 0.7].forEach((f) => { const p = sidePt(t, Math.PI * f, 0.45); s += `<g transform="translate(${p.x.toFixed(1)},${p.y.toFixed(1)}) scale(${p.sx.toFixed(2)},1)"><path d="M0 0 C-6 -9 -16 -9 -15 -1 C-14 5 -6 4 0 0Z M0 0 C6 -9 16 -9 15 -1 C14 5 6 4 0 0Z" fill="url(#${G}bw)"/><path d="M-1 1 L-7 15 L-3.5 13.5 L-2 16.5 Z M1 1 L7 15 L3.5 13.5 L2 16.5 Z" fill="${dark(design.bow || '#f28fae', 0.08)}"/><ellipse rx="3" ry="3.4" fill="${dark(design.bow || '#f28fae', 0.18)}"/></g>`; });
+      break;
+    case 'finals': {
+      if (i !== 0) break;
+      const y = t.top + t.h * 0.72, rx = t.w / 2;
+      s += `<path id="${G}fp" d="M${200 - rx} ${y} A${rx} ${t.ry} 0 0 0 ${200 + rx} ${y}" fill="none"/><text font-family="Georgia, serif" font-style="italic" font-size="24" fill="#6b4226"><textPath href="#${G}fp" startOffset="50%" text-anchor="middle">you got this ♡</textPath></text>`;
+      break;
+    }
+    default: break;
+  }
+  if (design.lambeth) {
+    const m = Math.max(4, Math.round(t.w / 55));
+    const sag = t.h * 0.32;
+    for (let k = 0; k < m; k++) {
+      const a = 0.05 + (k / m) * (Math.PI - 0.1), b = 0.05 + ((k + 1) / m) * (Math.PI - 0.1);
+      let d = '';
+      for (let q = 0; q <= 14; q++) { const u = a + (b - a) * (q / 14); const p = sidePt(t, u, 0); d += `${q ? 'L' : 'M'}${p.x.toFixed(1)} ${(p.y + 8 + sag * Math.sin((Math.PI * q) / 14)).toFixed(1)}`; }
+      s += `<path d="${d}" stroke="${design.piping2 || '#fff'}" stroke-width="5.5" fill="none" stroke-linecap="round" stroke-dasharray=".1 6.5"/><path d="${d}" stroke="${design.piping}" stroke-width="2.2" fill="none" opacity=".9"/>`;
+      const p = sidePt(t, a, 0);
+      if (k) s += `<circle cx="${p.x.toFixed(1)}" cy="${(p.y + 9).toFixed(1)}" r="${(4 * (0.7 + 0.3 * p.sx)).toFixed(1)}" fill="url(#${G}p2)"/><path d="M${p.x.toFixed(1)} ${(p.y + 13).toFixed(1)} l0 ${(t.h * 0.18).toFixed(1)}" stroke="${design.piping}" stroke-width="2" stroke-linecap="round"/>`;
+    }
+  }
+  if (design.pipe === 'ruffle') {
+    const rows = Math.max(4, Math.round(t.h / 13));
+    for (let r = 1; r < rows; r++) {
+      const f = r / rows;
+      let d = '';
+      for (let q = 0; q <= 60; q++) { const u = (q / 60) * Math.PI; const p = sidePt(t, u, f); d += `${q ? 'L' : 'M'}${p.x.toFixed(1)} ${(p.y + Math.abs(Math.sin(q * 1.6)) * 3.2).toFixed(1)}`; }
+      s += `<path d="${d}" stroke="${dark(t.c, 0.12)}" stroke-width="2.2" fill="none" opacity=".35" transform="translate(0,1.4)"/><path d="${d}" stroke="${light(t.c, 0.55)}" stroke-width="1.8" fill="none"/>`;
+    }
+  }
+  return s;
+}
+
+function topperSide(toppers, t, R, G) {
+  let s = '';
+  if (toppers.includes('pearls')) s += ring(200, t.top + t.h * 0.55, t.w / 2, t.ry, true, 7.5, (x, y, d) => `<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="${(3.4 * d).toFixed(2)}" fill="url(#${G}pl)"/>`);
+  if (toppers.includes('goldleaf')) for (let k = 0; k < 6; k++) {
+    const p = sidePt(t, 0.3 + R() * (Math.PI - 0.6), 0.2 + R() * 0.6);
+    const pts = Array.from({ length: 7 }, (_, q) => { const a = (q / 7) * Math.PI * 2, rr = 4 + R() * 6; return `${(p.x + Math.cos(a) * rr * p.sx).toFixed(1)},${(p.y + Math.sin(a) * rr).toFixed(1)}`; }).join(' ');
+    s += `<polygon points="${pts}" fill="url(#${G}g)" opacity=".95"/>`;
+  }
+  if (toppers.includes('sprinkles')) {
+    const cols = ['#f06292', '#ffd166', '#5fd0a6', '#5fb2e8', '#b388ff', '#ffffff'];
+    for (let k = 0; k < 30; k++) { const p = sidePt(t, 0.1 + R() * (Math.PI - 0.2), 0.12 + R() * 0.75); s += `<rect x="${p.x.toFixed(1)}" y="${p.y.toFixed(1)}" width="${(6 * p.sx).toFixed(1)}" height="2" rx="1" fill="${cols[k % 6]}" transform="rotate(${(R() * 180).toFixed(0)} ${p.x.toFixed(1)} ${p.y.toFixed(1)})"/>`; }
+  }
+  if (toppers.includes('bows')) [0.32, 0.68].forEach((f) => { const p = sidePt(t, Math.PI * f, 0.25); s += `<g transform="translate(${p.x.toFixed(1)},${p.y.toFixed(1)}) scale(${(p.sx * 0.9).toFixed(2)},.9)"><path d="M0 0 C-6 -9 -16 -9 -15 -1 C-14 5 -6 4 0 0Z M0 0 C6 -9 16 -9 15 -1 C14 5 6 4 0 0Z" fill="#f48fb1"/><path d="M-1 1 L-6 14 M1 1 L6 14" stroke="#f48fb1" stroke-width="3"/><circle r="3.2" fill="#e05b8a"/></g>`; });
+  return s;
+}
+
+function cakeSVG3D(design, candles = [], toppers = [], opts = {}) {
+  const R = rng(opts.seed || design.id);
+  const id = uid();
+  const cx = 200;
+  const plateY = 352;
+  const maxW = Math.max(...design.tiers.map((t) => t.w));
+  const PR = maxW / 2 + 30, Pry = PR * TILT;
+  let y = plateY - 2;
+  const tiers = design.tiers.map((t) => { const ry = (t.w / 2) * TILT; const bottom = y; const top = y - t.h; y = top; return { ...t, ry, top, bottom }; });
+  const tt = tiers[tiers.length - 1];
+  const minY = tt.top - tt.ry - 128;
+  const pc = design.plate;
+  const pipe = design.pipe || 'shell';
+
+  let defs = sideGrad(`${id}ps`, pc) + topGrad(`${id}pt`, pc) + ballGrad(`${id}p1`, design.piping) + ballGrad(`${id}p2`, design.piping2 || design.piping)
+    + `<radialGradient id="${id}gs"><stop offset="0" stop-color="#5a3a30" stop-opacity=".28"/><stop offset="1" stop-color="#5a3a30" stop-opacity="0"/></radialGradient>`
+    + `<radialGradient id="${id}ao"><stop offset=".6" stop-color="#3a2420" stop-opacity=".22"/><stop offset="1" stop-color="#3a2420" stop-opacity="0"/></radialGradient>`
+    + `<linearGradient id="${id}edge" x1="0" x2="1"><stop offset="0" stop-color="#2a1a18" stop-opacity=".22"/><stop offset=".16" stop-color="#2a1a18" stop-opacity="0"/><stop offset=".8" stop-color="#2a1a18" stop-opacity="0"/><stop offset="1" stop-color="#2a1a18" stop-opacity=".28"/></linearGradient>`
+    + `<linearGradient id="${id}vb" x1="0" y1="0" x2="0" y2="1"><stop offset=".7" stop-color="#2a1a18" stop-opacity="0"/><stop offset="1" stop-color="#2a1a18" stop-opacity=".12"/></linearGradient>`
+    + ballGrad(`${id}pl`, '#fffaf1') + ballGrad(`${id}bl`, '#ffb3cb') + ballGrad(`${id}bw`, design.bow || '#f28fae')
+    + `<linearGradient id="${id}g" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#fff0b8"/><stop offset=".45" stop-color="#e3b85c"/><stop offset="1" stop-color="#b8862f"/></linearGradient>`;
+  if (design.drip) defs += topGrad(`${id}dt`, design.drip);
+
+  let out = '';
+  // stand
+  out += `<ellipse cx="${cx}" cy="${plateY + 70}" rx="${PR * 0.75}" ry="14" fill="url(#${id}gs)"/>`;
+  out += `<ellipse cx="${cx}" cy="${plateY + 64}" rx="62" ry="12" fill="${dark(pc, 0.18)}"/><path d="M${cx - 62} ${plateY + 58} L${cx - 62} ${plateY + 64} A62 12 0 0 0 ${cx + 62} ${plateY + 64} L${cx + 62} ${plateY + 58}Z" fill="url(#${id}ps)"/><ellipse cx="${cx}" cy="${plateY + 58}" rx="62" ry="12" fill="url(#${id}pt)"/>`;
+  out += `<path d="M${cx - 13} ${plateY + 6} C${cx - 9} ${plateY + 26} ${cx - 8} ${plateY + 38} ${cx - 30} ${plateY + 56} L${cx + 30} ${plateY + 56} C${cx + 8} ${plateY + 38} ${cx + 9} ${plateY + 26} ${cx + 13} ${plateY + 6}Z" fill="url(#${id}ps)"/>`;
+  out += `<path d="M${cx - PR} ${plateY} L${cx - PR} ${plateY + 8} A${PR} ${Pry} 0 0 0 ${cx + PR} ${plateY + 8} L${cx + PR} ${plateY}Z" fill="url(#${id}ps)"/><ellipse cx="${cx}" cy="${plateY}" rx="${PR}" ry="${Pry}" fill="url(#${id}pt)"/><ellipse cx="${cx}" cy="${plateY}" rx="${PR - 6}" ry="${Pry - 1.5}" fill="none" stroke="#fff" stroke-opacity=".5" stroke-width="1.2"/>`;
+  out += ring(cx, plateY + 4, PR, Pry, true, 9, (x, yy, d) => `<circle cx="${x.toFixed(1)}" cy="${yy.toFixed(1)}" r="${(1.6 * d).toFixed(2)}" fill="#fff" opacity=".6"/>`);
+
+  tiers.forEach((t, i) => {
+    const x1 = cx - t.w / 2, x2 = cx + t.w / 2, rx = t.w / 2;
+    defs += sideGrad(`${id}s${i}`, t.c) + topGrad(`${id}t${i}`, design.drip || light(t.c, 0.1));
+    out += `<ellipse cx="${cx}" cy="${t.bottom + 1}" rx="${rx + 10}" ry="${t.ry + 5}" fill="url(#${id}ao)"/>`;
+    out += pipingRing(pipe, cx, t.bottom - 3, rx + 1, t.ry, false, 5.5, `${id}p1`);
+    const side = `M${x1} ${t.top} L${x1} ${t.bottom} A${rx} ${t.ry} 0 0 0 ${x2} ${t.bottom} L${x2} ${t.top} Z`;
+    out += `<path d="${side}" fill="url(#${id}s${i})"/>`;
+    out += sideDeco(design, t, i, R, id);
+    out += topperSide(toppers, t, R, id);
+    out += `<path d="${side}" fill="url(#${id}edge)"/><path d="${side}" fill="url(#${id}vb)"/>`;
+    if (design.drip) {
+      const dc = design.drip;
+      let d = `M${x1} ${t.top}`;
+      for (let q = 0; q <= 50; q++) { const th = (q / 50) * Math.PI; d += ` L${(cx - Math.cos(th) * rx).toFixed(1)} ${(t.top + Math.sin(th) * t.ry + 5 + Math.sin(q * 1.3) * 1.5).toFixed(1)}`; }
+      out += `<path d="${d} L${x2} ${t.top}Z" fill="${dc}"/>`;
+      for (let th = 0.1 + R() * 0.1; th < Math.PI - 0.08; th += 0.13 + R() * 0.16) {
+        const sin = Math.sin(th), x = cx - Math.cos(th) * rx, yb = t.top + sin * t.ry + 3;
+        const len = (8 + R() * t.h * 0.5) * (0.45 + 0.55 * sin), dw = 7.5 * (0.3 + 0.7 * sin);
+        const col = dark(dc, (1 - sin) * 0.22 + (Math.cos(th) < 0 ? 0.05 : 0));
+        out += `<rect x="${(x - dw / 2).toFixed(1)}" y="${yb.toFixed(1)}" width="${dw.toFixed(1)}" height="${len.toFixed(1)}" rx="${(dw / 2).toFixed(1)}" fill="${col}"/><circle cx="${x.toFixed(1)}" cy="${(yb + len - dw * 0.2).toFixed(1)}" r="${(dw * 0.62).toFixed(1)}" fill="${col}"/><rect x="${(x - dw * 0.25).toFixed(1)}" y="${(yb + 2).toFixed(1)}" width="${(dw * 0.18).toFixed(1)}" height="${Math.max(0, len - 3).toFixed(1)}" rx="1" fill="#fff" opacity="${(0.35 * sin).toFixed(2)}"/>`;
+      }
+    }
+    out += `<ellipse cx="${cx}" cy="${t.top}" rx="${rx}" ry="${t.ry}" fill="url(#${id}t${i})"/>`;
+    if (!design.drip) out += `<ellipse cx="${cx}" cy="${t.top + 1}" rx="${rx * 0.72}" ry="${t.ry * 0.72}" fill="none" stroke="#fff" stroke-opacity=".28" stroke-width="1.5"/>`;
+    if (i < tiers.length - 1) out += `<ellipse cx="${cx}" cy="${t.top + 1}" rx="${tiers[i + 1].w / 2 + 12}" ry="${tiers[i + 1].ry + 5}" fill="url(#${id}ao)"/>`;
+    out += pipingRing(pipe === 'ruffle' ? 'pearl' : pipe, cx, t.top, rx - 3, t.ry - 1, false, 4.4, `${id}p2`);
+    if (i < tiers.length - 1) out += pipingRing(pipe === 'ruffle' ? 'pearl' : pipe, cx, t.top, rx - 3, t.ry - 1, true, 4.4, `${id}p2`);
+  });
+
+  // items standing on the top tier, depth sorted
+  const items = [];
+  const rxT = tt.w / 2, ryT = tt.ry;
+  const onTop = (f, th) => ({ x: cx + Math.cos(th) * rxT * f, y: tt.top + Math.sin(th) * ryT * f });
+  const rimItem = (n, f, draw, off = 0) => { for (let k = 0; k < n; k++) { const th = off + (k / n) * Math.PI * 2; const p = onTop(f, th); items.push({ y: p.y, s: draw(p.x, p.y, 0.85 + 0.15 * Math.sin(th)) }); } };
+  if (design.deco === 'strawberries') rimItem(9, 0.84, strawberry3D, 0.2);
+  if (design.deco === 'berries') rimItem(14, 0.86, berry3D, 0.1);
+  if (toppers.includes('cherries')) rimItem(6, 0.78, cherry3D, 0.5);
+  if (toppers.includes('sprinkles') || design.deco === 'confetti') {
+    const cols = ['#f06292', '#ffd166', '#5fd0a6', '#5fb2e8', '#b388ff', '#ffffff'];
+    let sp = '';
+    for (let k = 0; k < 40; k++) { const a = R() * Math.PI * 2, rr = Math.sqrt(R()) * 0.86; const p = onTop(rr, a); sp += `<rect x="${p.x.toFixed(1)}" y="${p.y.toFixed(1)}" width="5" height="1.8" rx=".9" fill="${cols[k % 6]}" transform="rotate(${(R() * 180).toFixed(0)} ${p.x.toFixed(1)} ${p.y.toFixed(1)})"/>`; }
+    items.push({ y: -1e9, s: sp });
+  }
+  const n = candles.length;
+  const outer = n <= 6 ? n : Math.ceil(n * 0.62);
+  candles.forEach((c, k) => {
+    let p;
+    if (n === 1) p = { x: cx, y: tt.top };
+    else if (k < outer) p = onTop(n <= 3 ? 0.42 : 0.6, Math.PI / 2 + (k / outer) * Math.PI * 2 + (n % 2 ? 0 : Math.PI / outer));
+    else p = onTop(0.2, Math.PI / 2 + ((k - outer) / (n - outer)) * Math.PI * 2 + 0.6);
+    const cd = opts.getDesign(c.design);
+    const rem = c.melted ? Math.max(0.12, c.remaining ?? 0.5) : 1;
+    items.push({ y: p.y, s: `<ellipse cx="${p.x.toFixed(1)}" cy="${(p.y + 1).toFixed(1)}" rx="9" ry="2.6" fill="#3a2420" opacity=".14"/><g transform="translate(${p.x.toFixed(1)},${p.y.toFixed(1)}) scale(.4)"><title>${c.subject || ''} · ${c.minutes} min${c.melted ? ' (blown out early)' : ''}</title>${candleGroup(cd, c.kind, rem, { bare: true, lit: !c.melted && opts.lit !== false, blue: c.blue })}</g>` });
+  });
+  // front rim piping of top tier sits in front of back items but behind front ones: add as an item at rim front depth
+  items.push({ y: tt.top + ryT * 0.5, s: pipingRing(pipe === 'ruffle' ? 'pearl' : pipe, cx, tt.top, rxT - 3, ryT - 1, true, 4.4, `${id}p2`) });
+  items.sort((a, b) => a.y - b.y).forEach((it) => { out += it.s; });
+
+  // front bottom piping + stand-side extras
+  tiers.forEach((t) => { out += pipingRing(pipe, cx, t.bottom - 3, t.w / 2 + 1, t.ry, true, 5.5, `${id}p1`); });
+  if (design.deco === 'finals') {
+    out += `<g transform="translate(${cx - PR + 34},${plateY + 10})"><ellipse cy="8" rx="13" ry="3" fill="#000" opacity=".12"/><path d="M-10 -10 L-9 6 Q0 10 9 6 L10 -10Z" fill="#fff"/><ellipse cy="-10" rx="10" ry="3" fill="#6b4226"/><path d="M10 -6 q8 2 0 9" stroke="#fff" stroke-width="3" fill="none"/></g>`;
+    out += `<g transform="translate(${cx + PR - 38},${plateY + 12})"><rect x="-16" y="0" width="32" height="7" rx="1.5" fill="#e76f6f"/><rect x="-14" y="-7" width="29" height="7" rx="1.5" fill="#6aa9d8"/><rect x="-15" y="-14" width="27" height="7" rx="1.5" fill="#f3cd6f"/></g>`;
+  }
+  const fig = (x, yy, svg) => `<g transform="translate(${x},${yy})"><ellipse cy="0" rx="13" ry="3.5" fill="#000" opacity=".12"/>${svg}</g>`;
+  if (toppers.includes('bunny')) out += fig(cx - PR + 26, plateY + 8, `<ellipse cx="-4" cy="-30" rx="3.5" ry="10" fill="#fff" stroke="#f0c8d4"/><ellipse cx="4" cy="-30" rx="3.5" ry="10" fill="#fff" stroke="#f0c8d4"/><ellipse cy="-8" rx="11" ry="10" fill="#fff"/><circle cy="-20" r="8" fill="#fff"/><circle cx="-3" cy="-21" r="1" fill="#333"/><circle cx="3" cy="-21" r="1" fill="#333"/><ellipse cy="-17" rx="1.6" ry="1" fill="#ff8fb3"/>`);
+  if (toppers.includes('frog')) out += fig(cx + PR - 26, plateY + 8, `<ellipse cy="-8" rx="13" ry="9" fill="#8bd47a"/><circle cx="-6" cy="-17" r="5" fill="#8bd47a"/><circle cx="6" cy="-17" r="5" fill="#8bd47a"/><circle cx="-6" cy="-17" r="2" fill="#222"/><circle cx="6" cy="-17" r="2" fill="#222"/><path d="M-5 -8 q5 4 10 0" stroke="#2f6b25" stroke-width="1.2" fill="none"/><ellipse cx="-8" cy="-6" rx="2" ry="1.2" fill="#ff9eb5"/><ellipse cx="8" cy="-6" rx="2" ry="1.2" fill="#ff9eb5"/>`);
+
+  return `<svg class="${opts.cls || 'cake-svg'}" viewBox="0 ${minY} 400 ${plateY + 90 - minY}" xmlns="http://www.w3.org/2000/svg"><defs>${defs}</defs>${out}</svg>`;
 }

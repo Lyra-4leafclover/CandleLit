@@ -3,10 +3,10 @@ import {
   state, save, resetAll, dayKey, newId, allCandles, getCandle, getCake, ownsCandle, streak, isBlue,
   currentCake, serveCake, rolloverIfNewDay, addCandleToCake, spend, totals, encodeGift, decodeGift,
 } from './store.js';
-import { candleSVG, cakeSVG, sculptureSVG } from './render.js';
+import { candleSVG, cakeSVG, sculptureSVG, setCakeStyle } from './render.js';
 import * as audio from './audio.js';
 import { party } from './party.js';
-import { periodStats, barChart, donut, hourChart, trendChart, heatmap, tagColor, fmtMin } from './stats.js';
+import { periodStats, barChart, donut, hourChart, trendChart, heatmap, tagColor, fmtMin, PALETTE } from './stats.js';
 
 const $ = (s, r = document) => r.querySelector(s);
 const view = $('#view');
@@ -368,6 +368,7 @@ VIEWS.bakery = () => {
         <p style="text-align:center" class="muted">${cake.candles.length}/${CAKE_SLOTS} candles · started ${cake.started}</p>
       </div>
       <div class="card">
+        <div class="row" style="margin-bottom:14px"><h3 style="margin:0">Cake style</h3><span class="spacer"></span><div class="seg">${[['new', '3D'], ['classic', 'Classic']].map(([k, l]) => `<button class="${(state.settings.cakeStyle || 'new') === k ? 'on' : ''}" data-act="cakeStyle" data-id="${k}">${l}</button>`).join('')}</div></div>
         <h3>Cake design</h3>
         <div class="chips">${ownedCakes.map((c) => `<button class="chip ${cake.design === c.id ? 'on' : ''}" data-act="cakeDesign" data-id="${c.id}">${esc(c.name)}</button>`).join('')}</div>
         <h3 style="margin-top:18px">Toppers</h3>
@@ -590,7 +591,6 @@ VIEWS.stats = () => {
   const P = ui.statsPeriod, off = ui.statsOffset;
   const st = periodStats(P, off);
   const prev = periodStats(P, off + 1);
-  const t = totals();
   const n = P === 'year' ? 5 : 8;
   const trend = Array.from({ length: n }, (_, i) => {
     const x = periodStats(P, off + n - 1 - i);
@@ -604,7 +604,6 @@ VIEWS.stats = () => {
   const hLabel = (h) => (h === 0 ? '12am' : h < 12 ? h + 'am' : h === 12 ? '12pm' : h - 12 + 'pm');
   const taskTags = Object.entries(st.tasksByTag).sort((x, y) => y[1] - x[1]);
   const maxT = Math.max(1, ...taskTags.map((x) => x[1]));
-  const impactGoal = 25, impactHours = t.minutes / 60;
   const stat = (label, val, sub = '') => `<div class="stat"><span>${label}</span><b>${val}</b>${sub ? `<small>${sub}</small>` : ''}</div>`;
   view.innerHTML = `
   <section class="grid">
@@ -634,11 +633,6 @@ VIEWS.stats = () => {
       <div class="card"><h2>Trend</h2><p class="muted" style="margin-top:-6px">Focus time over your last ${n} ${P}s</p>${trendChart(trend)}</div>
     </div>
     ${P === 'year' ? `<div class="card"><h2>${st.range.start.getFullYear()} at a glance</h2>${heatmap(st.range.start.getFullYear())}</div>` : ''}
-    <div class="card tint-butter">
-      <div class="row"><h2 style="margin:0">Light a candle for a cause</h2><span class="badge" style="background:#fff">concept</span></div>
-      <p class="muted">Like Forest's real-tree planting: every ${impactGoal} hours studied across Candlelit could fund a real donation. All-time you've studied <b>${impactHours.toFixed(1)} hrs</b> across ${t.candles} candles and ${t.cakes} cakes.</p>
-      <div class="progress"><div style="width:${Math.min(100, ((impactHours % impactGoal) / impactGoal) * 100)}%"></div></div>
-    </div>
     <div class="card plain">
       <div class="row"><label class="muted">Name <input type="text" data-change="name" value="${esc(state.name)}" style="width:160px"></label><span class="spacer"></span><button class="btn ghost sm" data-act="reset">Reset all data</button></div>
     </div>
@@ -663,6 +657,7 @@ VIEWS.tasks = () => {
     <div class="task-main"><div class="task-title">${esc(t.title)}</div>
       <div class="task-meta"><span class="tagpill" style="--c:${tagColor(t.tag)}">${esc(t.tag)}</span><span class="pomos" title="${t.pomos} of ${t.est} pomodoros">${Array.from({ length: Math.max(t.est, t.pomos) }, (_, i) => `<i class="${i < t.pomos ? 'on' : ''}"></i>`).join('')}</span><span class="muted">${t.pomos}/${t.est}</span></div></div>
     ${t.done ? '' : `<button class="btn sm ${linked === t.id ? '' : 'ghost'}" data-act="focusTask" data-id="${t.id}">${linked === t.id ? 'Linked · start' : 'Focus'}</button>`}
+    <button class="icon-btn" data-act="editTask" data-id="${t.id}" aria-label="Edit task">✎</button>
     <button class="icon-btn" data-act="deleteTask" data-id="${t.id}" aria-label="Delete task">×</button></li>`;
   view.innerHTML = `
   <section class="tasks-grid">
@@ -671,7 +666,7 @@ VIEWS.tasks = () => {
         <h1 style="margin:0 0 4px">To-do</h1>
         <p class="muted" style="margin:0">Link a task to a pomodoro. Every task needs a tag so its focus time counts in your stats.</p>
         <input type="text" id="taskTitle" class="task-input" placeholder="What are you working on?" value="${esc(ui.taskTitle)}" data-input="taskTitle" maxlength="80">
-        <label class="field">Tag <span class="req">required</span></label>
+        <label class="field">Tag <span class="req">required</span><button class="link-btn" data-act="editTags">Edit tags</button></label>
         <div class="chips" id="tagChips">${state.subjects.map((x) => `<button class="chip tagchip ${ui.taskTag === x ? 'on' : ''}" style="--c:${tagColor(x)}" data-act="taskTag" data-id="${esc(x)}"><i></i>${esc(x)}</button>`).join('')}<input type="text" placeholder="+ new tag" data-change="newTag" style="width:130px"></div>
         <label class="field">Estimated pomodoros</label>
         <div class="row"><div class="chips">${[1, 2, 3, 4, 5, 6].map((k) => `<button class="chip est ${ui.taskEst === k ? 'on' : ''}" data-act="taskEst" data-id="${k}">${k}</button>`).join('')}</div><span class="spacer"></span><button class="btn" data-act="addTask">Add task</button></div>
@@ -689,6 +684,46 @@ VIEWS.tasks = () => {
     </aside>
   </section>`;
 };
+
+/* ---------- tag & task editing ---------- */
+function renameTag(old, nu) {
+  nu = String(nu).trim().slice(0, 24);
+  if (!nu || nu === old || !state.subjects.includes(old)) return false;
+  const merge = state.subjects.includes(nu);
+  state.subjects = merge ? state.subjects.filter((x) => x !== old) : state.subjects.map((x) => (x === old ? nu : x));
+  const fix = (o, k) => { if (o && o[k] === old) o[k] = nu; };
+  state.tasks.forEach((t) => fix(t, 'tag'));
+  state.sessions.forEach((x) => fix(x, 'subject'));
+  [state.cake, ...state.gallery].forEach((c) => c?.candles?.forEach((x) => fix(x, 'subject')));
+  fix(state.active, 'subject');
+  fix(state.settings, 'subject');
+  if (state.tagColors[old] && !state.tagColors[nu]) state.tagColors[nu] = state.tagColors[old];
+  delete state.tagColors[old];
+  if (ui.taskTag === old) ui.taskTag = nu;
+  if (ui.taskFilter === old) ui.taskFilter = nu;
+  save();
+  return true;
+}
+function tagEditor() {
+  const uses = (t) => state.tasks.filter((x) => x.tag === t).length + state.sessions.filter((x) => x.subject === t).length;
+  modal(`<h2>Edit tags</h2><p class="muted" style="margin-top:-4px">Renaming a tag updates its tasks and past stats. Click a dot to change its colour.</p>
+    <div class="tag-edit-list">${state.subjects.map((t) => `<div class="tag-edit"><button class="dot-btn" style="background:${tagColor(t)}" data-act="tagColor" data-tag="${esc(t)}" aria-label="Change colour of ${esc(t)}"></button><input type="text" value="${esc(t)}" data-tagrename="${esc(t)}" maxlength="24" aria-label="Tag name"><span class="muted">${uses(t)} uses</span><button class="icon-btn" data-act="deleteTag" data-tag="${esc(t)}" ${state.subjects.length <= 1 ? 'disabled' : ''} aria-label="Delete ${esc(t)}">×</button></div>`).join('')}</div>
+    <div class="row" style="margin-top:16px"><input type="text" placeholder="+ new tag" data-change="newTagModal" style="flex:1" maxlength="24"><button class="btn" data-act="closeModal">Done</button></div>`);
+}
+function taskEditor(id) {
+  const t = state.tasks.find((x) => x.id === id);
+  if (!t) return;
+  ui.edit = { id, tag: t.tag, est: t.est };
+  modal(`<h2>Edit task</h2>
+    <input type="text" id="editTitle" class="task-input" value="${esc(t.title)}" maxlength="80" aria-label="Task name">
+    <label class="field">Tag <span class="req">required</span></label>
+    <div class="chips">${state.subjects.map((x) => `<button class="chip tagchip ${t.tag === x ? 'on' : ''}" style="--c:${tagColor(x)}" data-act="editTaskTag" data-id="${esc(x)}"><i></i>${esc(x)}</button>`).join('')}</div>
+    <label class="field">Estimated pomodoros</label>
+    <div class="chips">${[1, 2, 3, 4, 5, 6, 7, 8].map((k) => `<button class="chip ${t.est === k ? 'on' : ''}" data-act="editTaskEst" data-id="${k}">${k}</button>`).join('')}</div>
+    <label class="field">Pomodoros done</label><input type="number" id="editPomos" min="0" max="99" value="${t.pomos}" style="width:110px">
+    <div class="row" style="margin-top:24px"><button class="btn" data-act="saveTask">Save changes</button><button class="btn ghost" data-act="closeModal">Cancel</button></div>`);
+  setTimeout(() => $('#editTitle')?.focus(), 0);
+}
 
 /* ---------- actions ---------- */
 const actions = {
@@ -794,6 +829,35 @@ const actions = {
       await party.start(state.settings.minutes, state.settings.minutes * msPerMin());
     } catch (e) { toast(esc(e.message)); }
   },
+  cakeStyle: ({ id }) => { state.settings.cakeStyle = id; setCakeStyle(id); save(); route(); },
+  editTags: () => tagEditor(),
+  tagColor: ({ tag }) => { const i = PALETTE.indexOf(tagColor(tag)); state.tagColors[tag] = PALETTE[(i + 1) % PALETTE.length]; save(); route(); tagEditor(); },
+  deleteTag: ({ tag }) => {
+    if (state.subjects.length <= 1) return;
+    const target = state.subjects.includes('General') && tag !== 'General' ? 'General' : state.subjects.find((x) => x !== tag);
+    renameTag(tag, target);
+    toast(`Deleted “${esc(tag)}”. Its tasks and history moved to ${esc(target)}.`);
+    route(); tagEditor();
+  },
+  editTask: ({ id }) => taskEditor(id),
+  editTaskTag: ({ id }) => { ui.edit.tag = id; document.querySelectorAll('#modal [data-act="editTaskTag"]').forEach((el) => el.classList.toggle('on', el.dataset.id === id)); },
+  editTaskEst: ({ id }) => { ui.edit.est = +id; document.querySelectorAll('#modal [data-act="editTaskEst"]').forEach((el) => el.classList.toggle('on', el.dataset.id === id)); },
+  saveTask: () => {
+    const t = state.tasks.find((x) => x.id === ui.edit?.id);
+    if (!t) return closeModal();
+    const title = ($('#editTitle')?.value || '').trim();
+    if (!title) { toast('A task needs a name'); return; }
+    if (t.tag !== ui.edit.tag) {
+      state.sessions.forEach((x) => { if (x.task === t.id) x.subject = ui.edit.tag; });
+      if (state.settings.taskId === t.id) state.settings.subject = ui.edit.tag;
+    }
+    t.title = title.slice(0, 80);
+    t.tag = ui.edit.tag;
+    t.est = ui.edit.est;
+    t.pomos = Math.max(0, Math.min(99, parseInt($('#editPomos')?.value, 10) || 0));
+    save(); closeModal(); route();
+    toast('Task updated');
+  },
   statsPeriod: ({ id }) => { ui.statsPeriod = id; ui.statsOffset = 0; route(); },
   statsShift: ({ id }) => { ui.statsOffset = Math.max(0, ui.statsOffset + +id); route(); },
   taskTag: ({ id }) => { ui.taskTag = id; $('#tagChips')?.classList.remove('invalid'); document.querySelectorAll('[data-act="taskTag"]').forEach((el) => el.classList.toggle('on', el.dataset.id === id)); },
@@ -848,11 +912,13 @@ $('#modal').addEventListener('click', (e) => { if (e.target.id === 'modal') clos
 
 document.addEventListener('change', (e) => {
   const k = e.target.dataset.change;
-  if (!k) return;
+  if (!k && e.target.dataset.tagrename === undefined) return;
   const v = e.target.type === 'checkbox' ? e.target.checked : e.target.value;
   if (k === 'customMin') { const n = Math.max(1, Math.min(180, parseInt(v, 10) || 25)); state.settings.minutes = n; save(); route(); }
   if (k === 'newSubject' && v.trim()) { const s = v.trim().slice(0, 24); if (!state.subjects.includes(s)) state.subjects.push(s); state.settings.subject = s; save(); route(); }
   if (k === 'demo') { state.settings.demo = v; save(); route(); }
+  if (e.target.dataset.tagrename !== undefined) { if (renameTag(e.target.dataset.tagrename, v)) { route(); tagEditor(); } return; }
+  if (k === 'newTagModal' && v.trim()) { const s = v.trim().slice(0, 24); if (!state.subjects.includes(s)) state.subjects.push(s); save(); route(); tagEditor(); return; }
   if (k === 'linkTask') { const t = state.tasks.find((x) => x.id === v); state.settings.taskId = t ? t.id : null; if (t) state.settings.subject = t.tag; save(); route(); }
   if (k === 'newTag' && v.trim()) { const s = v.trim().slice(0, 24); if (!state.subjects.includes(s)) state.subjects.push(s); ui.taskTag = s; save(); route(); }
   if (k === 'name') { state.name = v.trim().slice(0, 24); save(); }
@@ -870,6 +936,8 @@ document.addEventListener('input', (e) => {
 document.addEventListener('keydown', (e) => {
   if (e.key === 'Enter' && (e.target.dataset.change === 'newSubject' || e.target.dataset.change === 'newTag')) e.target.blur();
   if (e.key === 'Enter' && e.target.id === 'taskTitle') actions.addTask();
+  if (e.key === 'Enter' && e.target.id === 'editTitle') actions.saveTask();
+  if (e.key === 'Enter' && (e.target.dataset.tagrename !== undefined || e.target.dataset.change === 'newTagModal')) e.target.blur();
 });
 
 document.addEventListener('visibilitychange', () => {
@@ -896,6 +964,7 @@ if (params.get('party')) {
 if (state.settings.ambience.length) {
   window.addEventListener('pointerdown', () => audio.setAmbience(state.settings.ambience), { once: true });
 }
+setCakeStyle(state.settings.cakeStyle);
 party.resume().then(route);
 route();
 setInterval(tick, 250);

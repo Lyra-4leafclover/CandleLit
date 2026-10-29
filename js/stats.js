@@ -2,6 +2,7 @@ import { state, dayKey } from './store.js';
 
 export const PALETTE = ['#f2a7bf', '#b9b5f0', '#9fd3e6', '#f3cd6f', '#a9d6a0', '#f5b48a', '#d7a6e8', '#8fc1b5', '#f09a9a', '#c9b79c'];
 export const tagColor = (tag) => {
+  if (state.tagColors?.[tag]) return state.tagColors[tag];
   const i = state.subjects.indexOf(tag);
   return PALETTE[(i < 0 ? [...tag].reduce((a, c) => a + c.charCodeAt(0), 0) : i) % PALETTE.length];
 };

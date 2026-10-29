@@ -50,16 +50,19 @@ export const CANDLES = [
 ];
 
 export const CAKES = [
-  { id: 'vanilla', name: 'Classic Vanilla', rarity: 'common', price: 0, tiers: [{ w: 300, h: 110, c: '#fff4dc' }], piping: '#ffffff', deco: 'none', plate: '#f3ede4' },
-  { id: 'strawberry', name: 'Strawberry Shortcake', rarity: 'common', price: 180, tiers: [{ w: 300, h: 115, c: '#ffe0e6' }], piping: '#ffffff', drip: '#ff4d6d', deco: 'strawberries', plate: '#ffffff' },
-  { id: 'chocolate', name: 'Chocolate Drip', rarity: 'common', price: 220, tiers: [{ w: 300, h: 120, c: '#8a4b2a' }], piping: '#f4d9b8', drip: '#3b1d0f', deco: 'none', plate: '#f0e6d8' },
-  { id: 'heart', name: 'Vintage Heart (Lambeth)', rarity: 'rare', price: 420, tiers: [{ w: 310, h: 120, c: '#ffb3c7' }], piping: '#ff5c8a', piping2: '#ffffff', deco: 'bows', plate: '#ffe6ee', lambeth: true },
-  { id: 'funfetti', name: 'Rainbow Funfetti', rarity: 'rare', price: 380, tiers: [{ w: 300, h: 80, c: '#ffffff' }, { w: 220, h: 70, c: '#fff6fb' }], piping: '#b9dff0', deco: 'confetti', plate: '#e8f7ff' },
-  { id: 'matcha', name: 'Matcha Tier', rarity: 'rare', price: 450, tiers: [{ w: 300, h: 85, c: '#b7d89a' }, { w: 210, h: 75, c: '#d9edc5' }], piping: '#fffbea', drip: '#6f9a4a', deco: 'none', plate: '#f4f1e6' },
-  { id: 'royal', name: 'Royal Gold Tier', rarity: 'legendary', price: 1100, tiers: [{ w: 320, h: 80, c: '#e4def7' }, { w: 240, h: 70, c: '#efeafb' }, { w: 160, h: 60, c: '#e4def7' }], piping: '#d8ad5e', piping2: '#ffffff', deco: 'gold', plate: '#f3ead8', lambeth: true },
-  { id: 'halloween', name: 'Halloween Drip', rarity: 'seasonal', price: 500, tiers: [{ w: 300, h: 90, c: '#5b4a66' }, { w: 210, h: 70, c: '#f6a35c' }], piping: '#fff3e0', drip: '#4a3a55', deco: 'bats', plate: '#efe6dc', available: isHalloween, season: 'Halloween' },
-  { id: 'blossom', name: 'Cherry Blossom Tier', rarity: 'seasonal', price: 500, tiers: [{ w: 300, h: 90, c: '#ffeef4' }, { w: 210, h: 75, c: '#ffd3e2' }], piping: '#ffffff', deco: 'blossoms', plate: '#ffffff', available: isSpring, season: 'Spring' },
-  { id: 'finals', name: 'Finals Week Survival', rarity: 'seasonal', price: 450, tiers: [{ w: 300, h: 100, c: '#d9c7a7' }], piping: '#6b4226', drip: '#4a2c17', deco: 'finals', plate: '#cfd8e3', available: isFinals, season: 'Finals season' },
+  { id: 'vanilla', name: 'Classic Vanilla', rarity: 'common', price: 0, tiers: [{ w: 290, h: 115, c: '#fdf1dc' }], piping: '#ffffff', pipe: 'shell', deco: 'none', plate: '#f6efe6' },
+  { id: 'peach', name: 'Peach Bow Cake', rarity: 'common', price: 160, tiers: [{ w: 290, h: 118, c: '#ffd9c6' }], piping: '#fff7f0', pipe: 'rosette', deco: 'bows', bow: '#f6a6b2', plate: '#ffffff' },
+  { id: 'strawberry', name: 'Strawberry Shortcake', rarity: 'common', price: 180, tiers: [{ w: 290, h: 115, c: '#ffe3e8' }], piping: '#ffffff', pipe: 'rosette', drip: '#f26b80', deco: 'strawberries', plate: '#ffffff' },
+  { id: 'chocolate', name: 'Chocolate Drip', rarity: 'common', price: 220, tiers: [{ w: 290, h: 120, c: '#a8704f' }], piping: '#f4dcc0', pipe: 'shell', drip: '#4a2a1a', deco: 'strawberries', plate: '#f0e6d8' },
+  { id: 'heart', name: 'Vintage Heart (Lambeth)', rarity: 'rare', price: 420, tiers: [{ w: 300, h: 120, c: '#ffc2d2' }], piping: '#f27a9e', piping2: '#ffffff', pipe: 'shell', deco: 'bows', bow: '#ffffff', plate: '#fff0f4', lambeth: true },
+  { id: 'berry', name: 'Blueberry Lemon Drip', rarity: 'rare', price: 400, tiers: [{ w: 290, h: 115, c: '#fff1b8' }], piping: '#ffffff', pipe: 'rosette', drip: '#8a97e6', deco: 'berries', plate: '#eef1fb' },
+  { id: 'funfetti', name: 'Rainbow Funfetti', rarity: 'rare', price: 380, tiers: [{ w: 300, h: 82, c: '#ffffff' }, { w: 216, h: 72, c: '#fff6fb' }], piping: '#b9dff0', pipe: 'pearl', deco: 'confetti', plate: '#e8f7ff' },
+  { id: 'matcha', name: 'Matcha Tier', rarity: 'rare', price: 450, tiers: [{ w: 300, h: 85, c: '#c3dea8' }, { w: 210, h: 75, c: '#e0efcf' }], piping: '#fffbea', pipe: 'rosette', drip: '#7fa65a', deco: 'none', plate: '#f4f1e6' },
+  { id: 'ruffle', name: 'Lavender Ruffle', rarity: 'rare', price: 480, tiers: [{ w: 300, h: 88, c: '#ddd3f5' }, { w: 212, h: 80, c: '#e9e2f9' }], piping: '#ffffff', pipe: 'ruffle', deco: 'none', plate: '#ffffff' },
+  { id: 'royal', name: 'Royal Gold Tier', rarity: 'legendary', price: 1100, tiers: [{ w: 320, h: 80, c: '#e4def7' }, { w: 240, h: 70, c: '#efeafb' }, { w: 160, h: 60, c: '#e4def7' }], piping: '#d8ad5e', piping2: '#ffffff', pipe: 'pearl', deco: 'gold', plate: '#f3ead8', lambeth: true },
+  { id: 'halloween', name: 'Halloween Drip', rarity: 'seasonal', price: 500, tiers: [{ w: 300, h: 90, c: '#5b4a66' }, { w: 210, h: 70, c: '#f6a35c' }], piping: '#fff3e0', pipe: 'shell', drip: '#3a2e44', deco: 'bats', plate: '#efe6dc', available: isHalloween, season: 'Halloween' },
+  { id: 'blossom', name: 'Cherry Blossom Tier', rarity: 'seasonal', price: 500, tiers: [{ w: 300, h: 90, c: '#fff0f5' }, { w: 210, h: 75, c: '#ffd9e6' }], piping: '#ffffff', pipe: 'pearl', deco: 'blossoms', plate: '#ffffff', available: isSpring, season: 'Spring' },
+  { id: 'finals', name: 'Finals Week Survival', rarity: 'seasonal', price: 450, tiers: [{ w: 290, h: 105, c: '#e2d2b4' }], piping: '#7a4e2e', pipe: 'shell', drip: '#5a3520', deco: 'finals', plate: '#dfe6ee', available: isFinals, season: 'Finals season' },
 ];
 
 export const TOPPERS = [
