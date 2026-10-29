@@ -74,7 +74,7 @@ function patternDefs(d, P, h) {
 }
 
 const KMUL = { birthday: 0.78, taper: 1, pillar: 1.15 };
-const SHAPES = { pumpkin: { w: 104, h: 80 }, seashell: { w: 100, h: 86 }, tamagotchi: { w: 74, h: 92 }, toadstool: { w: 104, h: 122 }, taper: { w: 30, h: 200 }, spiral: { w: 30, h: 200 }, pillar: { w: 74, h: 130 }, jar: { w: 84, h: 96 }, teacup: { w: 96, h: 50 } };
+const SHAPES = { pumpkin: { w: 116, h: 62 }, seashell: { w: 112, h: 92 }, tamagotchi: { w: 74, h: 92 }, toadstool: { w: 104, h: 122 }, taper: { w: 30, h: 200 }, spiral: { w: 30, h: 200 }, pillar: { w: 74, h: 130 }, jar: { w: 84, h: 96 }, teacup: { w: 96, h: 50 } };
 const GOLD = '#e0bb72';
 
 function flameMarkup(blue, agitated, id) {
@@ -206,21 +206,83 @@ const FIGURES = {
     return { defs, body };
   },
   toadstool: (d, w, h, id, opts) => {
-    const acc = d.accent || '#e2554f';
-    const capD = `M${-w / 2} ${-h * 0.5} C${-w / 2} ${-h * 1.16} ${w / 2} ${-h * 1.16} ${w / 2} ${-h * 0.5} Q0 ${-h * 0.43} ${-w / 2} ${-h * 0.5}Z`;
-    const defs = `<radialGradient id="${id}cap" cx=".4" cy=".28" r=".8"><stop offset="0" stop-color="${light(acc, 0.35)}"/><stop offset=".5" stop-color="${acc}"/><stop offset="1" stop-color="${dark(acc, 0.3)}"/></radialGradient><linearGradient id="${id}stm" x1="0" x2="1"><stop offset="0" stop-color="${dark(d.c2, 0.12)}"/><stop offset=".4" stop-color="${light(d.c1, 0.4)}"/><stop offset=".72" stop-color="${d.c1}"/><stop offset="1" stop-color="${dark(d.c2, 0.15)}"/></linearGradient><linearGradient id="${id}mos" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#b3d394"/><stop offset="1" stop-color="#78a05c"/></linearGradient><radialGradient id="${id}spt" cx=".38" cy=".3" r=".7"><stop offset="0" stop-color="#fff"/><stop offset=".7" stop-color="#fbf4ea"/><stop offset="1" stop-color="#e6d6c6"/></radialGradient>`;
-    let body = `<path d="M${-w * 0.17} ${-h * 0.46} C${-w * 0.19} ${-h * 0.3} ${-w * 0.22} ${-h * 0.18} ${-w * 0.22} ${-h * 0.08} L${w * 0.22} ${-h * 0.08} C${w * 0.22} ${-h * 0.18} ${w * 0.19} ${-h * 0.3} ${w * 0.17} ${-h * 0.46}Z" fill="url(#${id}stm)"/>`;
-    const win = opts.lit ? '#ffd27a' : '#cfe0e6';
-    body += `<path d="M${-w * 0.075} ${-h * 0.08} v${-h * 0.12} a${w * 0.075} ${w * 0.075} 0 0 1 ${w * 0.15} 0 v${h * 0.12}Z" fill="#b98a5e" stroke="#7f5b3a" stroke-width="1.2"/><path d="M${-w * 0.025} ${-h * 0.08} v${-h * 0.17} M${w * 0.025} ${-h * 0.08} v${-h * 0.17}" stroke="#9a7048" stroke-width=".7"/><circle cx="${w * 0.045}" cy="${-h * 0.15}" r="1.3" fill="${GOLD}"/>`;
-    body += `<circle cx="${w * 0.02}" cy="${-h * 0.34}" r="${w * 0.05}" fill="${win}" stroke="#7f5b3a" stroke-width="1.3"/><path d="M${w * 0.02} ${-h * 0.34 - w * 0.05} v${w * 0.1} M${w * 0.02 - w * 0.05} ${-h * 0.34} h${w * 0.1}" stroke="#7f5b3a" stroke-width=".9"/>${opts.lit ? `<circle cx="${w * 0.02}" cy="${-h * 0.34}" r="${w * 0.1}" fill="#ffd27a" opacity=".25"/>` : ''}`;
-    body += `<ellipse cy="${-h * 0.47}" rx="${w * 0.47}" ry="${h * 0.05}" fill="${dark(d.c2, 0.12)}"/>${Array.from({ length: 13 }, (_, i) => { const a = Math.PI * (0.05 + (i / 12) * 0.9); return `<path d="M0 ${-h * 0.46} L${(Math.cos(a) * w * 0.45).toFixed(1)} ${(-h * 0.47 + Math.sin(a) * h * 0.045).toFixed(1)}" stroke="${dark(d.c2, 0.28)}" stroke-width=".6" opacity=".6"/>`; }).join('')}`;
-    body += `<path d="${capD}" fill="url(#${id}cap)" stroke="${dark(acc, 0.35)}" stroke-width=".7"/><path d="M${-w * 0.38} ${-h * 0.62} C${-w * 0.34} ${-h * 0.8} ${-w * 0.2} ${-h * 0.9} ${-w * 0.06} ${-h * 0.93}" stroke="#fff" stroke-width="3" stroke-linecap="round" fill="none" opacity=".35"/>`;
-    body += [[-0.27, -0.66, 0.075], [0.06, -0.84, 0.08], [0.3, -0.64, 0.065], [-0.06, -0.62, 0.05], [0.24, -0.84, 0.04], [-0.37, -0.55, 0.04], [0.41, -0.55, 0.035], [-0.2, -0.86, 0.04]].map(([x, y, r]) => `<ellipse cx="${x * w}" cy="${y * h + 1}" rx="${r * w}" ry="${r * w * (1 - Math.abs(x) * 0.6)}" fill="${dark(acc, 0.35)}" opacity=".25"/><ellipse cx="${x * w}" cy="${y * h}" rx="${r * w}" ry="${r * w * (1 - Math.abs(x) * 0.6)}" fill="url(#${id}spt)"/>`).join('');
-    body += `<path d="M${-w * 0.46} 0 C${-w * 0.44} ${-h * 0.11} ${w * 0.44} ${-h * 0.11} ${w * 0.46} 0Z" fill="url(#${id}mos)"/>${[-0.36, -0.24, -0.12, 0.14, 0.27, 0.38].map((x, i) => `<path d="M${x * w} ${-h * 0.035} l${-1.5 + (i % 2)} -4 M${x * w + 2} ${-h * 0.04} l1 -4.5" stroke="#6b9450" stroke-width="1" stroke-linecap="round"/>`).join('')}`;
-    const mini = (x, s) => `<g transform="translate(${x * w},${-h * 0.05}) scale(${s})"><rect x="-1.6" y="-7" width="3.2" height="7" rx="1.4" fill="#fbf1df"/><path d="M-6 -6 C-6 -13 6 -13 6 -6Z" fill="${acc}"/><circle cx="-2" cy="-9" r="1" fill="#fff"/><circle cx="2.2" cy="-8" r=".8" fill="#fff"/></g>`;
-    body += mini(-0.32, 1) + mini(-0.24, 0.65) + mini(0.33, 0.85) + blossom(w * 0.22, -h * 0.05, 0.5, '#fff', '#ffd36e') + blossom(-w * 0.12, -h * 0.04, 0.45, '#f7c6d6', '#ffd36e');
-    if (opts.lit) body += [[-0.56, -0.7], [0.58, -0.78], [0.5, -0.32], [-0.5, -0.3], [-0.3, -1.02]].map(([x, y], i) => `<circle class="twinkle" style="animation-delay:${i * 0.4}s" cx="${x * w}" cy="${y * h}" r="1.8" fill="#fff3b0"/><circle cx="${x * w}" cy="${y * h}" r="5" fill="#ffe680" opacity=".25"/>`).join('');
-    return { defs, body };
+    const acc = d.accent || '#e9898c', ink = mix(dark(acc, 0.55), '#6b4a3a', 0.5);
+    const capD = `M${-w * 0.49} ${-h * 0.49} C${-w * 0.52} ${-h * 0.82} ${-w * 0.22} ${-h * 1.02} ${w * 0.02} ${-h * 1.0} C${w * 0.3} ${-h * 0.99} ${w * 0.53} ${-h * 0.8} ${w * 0.49} ${-h * 0.5} C${w * 0.3} ${-h * 0.475} ${-w * 0.3} ${-h * 0.475} ${-w * 0.49} ${-h * 0.49}Z`;
+    const defs = `<filter id="${id}wc" x="-10%" y="-10%" width="120%" height="120%"><feTurbulence type="fractalNoise" baseFrequency=".045" numOctaves="2" seed="9" result="n"/><feDisplacementMap in="SourceGraphic" in2="n" scale="2.4"/></filter><radialGradient id="${id}cap" cx=".42" cy=".3" r=".75"><stop offset="0" stop-color="${light(acc, 0.4)}"/><stop offset=".55" stop-color="${acc}"/><stop offset="1" stop-color="${dark(acc, 0.18)}"/></radialGradient><linearGradient id="${id}stm" x1="0" x2="1"><stop offset="0" stop-color="${dark(d.c2, 0.06)}"/><stop offset=".38" stop-color="${light(d.c1, 0.5)}"/><stop offset=".75" stop-color="${d.c1}"/><stop offset="1" stop-color="${dark(d.c2, 0.1)}"/></linearGradient>`;
+    const stroke = `stroke="${ink}" stroke-width="1.1" stroke-linejoin="round" stroke-linecap="round"`;
+    let body = `<ellipse cy="1" rx="${w * 0.36}" ry="3.5" fill="${ink}" opacity=".12"/>`;
+    body += `<path d="M${-w * 0.15} ${-h * 0.47} C${-w * 0.17} ${-h * 0.32} ${-w * 0.26} ${-h * 0.12} ${-w * 0.22} ${-h * 0.03} C${-w * 0.12} ${h * 0.01} ${w * 0.12} ${h * 0.01} ${w * 0.22} ${-h * 0.03} C${w * 0.26} ${-h * 0.12} ${w * 0.17} ${-h * 0.32} ${w * 0.15} ${-h * 0.47}Z" fill="url(#${id}stm)" ${stroke}/>`;
+    body += `<path d="M${-w * 0.08} ${-h * 0.4} C${-w * 0.1} ${-h * 0.28} ${-w * 0.13} ${-h * 0.16} ${-w * 0.12} ${-h * 0.08}" stroke="#fff" stroke-width="2.4" stroke-linecap="round" fill="none" opacity=".55"/>`;
+    let frill = `M${-w * 0.46} ${-h * 0.49}`;
+    for (let i = 0; i < 10; i++) { const x0 = -w * 0.46 + (i / 10) * w * 0.92, x1 = x0 + w * 0.092; frill += ` Q${((x0 + x1) / 2).toFixed(1)} ${(-h * 0.415 - Math.sin(((i + 0.5) / 10) * Math.PI) * h * 0.035).toFixed(1)} ${x1.toFixed(1)} ${(-h * 0.49 + Math.sin(((i + 1) / 10) * Math.PI) * h * 0.035 * 0).toFixed(1)}`; }
+    body += `<path d="${frill} C${w * 0.3} ${-h * 0.51} ${-w * 0.3} ${-h * 0.51} ${-w * 0.46} ${-h * 0.49}Z" fill="${light(d.c1, 0.3)}" ${stroke}/>`;
+    body += `<path d="${capD}" fill="url(#${id}cap)" ${stroke}/>`;
+    body += `<path d="M${-w * 0.36} ${-h * 0.62} C${-w * 0.33} ${-h * 0.78} ${-w * 0.2} ${-h * 0.9} ${-w * 0.05} ${-h * 0.93}" stroke="#fff" stroke-width="3.2" stroke-linecap="round" fill="none" opacity=".45"/>`;
+    body += [[-0.25, -0.7, 0.085, 0.75, -10], [0.12, -0.86, 0.07, 0.8, 15], [0.31, -0.64, 0.075, 0.7, 25], [-0.05, -0.62, 0.05, 0.75, 0], [-0.13, -0.88, 0.035, 0.85, 0], [0.4, -0.54, 0.035, 0.7, 0], [-0.4, -0.55, 0.04, 0.7, 0]].map(([x, y, r, k, rot]) => `<ellipse transform="rotate(${rot} ${x * w} ${y * h})" cx="${x * w}" cy="${y * h}" rx="${r * w}" ry="${r * w * k}" fill="${light(d.c1, 0.6)}" stroke="${ink}" stroke-width=".7" stroke-opacity=".55"/>`).join('');
+    const baby = `<g transform="translate(${-w * 0.33},${-h * 0.01}) rotate(-14)"><path d="M-3.4 0 C-3.8 -5 -2.6 -9 -2.4 -12 L2.4 -12 C2.6 -9 3.8 -5 3.4 0Z" fill="url(#${id}stm)" ${stroke}/><path d="M-10 -11 C-10 -21 10 -21 10 -11 C5 -9.5 -5 -9.5 -10 -11Z" fill="url(#${id}cap)" ${stroke}/><ellipse cx="-3.5" cy="-15.5" rx="2.2" ry="1.6" fill="${light(d.c1, 0.6)}"/><ellipse cx="3.5" cy="-16" rx="1.6" ry="1.2" fill="${light(d.c1, 0.6)}"/></g>`;
+    const clover = (x, s) => `<g transform="translate(${x * w},0) scale(${s})" ${stroke} stroke-width="0.9"><path d="M0 0 C0 -4 1 -7 2 -9" fill="none"/>${[-60, 30, 120].map((a) => `<path transform="translate(2 -9) rotate(${a})" d="M0 0 C-3 -2 -3 -6 0 -5 C3 -6 3 -2 0 0Z" fill="#a9cf8e"/>`).join('')}</g>`;
+    body += baby + clover(0.27, 0.9) + clover(0.36, 0.65) + `<path d="M${w * 0.15} -1 l2 -4 M${w * 0.19} -1 l-1 -4.5 M${-w * 0.18} -1 l1.5 -3.5" ${stroke} stroke="#7aa462"/>`;
+    return { defs, body: `<g filter="url(#${id}wc)">${body}</g>` };
+  },
+};
+
+/* ---- vessel candles: wax poured into a ceramic pumpkin / real shell; the wax level sinks as it burns ---- */
+const pearl = (x, y, r, g) => `<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="${r}" fill="url(#${g})"/>`;
+const VESSELS = {
+  pumpkin: (d, w, h, r, opts, id) => {
+    const rxR = w * 0.46, ryR = w * 0.13, rxO = w * 0.24, ryO = w * 0.068, top = -h;
+    const molten = opts.lit ? mix(d.drip, '#ffd58a', 0.35) : d.drip;
+    let defs = `<radialGradient id="${id}lb" cx=".34" cy=".28" r=".8"><stop offset="0" stop-color="${light(d.c1, 0.45)}"/><stop offset=".35" stop-color="${d.c1}"/><stop offset=".85" stop-color="${d.c2}"/><stop offset="1" stop-color="${dark(d.c2, 0.25)}"/></radialGradient><radialGradient id="${id}sho" cx=".5" cy=".7" r=".7"><stop offset="0" stop-color="${d.c2}"/><stop offset=".7" stop-color="${d.c1}"/><stop offset="1" stop-color="${light(d.c1, 0.2)}"/></radialGradient><radialGradient id="${id}wx" cx=".45" cy=".4" r=".7"><stop offset="0" stop-color="${light(molten, 0.5)}"/><stop offset="1" stop-color="${dark(molten, 0.05)}"/></radialGradient><clipPath id="${id}op"><ellipse cy="${top}" rx="${rxO}" ry="${ryO}"/></clipPath>`;
+    let back = `<ellipse cy="3" rx="${w * 0.48}" ry="6" fill="#3a2420" opacity=".12"/>`;
+    back += `<ellipse cy="${top}" rx="${rxR * 0.9}" ry="${ryR}" fill="url(#${id}sho)" stroke="${dark(d.c2, 0.3)}" stroke-width=".6" stroke-opacity=".4"/>`;
+    for (let i = 0; i < 14; i++) { const a = (i / 14) * Math.PI * 2; back += `<path d="M${(Math.cos(a) * rxO * 1.05).toFixed(1)} ${(top + Math.sin(a) * ryO * 1.05).toFixed(1)} L${(Math.cos(a) * rxR * 0.86).toFixed(1)} ${(top + Math.sin(a) * ryR * 0.92).toFixed(1)}" stroke="${dark(d.c2, 0.28)}" stroke-width=".8" opacity=".35"/>`; }
+    back += `<ellipse cy="${top}" rx="${rxO + 2.5}" ry="${ryO + 1.2}" fill="${light(d.c1, 0.35)}"/><ellipse cy="${top}" rx="${rxO}" ry="${ryO}" fill="${dark(d.c2, 0.4)}"/>`;
+    const lvl = top + 2 + (1 - r) * h * 0.5, wrx = rxO * (0.96 - (1 - r) * 0.12);
+    back += `<g clip-path="url(#${id}op)"><ellipse cy="${(lvl + ryO * 0.15).toFixed(1)}" rx="${wrx.toFixed(1)}" ry="${(ryO * 0.9).toFixed(1)}" fill="url(#${id}wx)"/><rect x="${-rxO}" y="${(lvl + ryO * 0.15).toFixed(1)}" width="${2 * rxO}" height="${h}" fill="${dark(molten, 0.08)}"/></g>`;
+    const xs = [[-0.36, 0.085], [0.36, 0.085], [-0.21, 0.12], [0.21, 0.12], [0, 0.14]];
+    let front = '';
+    xs.forEach(([f, lwf]) => {
+      const x = f * w, lw = w * lwf, t = top + ryR * Math.sqrt(Math.max(0, 1 - Math.pow(x / rxR, 2))) * 0.55, mid = -h * 0.46, bx = x * 0.9;
+      const p = (sx) => `C${(x + sx * lw * 0.55).toFixed(1)} ${t.toFixed(1)} ${(x + sx * lw * 1.3).toFixed(1)} ${(t + (mid - t) * 0.35).toFixed(1)} ${(x + sx * lw * 1.3).toFixed(1)} ${mid.toFixed(1)}`;
+      front += `<path d="M${x.toFixed(1)} ${t.toFixed(1)} ${p(-1)} C${(x - lw * 1.3).toFixed(1)} ${(-h * 0.12).toFixed(1)} ${(bx - lw * 0.8).toFixed(1)} 0 ${bx.toFixed(1)} 0 C${(bx + lw * 0.8).toFixed(1)} 0 ${(x + lw * 1.3).toFixed(1)} ${(-h * 0.12).toFixed(1)} ${(x + lw * 1.3).toFixed(1)} ${mid.toFixed(1)} C${(x + lw * 1.3).toFixed(1)} ${(t + (mid - t) * 0.35).toFixed(1)} ${(x + lw * 0.55).toFixed(1)} ${t.toFixed(1)} ${x.toFixed(1)} ${t.toFixed(1)}Z" fill="url(#${id}lb)" stroke="${dark(d.c2, 0.32)}" stroke-width=".7" stroke-opacity=".45"/>`;
+      front += `<path d="M${(x - lw * 0.55).toFixed(1)} ${(t + (mid - t) * 0.45).toFixed(1)} Q${(x - lw * 0.8).toFixed(1)} ${mid.toFixed(1)} ${(x - lw * 0.55).toFixed(1)} ${(-h * 0.2).toFixed(1)}" stroke="#fff" stroke-width="${(lw * 0.16).toFixed(1)}" stroke-linecap="round" fill="none" opacity=".4"/>`;
+    });
+    front += `<path d="M${-rxO * 0.6} ${top + ryR * 0.62} Q0 ${top + ryR * 0.9} ${rxO * 0.6} ${top + ryR * 0.62}" stroke="${dark(d.c2, 0.25)}" stroke-width=".8" fill="none" opacity=".3"/>`;
+    
+front += `<path d="M${-rxO - 2.5} ${top} A${rxO + 2.5} ${ryO + 1.2} 0 0 0 ${rxO + 2.5} ${top}" stroke="${light(d.c1, 0.55)}" stroke-width="1.6" fill="none"/>`;
+    if (d.dots) front += Array.from({ length: 16 }, (_, i) => `<circle cx="${((i % 8) - 3.5) * w * 0.1}" cy="${-h * (0.3 + Math.floor(i / 8) * 0.25) - (i % 3) * 3}" r="1.2" fill="#fff" opacity=".85"/>`).join('');
+    return { defs, back, front, wick: lvl + ryO * 0.15 };
+  },
+  seashell: (d, w, h, r, opts, id) => {
+    const A = [0, -h * 0.2], N = 13, a0 = -166, a1 = -14, st = (a1 - a0) / N;
+    const P = (deg, k = 1) => { const a = (deg * Math.PI) / 180; return [Math.cos(a) * w * 0.47 * k, A[1] + Math.sin(a) * h * 0.8 * k]; };
+    const molten = opts.lit ? mix(mix(d.drip, d.c1, 0.3), '#ffd58a', 0.3) : mix(d.drip, d.c1, 0.3);
+    let defs = `<filter id="${id}wc" x="-10%" y="-10%" width="120%" height="120%"><feTurbulence type="fractalNoise" baseFrequency=".05" numOctaves="2" seed="4" result="n"/><feDisplacementMap in="SourceGraphic" in2="n" scale="2.2"/></filter><linearGradient id="${id}ir" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#d9c8ff" stop-opacity=".35"/><stop offset=".5" stop-color="#fff" stop-opacity="0"/><stop offset="1" stop-color="#bdf0e6" stop-opacity=".35"/></linearGradient><radialGradient id="${id}pr" cx=".35" cy=".3" r=".7"><stop offset="0" stop-color="#fff"/><stop offset=".7" stop-color="#fbf1ec"/><stop offset="1" stop-color="#dcc9c0"/></radialGradient><radialGradient id="${id}wx" cx=".45" cy=".4" r=".7"><stop offset="0" stop-color="${light(molten, 0.5)}"/><stop offset="1" stop-color="${molten}"/></radialGradient><linearGradient id="${id}bw" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${light(d.c1, 0.4)}"/><stop offset="1" stop-color="${d.c2}"/></linearGradient>`;
+    let lid = '', outline = '';
+    for (let i = 0; i < N; i++) {
+      const a = a0 + i * st, b = a + st, pa = P(a), pb = P(b), pm = P((a + b) / 2, 1.065), pc = P((a + b) / 2, 0.9);
+      defs += `<linearGradient id="${id}r${i}" gradientUnits="userSpaceOnUse" x1="${pa[0].toFixed(1)}" y1="${pa[1].toFixed(1)}" x2="${pb[0].toFixed(1)}" y2="${pb[1].toFixed(1)}"><stop offset="0" stop-color="${d.c2}"/><stop offset=".5" stop-color="${light(d.c1, 0.6)}"/><stop offset="1" stop-color="${dark(d.c2, 0.06)}"/></linearGradient>`;
+      lid += `<path d="M${A[0]} ${A[1]} L${pa[0].toFixed(1)} ${pa[1].toFixed(1)} Q${pm[0].toFixed(1)} ${pm[1].toFixed(1)} ${pb[0].toFixed(1)} ${pb[1].toFixed(1)}Z" fill="url(#${id}r${i})"/><path d="M${(A[0] + (pc[0] - A[0]) * 0.25).toFixed(1)} ${(A[1] + (pc[1] - A[1]) * 0.25).toFixed(1)} L${pc[0].toFixed(1)} ${pc[1].toFixed(1)}" stroke="#fff" stroke-width="1.6" stroke-linecap="round" opacity=".5"/>`;
+      outline += `${i ? '' : `M${pa[0].toFixed(1)} ${pa[1].toFixed(1)}`} Q${pm[0].toFixed(1)} ${pm[1].toFixed(1)} ${pb[0].toFixed(1)} ${pb[1].toFixed(1)}`;
+    }
+    lid += `<path d="M${A[0]} ${A[1]} L${P(a0)[0].toFixed(1)} ${P(a0)[1].toFixed(1)}${outline}Z" fill="url(#${id}ir)"/><path d="${outline}" stroke="${light(d.c1, 0.7)}" stroke-width="2.2" fill="none" opacity=".9"/><path d="${outline}" stroke="${dark(d.c2, 0.15)}" stroke-width=".6" fill="none" opacity=".5"/>`;
+    const y0 = -h * 0.3, rx = w * 0.46, ry = w * 0.075;
+    const lvl = y0 + 3 + (1 - r) * h * 0.14, wrx = rx * (0.9 - (1 - r) * 0.3);
+    let back = `<ellipse cy="3" rx="${w * 0.42}" ry="5" fill="#3a2420" opacity=".1"/><g filter="url(#${id}wc)">${lid}</g>`;
+    defs += `<clipPath id="${id}op"><ellipse cy="${y0}" rx="${rx - 2}" ry="${ry - 1}"/></clipPath>`;
+    back += `<ellipse cy="${y0}" rx="${rx}" ry="${ry}" fill="${dark(d.c2, 0.12)}"/><g clip-path="url(#${id}op)"><ellipse cy="${lvl.toFixed(1)}" rx="${wrx.toFixed(1)}" ry="${(ry * 0.85).toFixed(1)}" fill="url(#${id}wx)"/></g>`;
+    let front = `<path d="M${-rx} ${y0} C${-rx * 0.98} ${y0 + h * 0.2} ${-rx * 0.45} -1 0 -1 C${rx * 0.45} -1 ${rx * 0.98} ${y0 + h * 0.2} ${rx} ${y0} A${rx} ${ry} 0 0 1 ${-rx} ${y0}Z" fill="url(#${id}bw)"/>`;
+    for (let i = 1; i < 12; i++) { const a = Math.PI * (i / 12); front += `<path d="M0 -3 L${(-Math.cos(a) * rx * 0.98).toFixed(1)} ${(y0 + Math.sin(a) * ry * 0.98).toFixed(1)}" stroke="#fff" stroke-width="1.3" opacity=".45"/>`; }
+    let edge = `M${-rx} ${y0}`;
+    for (let i = 0; i < 12; i++) { const a = Math.PI - (i / 12) * Math.PI, b = Math.PI - ((i + 1) / 12) * Math.PI, m = (a + b) / 2; edge += ` Q${(Math.cos(m) * rx * 1.02).toFixed(1)} ${(y0 + Math.sin(m) * ry * 1.25 + 1.5).toFixed(1)} ${(Math.cos(b) * rx).toFixed(1)} ${(y0 + Math.sin(b) * ry).toFixed(1)}`; }
+    front += `<path d="${edge}" stroke="${light(d.c1, 0.7)}" stroke-width="2" fill="none"/>`;
+    front = `<g filter="url(#${id}wc)">${front}</g>`;
+    let strand = '';
+    for (let i = 0; i <= 22; i++) { const t = i / 22, x = -rx * 0.78 + t * rx * 1.56, y = y0 + ry * 0.9 + Math.sin(t * Math.PI) * h * 0.07; strand += pearl(x, y, 1.9, `${id}pr`); }
+    const loop = (s) => { let o = ''; for (let i = 0; i < 12; i++) { const t = (i / 12) * Math.PI * 2; o += pearl(s * (7 + Math.cos(t) * 6.5), -h * 0.06 + Math.sin(t) * 4, 1.5, `${id}pr`); } return o; };
+    const tail = (s) => { let o = ''; for (let i = 1; i <= 6; i++) o += pearl(s * (1.5 + i * 1.6), -h * 0.06 + i * 2.6, 1.5, `${id}pr`); return o; };
+    front += strand + loop(-1) + loop(1) + tail(-1) + tail(1) + pearl(0, -h * 0.06, 2.6, `${id}pr`);
+    return { defs, back, front, wick: lvl };
   },
 };
 
@@ -566,6 +628,13 @@ export function candleGroup(d, kind, rem, opts = {}) {
       <rect x="${-w / 2 + 8}" y="${-h + 12}" width="5" height="${h - 30}" rx="2.5" fill="#fff" opacity=".7"/>
       <ellipse cy="${-h}" rx="${w / 2 - 1}" ry="5" fill="none" stroke="#fff" stroke-width="2"/>
       <g transform="translate(0,${-h * 0.42})"><rect x="-22" y="-14" width="44" height="30" rx="6" fill="#fffaf2" stroke="#ead9c4" stroke-width=".8"/>${leaf(-14, 6, -50, 0.7)}${blossom(-8, -2, 0.9, d.accent)}${blossom(9, 4, 0.7, '#f7d27a')}${leaf(6, 8, 20, 0.6)}</g>`;
+  } else if (VESSELS[shape]) {
+    const v = VESSELS[shape](d, w, S.h, r, opts, id);
+    defs += v.defs;
+    out += v.back;
+    front = v.front;
+    wickBase = v.wick;
+    flameDrawnEarly = true;
   } else if (FIGURES[shape]) {
     const m = moldedCandle(d, shape, w, S.h, r, opts, id);
     defs += m.defs;
