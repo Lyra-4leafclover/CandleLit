@@ -74,7 +74,7 @@ function patternDefs(d, P, h) {
 }
 
 const KMUL = { birthday: 0.78, taper: 1, pillar: 1.15 };
-const SHAPES = { pumpkin: { w: 116, h: 62 }, seashell: { w: 112, h: 92 }, tamagotchi: { w: 74, h: 92 }, toadstool: { w: 104, h: 122 }, taper: { w: 30, h: 200 }, spiral: { w: 30, h: 200 }, pillar: { w: 74, h: 130 }, jar: { w: 84, h: 96 }, teacup: { w: 96, h: 50 } };
+const SHAPES = { painted: { w: 100, h: 110 }, pumpkin: { w: 116, h: 62 }, seashell: { w: 112, h: 92 }, tamagotchi: { w: 74, h: 92 }, toadstool: { w: 104, h: 122 }, taper: { w: 30, h: 200 }, spiral: { w: 30, h: 200 }, pillar: { w: 74, h: 130 }, jar: { w: 84, h: 96 }, teacup: { w: 96, h: 50 } };
 const GOLD = '#e0bb72';
 
 function flameMarkup(blue, agitated, id) {
@@ -225,6 +225,26 @@ const FIGURES = {
     return { defs, body: `<g filter="url(#${id}wc)">${body}</g>` };
   },
 };
+
+/* ---- painted candles: watercolor melt-stage images crossfaded by remaining wax ---- */
+const ART = {
+  scallop: { ar: 0.864, h: 110, wick: [[0.497, 0.006], [0.5, 0.11], [0.499, 0.328]] },
+  pumpkin: { ar: 1.011, h: 96, wick: [[0.471, 0.166], [0.474, 0.268], [0.473, 0.44]] },
+  clam: { ar: 0.82, h: 120, wick: [[0.471, 0.531], [0.474, 0.606], [0.482, 0.704]] },
+  conch: { ar: 0.488, h: 150, wick: [[0.471, 0.006], [0.464, 0.144], [0.464, 0.464]] },
+  abalone: { ar: 1.299, h: 80, wick: [[0.502, 0.29], [0.505, 0.367], [0.505, 0.5]] },
+};
+const ART_STAGES = [1, 0.55, 0.12];
+const artSize = (d) => { const a = ART[d.art]; return { w: Math.round(a.h * a.ar), h: a.h }; };
+function paintedCandle(d, r, id) {
+  const a = ART[d.art], { w, h } = artSize(d);
+  const k = r >= ART_STAGES[1] ? 0 : 1;
+  const t = Math.max(0, Math.min(1, (r - ART_STAGES[k + 1]) / (ART_STAGES[k] - ART_STAGES[k + 1])));
+  const img = (i, op) => `<image href="/art/${d.art}_${i}.webp" x="${-w / 2}" y="${-h}" width="${w}" height="${h}" preserveAspectRatio="xMidYMax meet"${op < 1 ? ` opacity="${op.toFixed(2)}"` : ''}/>`;
+  const wy = a.wick[k][1] * t + a.wick[k + 1][1] * (1 - t), wx = a.wick[k][0] * t + a.wick[k + 1][0] * (1 - t);
+  const out = `<ellipse cy="1" rx="${w * 0.4}" ry="4" fill="#3a2420" opacity=".1"/>${img(k + 1, 1)}${t > 0.01 ? img(k, t) : ''}`;
+  return { out, tip: -h + wy * h, x: (wx - 0.5) * w };
+}
 
 /* ---- vessel candles: wax poured into a ceramic pumpkin / real shell; the wax level sinks as it burns ---- */
 const pearl = (x, y, r, g) => `<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="${r}" fill="url(#${g})"/>`;
@@ -607,10 +627,10 @@ export function candleGroup(d, kind, rem, opts = {}) {
   const r = Math.max(0, Math.min(1, rem));
   let shape = d.shape || (d.pattern === 'spiral' ? 'taper' : 'taper');
   if (opts.bare && (shape === 'jar' || shape === 'teacup')) shape = 'pillar';
-  const S = SHAPES[shape];
+  const S = d.art && ART[d.art] ? artSize(d) : SHAPES[shape];
   const w = S.w;
-  const h = FIGURES[shape] ? S.h : S.h * (KMUL[kind] || 1);
-  const holder = opts.bare || FIGURES[shape] || shape === 'jar' || shape === 'teacup' ? null : holderMarkup(d, w, id);
+  const h = FIGURES[shape] || shape === 'painted' ? S.h : S.h * (KMUL[kind] || 1);
+  const holder = opts.bare || FIGURES[shape] || shape === 'painted' || shape === 'jar' || shape === 'teacup' ? null : holderMarkup(d, w, id);
   let defs = holder ? holder.defs : '';
   let out = holder ? holder.back : '';
   let wickBase, flameDrawnEarly = false;
@@ -628,6 +648,11 @@ export function candleGroup(d, kind, rem, opts = {}) {
       <rect x="${-w / 2 + 8}" y="${-h + 12}" width="5" height="${h - 30}" rx="2.5" fill="#fff" opacity=".7"/>
       <ellipse cy="${-h}" rx="${w / 2 - 1}" ry="5" fill="none" stroke="#fff" stroke-width="2"/>
       <g transform="translate(0,${-h * 0.42})"><rect x="-22" y="-14" width="44" height="30" rx="6" fill="#fffaf2" stroke="#ead9c4" stroke-width=".8"/>${leaf(-14, 6, -50, 0.7)}${blossom(-8, -2, 0.9, d.accent)}${blossom(9, 4, 0.7, '#f7d27a')}${leaf(6, 8, 20, 0.6)}</g>`;
+  } else if (shape === 'painted' && ART[d.art]) {
+    const p = paintedCandle(d, r, id);
+    out += p.out;
+    wickBase = p.tip + 9;
+    var paintedX = p.x;
   } else if (VESSELS[shape]) {
     const v = VESSELS[shape](d, w, S.h, r, opts, id);
     defs += v.defs;
@@ -665,20 +690,20 @@ export function candleGroup(d, kind, rem, opts = {}) {
   const figK = d.topper && FIGS[d.topper] ? 1.5 : 1;
   if (d.topper && (shape === 'pillar' || shape === 'taper' || shape === 'spiral')) { topper = FIGS[d.topper] ? `<g transform="translate(0,${wickBase}) scale(${figK})">${FIGS[d.topper](0)}</g>` : cherubMarkup(wickBase); wickTop = wickBase - 40 * figK; }
   const wick = topper ? `<path d="M0 ${wickBase - 33 * figK} q1.5 -4 0 -${8 * figK}" stroke="#3a2a22" stroke-width="1.6" fill="none"/>` : `<path d="M0 ${wickBase} q1.6 -4.5 0 -9" stroke="#3a2a22" stroke-width="1.7" fill="none" stroke-linecap="round"/>`;
-  const fl = opts.lit ? `<g transform="translate(0,${wickTop + 1})">${flameMarkup(opts.blue, opts.agitated, id)}</g>` : '';
+  const fl = opts.lit ? `<g transform="translate(${shape === 'painted' ? (paintedX || 0).toFixed(1) : 0},${wickTop + 1})">${flameMarkup(opts.blue, opts.agitated, id)}</g>` : '';
   const smoke = opts.smoke ? `<path class="smoke" d="M0 ${wickTop} c-6 -10 6 -16 0 -26 c-6 -10 6 -16 0 -26" stroke="#cfc6cc" stroke-width="2" fill="none" opacity=".7"/>` : '';
   const sp = opts.sparkles ? sparkles(w, h + (holder ? 0 : 0), R, d.accent || '#e7a8b8') : '';
   const fr = holder ? holder.front : '';
-  const body = flameDrawnEarly ? `${out}${topper}${wick}${fl}${front}${smoke}` : `${out}${fr}${front}${topper}${wick}${fl}${smoke}`;
+  const body = shape === 'painted' ? `${out}${fl}${smoke}` : flameDrawnEarly ? `${out}${topper}${wick}${fl}${front}${smoke}` : `${out}${fr}${front}${topper}${wick}${fl}${smoke}`;
   return `<defs>${defs}</defs><g class="candle">${sp}${body}</g>`;
 }
 
 export function candleMetrics(d, kind, bare = false) {
   let shape = d.shape || 'taper';
   if (bare && (shape === 'jar' || shape === 'teacup')) shape = 'pillar';
-  const S = SHAPES[shape];
-  const h = FIGURES[shape] ? S.h : S.h * (KMUL[kind] || 1);
-  const hold = bare || FIGURES[shape] || shape === 'jar' || shape === 'teacup' ? { h: shape === 'teacup' || shape === 'jar' ? 12 : 0, hw: S.w + 60 } : ({ ornate: { h: 150, hw: 120 }, brass: { h: 22, hw: S.w + 84 }, wood: { h: 18, hw: S.w + 48 }, ceramic: { h: 16, hw: S.w + 44 } }[d.holder] || { h: 14, hw: S.w + 40 });
+  const S = d.art && ART[d.art] ? artSize(d) : SHAPES[shape];
+  const h = FIGURES[shape] || shape === 'painted' ? S.h : S.h * (KMUL[kind] || 1);
+  const hold = bare || FIGURES[shape] || shape === 'painted' || shape === 'jar' || shape === 'teacup' ? { h: shape === 'teacup' || shape === 'jar' ? 12 : 0, hw: S.w + 60 } : ({ ornate: { h: 150, hw: 120 }, brass: { h: 22, hw: S.w + 84 }, wood: { h: 18, hw: S.w + 48 }, ceramic: { h: 16, hw: S.w + 44 } }[d.holder] || { h: 14, hw: S.w + 40 });
   return { w: S.w, h, holderH: hold.h, holderW: hold.hw, extraTop: d.topper ? (FIGS[d.topper] ? 60 : 40) : 0 };
 }
 

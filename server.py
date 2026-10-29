@@ -10,6 +10,8 @@ import sqlite3
 import string
 import threading
 import time
+import mimetypes
+mimetypes.add_type('image/webp', '.webp')
 from http.cookies import SimpleCookie
 from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
 from urllib.parse import urlparse
