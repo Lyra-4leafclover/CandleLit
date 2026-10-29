@@ -49,6 +49,55 @@ const SCENES = {
     <path d="M0 540 H600 V700 H0Z" fill="#2f2540"/><path d="M0 540 H600" stroke="#6a5a85" stroke-width="2" opacity=".6"/>`,
 };
 
+const px = (x, y, n, m, sz, cols, seed = 3) => { let o = '', a = seed; const r = () => ((a = (a * 9301 + 49297) % 233280) / 233280); for (let i = 0; i < n; i++) for (let j = 0; j < m; j++) o += `<rect x="${x + i * sz}" y="${y + j * sz}" width="${sz}" height="${sz}" fill="${cols[Math.floor(r() * cols.length)]}"/>`; return o; };
+const bat = (x, y, s) => `<path transform="translate(${x},${y}) scale(${s})" d="M0 0 C-4 -6 -10 -6 -14 -2 C-11 -2 -10 1 -12 3 C-8 1 -5 2 -4 5 C-2 2 0 2 0 2 C0 2 2 2 4 5 C5 2 8 1 12 3 C10 1 11 -2 14 -2 C10 -6 4 -6 0 0Z" fill="#2a2140"/>`;
+const pumpkin = (x, y, s) => `<g transform="translate(${x},${y}) scale(${s})"><ellipse rx="22" ry="17" fill="#f39a4a"/><ellipse rx="11" ry="17" fill="#f7aa5e"/><path d="M0 -17 q2 -8 7 -10" stroke="#5b7a3a" stroke-width="3" fill="none"/></g>`;
+const heart = (x, y, s, c) => `<path transform="translate(${x},${y}) scale(${s})" d="M0 4 C-6 -2 -10 -6 -6 -10 C-3 -12 0 -10 0 -7 C0 -10 3 -12 6 -10 C10 -6 6 -2 0 4Z" fill="${c}"/>`;
+const star5 = (x, y, s, c) => `<path transform="translate(${x},${y}) scale(${s})" d="M0 -10 L2.9 -3.1 10 -3.1 4.3 1.3 6.5 8.5 0 4.2 -6.5 8.5 -4.3 1.3 -10 -3.1 -2.9 -3.1Z" fill="${c}"/>`;
+const bauble = (x, y, c) => `<line x1="${x}" y1="${y - 22}" x2="${x}" y2="${y - 8}" stroke="#c9a24a"/><circle cx="${x}" cy="${y}" r="9" fill="${c}"/><circle cx="${x - 3}" cy="${y - 3}" r="2.5" fill="#fff" opacity=".6"/>`;
+Object.assign(SCENES, {
+  gothic: () => `<defs><linearGradient id="sgo-w" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#2a1f2e"/><stop offset="1" stop-color="#140f18"/></linearGradient><linearGradient id="sgo-s" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#3b2d52"/><stop offset="1" stop-color="#7a4a6a"/></linearGradient></defs>
+    <rect width="600" height="700" fill="url(#sgo-w)"/>
+    <path d="M150 470 V190 Q150 60 300 30 Q450 60 450 190 V470Z" fill="url(#sgo-s)"/>${stars(40, 600, 300, 11)}<circle cx="370" cy="150" r="34" fill="#f4ecdc" opacity=".9"/>
+    <path d="M150 470 V190 Q150 60 300 30 Q450 60 450 190 V470" fill="none" stroke="#4a3a4e" stroke-width="14"/><path d="M300 30 V470 M150 260 H450" stroke="#4a3a4e" stroke-width="7"/>
+    <path d="M40 0 C90 140 60 320 130 470 L40 470Z" fill="#0d0a10" opacity=".85"/><path d="M560 0 C510 140 540 320 470 470 L560 470Z" fill="#0d0a10" opacity=".85"/>
+    ${[[70, 470], [530, 470]].map(([x, y]) => `<g transform="translate(${x},${y})"><rect x="-4" y="-80" width="8" height="80" fill="#b9b2c4"/><path d="M-30 -80 h60" stroke="#b9b2c4" stroke-width="5"/>${[-30, 0, 30].map((dx) => `<rect x="${dx - 4}" y="-112" width="8" height="30" fill="#1b1520"/><ellipse cx="${dx}" cy="-122" rx="4" ry="8" fill="#ffcf7a"/><circle cx="${dx}" cy="-120" r="16" fill="#ffcf7a" opacity=".18"/>`).join('')}</g>`).join('')}
+    <path d="M0 540 H600 V700 H0Z" fill="#1c1420"/>${[[60, 600], [540, 610], [110, 650], [490, 660]].map(([x, y]) => rose(x, y, 2, '#7a1f2e')).join('')}`,
+  emo: () => `<defs><pattern id="sem-c" width="60" height="60" patternUnits="userSpaceOnUse"><rect width="60" height="60" fill="#1a1418"/><rect width="30" height="30" fill="#f472b6" opacity=".35"/><rect x="30" y="30" width="30" height="30" fill="#f472b6" opacity=".35"/></pattern></defs>
+    <rect width="600" height="700" fill="url(#sem-c)"/><rect width="600" height="700" fill="#000" opacity=".25"/>
+    ${lights(20, 600, 14, 60)}
+    ${[[70, 140, 1.6], [520, 120, 1.3], [90, 420, 1.2], [510, 400, 1.7], [300, 80, 1]].map(([x, y, s], i) => (i % 2 ? heart(x, y, s * 2, '#ff5fa2') : star5(x, y, s * 2, '#ffd1e8'))).join('')}
+    <rect x="30" y="200" width="110" height="150" rx="6" fill="#2b2229" stroke="#ff5fa2" stroke-width="3" transform="rotate(-6 85 275)"/><rect x="460" y="190" width="110" height="150" rx="6" fill="#2b2229" stroke="#ffd1e8" stroke-width="3" transform="rotate(5 515 265)"/>
+    <path d="M0 560 H600 V700 H0Z" fill="#141014"/><path d="M0 560 H600" stroke="#ff5fa2" stroke-width="3" opacity=".7"/>`,
+  halloween2: () => `<defs><linearGradient id="sh2" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#3a2a63"/><stop offset=".7" stop-color="#8a5a9a"/><stop offset="1" stop-color="#f3a96a"/></linearGradient></defs>
+    <rect width="600" height="700" fill="url(#sh2)"/>${stars(40, 600, 380, 5)}<circle cx="460" cy="130" r="70" fill="#fff1d0"/><circle cx="460" cy="130" r="110" fill="#fff1d0" opacity=".15"/>
+    ${[[120, 120, 1.6], [200, 170, 1.1], [520, 260, 1.3], [80, 300, 1]].map(([x, y, s]) => bat(x, y, s * 1.8)).join('')}
+    <path d="M0 520 q150 -50 300 -10 q150 -40 300 0 V700 H0Z" fill="#3b2a4a"/><g transform="translate(470,500)"><rect x="-30" y="-50" width="60" height="50" fill="#2a1f36"/><path d="M-38 -50 L0 -85 L38 -50Z" fill="#2a1f36"/><rect x="-8" y="-38" width="10" height="12" fill="#ffcf7a"/></g>
+    ${[[80, 620, 1.6], [150, 650, 1.1], [520, 630, 1.5], [450, 665, 1]].map(([x, y, s]) => pumpkin(x, y, s)).join('')}`,
+  christmas: () => `<defs><linearGradient id="sxw" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#8e2a2f"/><stop offset="1" stop-color="#6b1f24"/></linearGradient><linearGradient id="sxs" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#2a3a6a"/><stop offset="1" stop-color="#6c86b8"/></linearGradient></defs>
+    <rect width="600" height="700" fill="url(#sxw)"/><rect x="170" y="80" width="260" height="300" rx="12" fill="url(#sxs)"/>${stars(30, 600, 380, 9).replace(/class="twinkle"/g, 'class="twinkle" ').replace(/fill="#fff[^"]*"/g, 'fill="#ffffff"')}
+    <path d="M170 360 q60 -20 130 0 q70 -20 130 0 V380 H170Z" fill="#f4f7fb"/><rect x="170" y="80" width="260" height="300" rx="12" fill="none" stroke="#f6efe2" stroke-width="12"/><path d="M300 80 V380 M170 230 H430" stroke="#f6efe2" stroke-width="6"/>
+    <path d="M0 40 Q150 110 300 40 T600 40" stroke="#2f6b3a" stroke-width="14" fill="none"/>${[60, 150, 240, 360, 450, 540].map((x, i) => bauble(x, 70 + (i % 2) * 14, ['#d4af37', '#e8e2d0', '#c43b3b'][i % 3])).join('')}
+    <g transform="translate(70,540)"><path d="M0 -200 L55 -60 H-55Z M0 -150 L70 0 H-70Z" fill="#2f6b3a"/><rect x="-10" y="0" width="20" height="18" fill="#7a4a2a"/>${star5(0, -205, 1.4, '#ffd76a')}${[[-20, -90, '#c43b3b'], [25, -40, '#d4af37'], [-30, -20, '#e8e2d0'], [15, -120, '#c43b3b']].map(([x, y, c]) => `<circle cx="${x}" cy="${y}" r="6" fill="${c}"/>`).join('')}</g>
+    <path d="M0 560 H600 V700 H0Z" fill="#5a3a2a"/><path d="M0 560 H600" stroke="#d4af37" stroke-width="2" opacity=".6"/>`,
+  cottagecore: () => `<defs><linearGradient id="scc" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#dcebf6"/><stop offset=".6" stop-color="#fbf1e2"/><stop offset="1" stop-color="#e6f0d2"/></linearGradient></defs>
+    <rect width="600" height="700" fill="url(#scc)"/><circle cx="480" cy="110" r="50" fill="#fff6dc" opacity=".8"/>
+    <path d="M0 430 q150 -50 300 -10 q150 -40 300 0 V700 H0Z" fill="#cfe2b5"/><g transform="translate(150,430)"><rect x="-40" y="-50" width="80" height="50" fill="#f3e6d2"/><path d="M-50 -50 L0 -90 L50 -50Z" fill="#c98b6a"/><rect x="-10" y="-30" width="20" height="30" fill="#8a6a4a"/><rect x="18" y="-40" width="14" height="12" fill="#bfe0f0"/></g>
+    <path d="M0 500 q200 -30 400 0 q120 15 200 0 V700 H0Z" fill="#b9d79e"/>
+    ${Array.from({ length: 26 }, (_, i) => flower(20 + (i * 97) % 580, 520 + (i * 53) % 170, 1.3, ['#f6a5bc', '#fff', '#f9d77e', '#c7b6f2'][i % 4])).join('')}
+    ${[[70, 620], [530, 640]].map(([x, y]) => `<g transform="translate(${x},${y})"><rect x="-5" y="-18" width="10" height="18" fill="#f3e6d2"/><path d="M-18 -16 Q0 -36 18 -16Z" fill="#d9534f"/><circle cx="-6" cy="-24" r="2.5" fill="#fff"/><circle cx="6" cy="-21" r="2" fill="#fff"/></g>`).join('')}`,
+  gamer: () => `<defs><linearGradient id="sgm" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#2a2340"/><stop offset="1" stop-color="#3a2a52"/></linearGradient><linearGradient id="sgr" x1="0" x2="1"><stop offset="0" stop-color="#ff7ab6"/><stop offset=".33" stop-color="#b48cff"/><stop offset=".66" stop-color="#6fe3ff"/><stop offset="1" stop-color="#7affc1"/></linearGradient></defs>
+    <rect width="600" height="700" fill="url(#sgm)"/><rect x="0" y="36" width="600" height="6" fill="url(#sgr)" opacity=".9"/>
+    <rect x="20" y="120" width="150" height="100" rx="10" fill="#151122" stroke="url(#sgr)" stroke-width="4"/><rect x="430" y="120" width="150" height="100" rx="10" fill="#151122" stroke="url(#sgr)" stroke-width="4"/>
+    ${px(40, 140, 6, 4, 12, ['#ff7ab6', '#b48cff', '#6fe3ff', '#151122'], 7)}${px(450, 140, 6, 4, 12, ['#7affc1', '#6fe3ff', '#b48cff', '#151122'], 13)}
+    ${[[80, 330], [520, 360], [300, 90]].map(([x, y], i) => heart(x, y, 2.4, ['#ff7ab6', '#7affc1', '#b48cff'][i])).join('')}
+    <path d="M0 540 H600 V700 H0Z" fill="#1c1630"/><rect x="0" y="536" width="600" height="5" fill="url(#sgr)"/>
+    <g transform="translate(90,610)"><rect x="-38" y="-16" width="76" height="34" rx="16" fill="#c9b6ff"/><circle cx="-18" cy="0" r="5" fill="#2a2340"/><circle cx="18" cy="-4" r="4" fill="#ff7ab6"/><circle cx="26" cy="4" r="4" fill="#7affc1"/></g>`,
+  minecraft: () => `<rect width="600" height="700" fill="#8ec9f5"/>${px(60, 70, 8, 2, 16, ['#ffffff', '#f4f8fb'], 4)}${px(380, 120, 7, 2, 16, ['#ffffff', '#eef4f9'], 9)}<rect x="470" y="40" width="64" height="64" fill="#fff3a8"/>
+    <g>${px(30, 260, 3, 3, 30, ['#3f8a2e', '#4f9e38', '#367a28'], 2)}<rect x="62" y="350" width="26" height="110" fill="#7a5a3a"/></g><g>${px(480, 280, 3, 3, 30, ['#3f8a2e', '#4f9e38', '#367a28'], 5)}<rect x="512" y="370" width="26" height="90" fill="#7a5a3a"/></g>
+    ${px(0, 460, 20, 1, 30, ['#5aa83c', '#4f9e38', '#62b445'], 6)}${px(0, 490, 20, 7, 30, ['#8a5f3c', '#7a5232', '#94683f', '#6e4a2c'], 8)}`,
+});
+
 export function sceneSVG(name) {
   const f = SCENES[name];
   return f ? `<svg class="scene-bg" viewBox="0 0 600 700" preserveAspectRatio="xMidYMid slice" aria-hidden="true">${f()}</svg>` : '';

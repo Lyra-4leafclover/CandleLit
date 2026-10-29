@@ -390,7 +390,7 @@ VIEWS.bakery = () => {
       </div>
       <div class="card">
         <div class="row" style="margin-bottom:14px"><h3 style="margin:0">Cake style</h3><span class="spacer"></span><div class="seg">${[['painted', 'Watercolor'], ['new', '3D'], ['classic', 'Classic']].map(([k, l]) => `<button class="${(state.settings.cakeStyle || 'painted') === k ? 'on' : ''}" data-act="cakeStyle" data-id="${k}">${l}</button>`).join('')}</div></div>
-        <div class="row" style="margin-bottom:14px"><h3 style="margin:0">Scene</h3><span class="spacer"></span><div class="chips">${['plain', 'gingham', 'window', 'garden', 'night'].map((k) => `<button class="chip sm ${(state.settings.scene || 'plain') === k ? 'on' : ''}" data-act="scene" data-id="${k}">${k[0].toUpperCase() + k.slice(1)}</button>`).join('')}</div></div>
+        <div class="row" style="margin-bottom:14px"><h3 style="margin:0">Scene</h3><span class="spacer"></span><div class="chips">${SCENE_LIST.map(([k, l]) => `<button class="chip sm ${(state.settings.scene || 'plain') === k ? 'on' : ''}" data-act="scene" data-id="${k}">${l}</button>`).join('')}</div></div>
         <h3>Cake design</h3>
         <div class="chips">${ownedCakes.map((c) => `<button class="chip ${cake.design === c.id ? 'on' : ''}" data-act="cakeDesign" data-id="${c.id}">${esc(c.name)}</button>`).join('')}</div>
         <h3 style="margin-top:18px">Toppers</h3>
@@ -432,10 +432,12 @@ function candleLog(candles) {
 }
 
 /* ---------- share card ---------- */
-const PAINTED_SCENES = ['gingham', 'window', 'garden', 'night'];
-const sceneBg = (name) => (getArtMode() === 'painted' && PAINTED_SCENES.includes(name) ? `<img class="scene-bg" src="/art5/scene_${name}.webp" alt="">` : sceneSVG(name));
+const SCENE_LIST = [['plain', 'Plain'], ['gingham', 'Gingham'], ['window', 'Window'], ['garden', 'Garden'], ['night', 'Night'], ['gothic', 'Gothic'], ['emo', 'Emo'], ['halloween2', 'Halloween'], ['christmas', 'Christmas'], ['cottagecore', 'Cottagecore'], ['gamer', 'Gamer'], ['minecraft', 'Minecraft']];
+const SCENE_DIR = { gingham: 'art5', window: 'art5', garden: 'art5', night: 'art5', gothic: 'art6', emo: 'art6', halloween2: 'art6', christmas: 'art6', cottagecore: 'art6', gamer: 'art6', minecraft: 'art6' };
+const PAINTED_SCENES = Object.keys(SCENE_DIR);
+const sceneBg = (name) => (getArtMode() === 'painted' && PAINTED_SCENES.includes(name) ? `<img class="scene-bg" src="/${SCENE_DIR[name]}/scene_${name}.webp" alt="">` : sceneSVG(name));
 function cardBackground(name) {
-  if (getArtMode() === 'painted' && PAINTED_SCENES.includes(name)) return `<image href="/art5/scene_${name}.webp" x="0" y="0" width="1080" height="1350" preserveAspectRatio="xMidYMid slice"/>`;
+  if (getArtMode() === 'painted' && PAINTED_SCENES.includes(name)) return `<image href="/${SCENE_DIR[name]}/scene_${name}.webp" x="0" y="0" width="1080" height="1350" preserveAspectRatio="xMidYMid slice"/>`;
   const svg = sceneSVG(name);
   return svg ? svg.replace('<svg class="scene-bg"', '<svg x="0" y="0" width="1080" height="1350"') : '';
 }

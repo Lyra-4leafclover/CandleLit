@@ -1,5 +1,6 @@
 import { ART3, CAKE_ART } from './art3.js';
 import { ART4 } from './art4.js';
+import { ART6, CAKE_ART6 } from './art6.js';
 
 let uidN = 0;
 const uid = () => `u${++uidN}${Math.random().toString(36).slice(2, 5)}`;
@@ -256,7 +257,8 @@ const ART = {
   conch: { ar: 0.527, h: 150, drip: '#f9c2a4', molded: true, st: [[0.463, 0.006, 0.08], [0.447, 0.12, 0.16], [0.451, 0.143, 0.2], [0.453, 0.259, 0.26], [0.452, 0.462, 0.28], [0.469, 0.728, 0.3]] },
   abalone: { ar: 1.295, h: 82, drip: '#bfe8da', st: [[0.502, 0.29, 0.4], [0.507, 0.364, 0.4], [0.508, 0.364, 0.4], [0.506, 0.413, 0.4], [0.506, 0.495, 0.38], [0.524, 0.54, 0.36]] },
 };
-Object.assign(ART, ART3);
+Object.assign(ART, ART3, ART6);
+Object.assign(CAKE_ART, CAKE_ART6);
 const BODY_H = { pillar: 120, taper: 150, votive: 78 };
 for (const [k, b] of Object.entries(ART4.body)) ART['b_' + k] = { file: 'body_' + k, dir: 'art4', ar: b.ar, h: BODY_H[k], st: b.st, drip: '#fff8ee', molded: 1, baseW: b.baseW };
 const artSize = (d) => { const a = ART[d.art]; return { w: Math.round(a.h * a.ar), h: a.h }; };
@@ -1258,7 +1260,7 @@ function cakeSVGPainted(design, candles = [], toppers = [], opts = {}) {
     items.push({ y: p.y, s: `<ellipse cx="${p.x.toFixed(1)}" cy="${(p.y + 1).toFixed(1)}" rx="13" ry="3.6" fill="#3a2420" opacity=".14"/><g transform="translate(${p.x.toFixed(1)},${p.y.toFixed(1)}) scale(.6)"><title>${c.subject || ''} · ${c.minutes} min${c.melted ? ' (blown out early)' : ''}</title>${candleGroup(cd, c.kind, rem, { bare: true, lit: !c.melted && opts.lit !== false, blue: c.blue })}</g>` });
   });
   const body = items.sort((a, b) => a.y - b.y).map((it) => it.s).join('');
-  return `<svg class="${opts.cls || 'cake-svg'}" viewBox="0 0 400 ${Y0 + H + 12}" xmlns="http://www.w3.org/2000/svg"><ellipse cx="200" cy="${Y0 + H - 4}" rx="${W * 0.3}" ry="9" fill="#3a2420" opacity=".1"/><image href="/art3/cake_${design.id}.webp" x="${X0}" y="${Y0}" width="${W}" height="${H}"/>${body}</svg>`;
+  return `<svg class="${opts.cls || 'cake-svg'}" viewBox="0 0 400 ${Y0 + H + 12}" xmlns="http://www.w3.org/2000/svg"><ellipse cx="200" cy="${Y0 + H - 4}" rx="${W * 0.3}" ry="9" fill="#3a2420" opacity=".1"/><image href="/${art.dir || 'art3'}/cake_${design.id}.webp" x="${X0}" y="${Y0}" width="${W}" height="${H}"/>${body}</svg>`;
 }
 
 export const PSTUDIO = { bodies: Object.keys(ART4.body), holders: Object.keys(ART4.holder), patterns: ART4.pattern, decors: Object.keys(ART4.decor) };

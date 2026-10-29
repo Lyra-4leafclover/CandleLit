@@ -571,3 +571,6 @@ img.scene-bg { object-fit: cover; pointer-events: none; }
 .scene-gingham h2, .scene-window h2, .scene-garden h2 { color: #1f1a1c; }
 
 a.btn, a.btn:hover { color: var(--on-ink); text-decoration: none; }
+
+.scene-gothic h2, .scene-emo h2, .scene-halloween2 h2, .scene-christmas h2, .scene-cottagecore h2, .scene-gamer h2, .scene-minecraft h2 { background: rgba(255, 252, 248, 0.86); color: #1f1a1c; display: inline-block; padding: 6px 14px; border-radius: 999px; font-size: 1.15rem; }
+.scene-gothic .muted, .scene-emo .muted, .scene-halloween2 .muted, .scene-christmas .muted, .scene-cottagecore .muted, .scene-gamer .muted, .scene-minecraft .muted { background: rgba(255, 252, 248, 0.86); border-radius: 999px; padding: 4px 12px; width: fit-content; margin: 8px auto 0; color: #6a5f62; }
