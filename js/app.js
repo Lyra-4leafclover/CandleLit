@@ -1250,7 +1250,7 @@ function showAuth(mode = ui.authMode || 'login') {
       <div class="auth-brand"><span class="brand-mark"></span>Candlelit</div>
       <div class="auth-candles">${[['rosestick', 1], ['striped', 0.72], ['teacup', 0.85]].map(([id, r], i) => candleSVG(getCandle(id), 'taper', r, { lit: true, sparkles: i === 0, cls: 'auth-candle' })).join('')}</div>
       <h1>Study until your candle melts.</h1>
-      <p>Light a candle, focus until it burns down, and fill your bakery with cakes. Bring friends to study parties.</p>
+      <p>Light a candle, focus until it burns down, and fill your bakery with cakes.</p>
     </div>
     <div class="auth-card">
       <div class="seg auth-seg"><button class="${mode === 'login' ? 'on' : ''}" data-act="authMode" data-id="login">Sign in</button><button class="${mode === 'signup' ? 'on' : ''}" data-act="authMode" data-id="signup">Create account</button></div>
@@ -1263,7 +1263,7 @@ function showAuth(mode = ui.authMode || 'login') {
         <p class="auth-error" id="authError" role="alert"></p>
         <button class="btn big" type="submit" style="width:100%">${mode === 'login' ? 'Sign in' : 'Create account'}</button>
       </form>
-      <div class="auth-alt"><button class="link-btn" data-act="guest">Continue as guest</button><span class="muted">Guest progress stays on this device, and study parties need an account.</span></div>
+      <div class="auth-alt"><button class="link-btn" data-act="guest">Continue as guest</button><span class="muted">Guest progress stays on this device.</span></div>
     </div>
   </section>`;
   setTimeout(() => $('#authForm input')?.focus(), 0);

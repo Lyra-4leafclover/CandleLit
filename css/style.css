@@ -637,6 +637,7 @@ body { zoom: var(--z); }
 .altar .candle-svg { height: clamp(220px, calc(100vh / var(--z) - 330px), 470px); }
 .studio-preview { height: clamp(220px, calc(100vh / var(--z) - 400px), 380px); }
 .chat-card { height: min(560px, calc(100vh / var(--z) - 160px)); }
+.auth { min-height: calc(100vh / var(--z)); }
 @media (max-width: 900px) {
   .stage, .stage .candle-big { height: clamp(200px, calc(91vh / var(--z) - 380px), 360px); }
   .altar { min-height: 0; }
