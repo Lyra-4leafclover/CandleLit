@@ -1143,6 +1143,111 @@ function topperSide(toppers, t, R, G) {
   return s;
 }
 
+const TM = {
+  rose: (c = '#7a1f2e') => `<path d="M-7 3 q-4 1 -6 -2 M7 3 q4 1 6 -2" stroke="#3f5a3a" stroke-width="2.2" fill="none"/><circle r="5.5" fill="${c}"/><path d="M-3 -1 q3 -4 6 0 q-3 3 -6 0 M-4 2 q4 3 8 0" fill="none" stroke="${light(c, 0.3)}" stroke-width="1"/>`,
+  moon: (c = '#e8e2f0') => `<path d="M2 -6 a6 6 0 1 0 0 12 a4.5 4.5 0 1 1 0 -12z" fill="${c}"/>`,
+  bat: (c = '#1a1418') => `<path transform="scale(.6)" d="M0 0 C-4 -6 -10 -6 -14 -2 C-11 -2 -10 1 -12 3 C-8 1 -5 2 -4 5 C-2 2 0 2 0 2 C0 2 2 2 4 5 C5 2 8 1 12 3 C10 1 11 -2 14 -2 C10 -6 4 -6 0 0Z" fill="${c}"/>`,
+  star: (c = '#1a1418') => `<path transform="scale(.6)" d="M0 -10 L2.9 -3.1 10 -3.1 4.3 1.3 6.5 8.5 0 4.2 -6.5 8.5 -4.3 1.3 -10 -3.1 -2.9 -3.1Z" fill="${c}"/>`,
+  heart: (c = '#ff5fa2') => `<path d="M0 5 C-7 -1 -11 -6 -7 -10 C-4 -12 0 -10 0 -7 C0 -10 4 -12 7 -10 C11 -6 7 -1 0 5Z" fill="${c}"/>`,
+  pin: () => `<path d="M-6 0 H5 a2 2 0 0 0 0 -3 H-4" fill="none" stroke="#c9c4cf" stroke-width="1.4"/><circle cx="-6" cy="0" r="1.6" fill="#c9c4cf"/>`,
+  ghost: () => `<path d="M-5 5 V-1 a5 5 0 0 1 10 0 V5 l-1.7 -1.5 -1.7 1.5 -1.6 -1.5 -1.6 1.5 -1.7 -1.5z" fill="#fff"/><circle cx="-1.8" cy="-1" r=".9" fill="#2a2028"/><circle cx="1.8" cy="-1" r=".9" fill="#2a2028"/>`,
+  pumpkin: () => `<ellipse rx="7" ry="5.5" fill="#f39a4a"/><ellipse rx="3.4" ry="5.5" fill="#f7aa5e"/><path d="M0 -5.5 q1 -3 3 -3.5" stroke="#5b7a3a" stroke-width="1.6" fill="none"/>`,
+  candycorn: () => `<path d="M-4.5 5 L0 -7 L4.5 5Z" fill="#fff8e6"/><path d="M-4.5 5 L-2.8 0.5 H2.8 L4.5 5Z" fill="#ffd166"/><path d="M-2.8 0.5 L-1.4 -3 H1.4 L2.8 0.5Z" fill="#f39a4a"/>`,
+  hat: () => `<ellipse cy="4" rx="9" ry="2.5" fill="#2a2028"/><path d="M-5 4 L1 -9 L5 4Z" fill="#2a2028"/><rect x="-4.6" y="1" width="9.2" height="2" fill="#9a7ac8"/>`,
+  holly: () => `<path d="M0 0 q-6 -5 -12 -2 q3 2 2 4 q4 -1 10 -2Z M0 0 q6 -5 12 -2 q-3 2 -2 4 q-4 -1 -10 -2Z" fill="#2f6b3a"/><circle cx="-1.5" cy="-1" r="2" fill="#c43b3b"/><circle cx="1.8" cy="-1.5" r="2" fill="#c43b3b"/><circle cx="0" cy="1.5" r="2" fill="#c43b3b"/>`,
+  flake: (c = '#ffffff') => `<path d="M0 -6 V6 M-5.2 -3 L5.2 3 M-5.2 3 L5.2 -3" stroke="${c}" stroke-width="1.4" stroke-linecap="round"/>`,
+  bow: (c = '#c43b3b') => `<path d="M0 0 C-4 -5 -9 -4 -8 0 C-9 4 -4 5 0 0 C4 -5 9 -4 8 0 C9 4 4 5 0 0Z M-1 0 L-4 7 M1 0 L4 7" fill="${c}" stroke="${c}" stroke-width="1.4"/>`,
+  ginger: () => `<g fill="#b9773e"><circle cy="-5" r="3"/><path d="M-2.5 -2.5 H2.5 L6 0 L5 1.6 L2.5 0.5 V3 L4.5 7 L2.8 7.8 L0 4 L-2.8 7.8 L-4.5 7 L-2.5 3 V0.5 L-5 1.6 L-6 0Z"/></g><path d="M-1.5 -2 h3" stroke="#fff" stroke-width=".8"/>`,
+  daisy: (c = '#ffffff') => `${[0, 60, 120, 180, 240, 300].map((r) => `<ellipse cx="0" cy="-3.6" rx="1.8" ry="3" fill="${c}" transform="rotate(${r})"/>`).join('')}<circle r="2" fill="#f6c445"/>`,
+  bee: () => `<ellipse cx="-2" cy="-4" rx="2.5" ry="1.8" fill="#fff" opacity=".85"/><ellipse cx="2" cy="-4" rx="2.5" ry="1.8" fill="#fff" opacity=".85"/><ellipse rx="5" ry="3.4" fill="#f6c445"/><path d="M-1.6 -3.2 V3.2 M1.6 -3.2 V3.2" stroke="#2a1a10" stroke-width="1.4"/>`,
+  hex: (c = '#e0a020') => `<path d="M0 -6 L5.2 -3 V3 L0 6 L-5.2 3 V-3Z" fill="none" stroke="${c}" stroke-width="1.6"/>`,
+  pxheart: (c = '#ff7ab6') => { const H = ['.XX.XX.', 'XXXXXXX', 'XXXXXXX', '.XXXXX.', '..XXX..', '...X...']; let o = ''; H.forEach((r, y) => [...r].forEach((ch, x) => { if (ch === 'X') o += `<rect x="${(x - 3.5) * 1.8}" y="${(y - 3) * 1.8}" width="1.85" height="1.85" fill="${c}"/>`; })); return o; },
+  pxstar: (c = '#f6c445') => `<g fill="${c}"><rect x="-1" y="-5" width="2" height="10"/><rect x="-5" y="-1" width="10" height="2"/><rect x="-3" y="-3" width="6" height="6"/></g>`,
+  pad: (c = '#a58cf0') => `<rect x="-9" y="-4.5" width="18" height="9" rx="4.5" fill="${c}"/><path d="M-6.5 0 h4 M-4.5 -2 v4" stroke="#fff" stroke-width="1.2"/><circle cx="3.5" cy="-1" r="1.1" fill="#ff7ab6"/><circle cx="6" cy="1.2" r="1.1" fill="#7affc1"/>`,
+  console: () => `<rect x="-5" y="-7" width="10" height="14" rx="1.6" fill="#bff0dc" stroke="#7ac8a8" stroke-width=".8"/><rect x="-3.5" y="-5.5" width="7" height="5" fill="#2a2340"/><circle cx="2" cy="3.5" r="1" fill="#ff7ab6"/><path d="M-3.5 3.5 h2.6 M-2.2 2.2 v2.6" stroke="#2a2340" stroke-width=".9"/>`,
+  pawn: (c = '#1a1418') => `<path d="M-5 6 H5 L4 4 H-4Z M-2.6 4 Q-3 0 -1.6 -1 H1.6 Q3 0 2.6 4Z" fill="${c}"/><circle cy="-3.4" r="2.6" fill="${c}"/>`,
+  knight: (c = '#1a1418') => `<path d="M-5 6 H5 L4 4 H-4Z M-3 4 Q-3 -1 -1 -3 L-3 -4 Q0 -8 3 -5 Q4 -1 2.6 4Z" fill="${c}"/>`,
+  soccer: () => `<circle r="5.5" fill="#fff" stroke="#2a2228" stroke-width=".6"/><path d="M0 -2.4 L2.3 -0.7 1.4 2 -1.4 2 -2.3 -0.7Z" fill="#2a2228"/><path d="M0 -2.4 V-5.5 M2.3 -0.7 L5.2 -1.6 M1.4 2 L3.2 4.4 M-1.4 2 L-3.2 4.4 M-2.3 -0.7 L-5.2 -1.6" stroke="#2a2228" stroke-width=".6"/>`,
+  tball: () => `<circle r="5" fill="#d8ec4a"/><path d="M-4.6 -2 Q0 0 -4.6 2 M4.6 -2 Q0 0 4.6 2" stroke="#fff" stroke-width="1" fill="none"/>`,
+  racket: () => `<ellipse cy="-3" rx="4" ry="5" fill="none" stroke="#2f6fd4" stroke-width="1.4"/><path d="M-2.4 -3 h4.8 M0 -7 v8 M0 2 V8" stroke="#2f6fd4" stroke-width=".7"/><path d="M0 2 V8" stroke="#2a2228" stroke-width="2"/>`,
+  baseball: () => `<circle r="5" fill="#fff" stroke="#d8d0c4" stroke-width=".5"/><path d="M-3 -4 Q-1 0 -3 4 M3 -4 Q1 0 3 4" stroke="#d43b3b" stroke-width=".8" fill="none"/>`,
+  bat2: () => `<path d="M-8 6 L6 -6" stroke="#b9773e" stroke-width="2.6" stroke-linecap="round"/><path d="M-8 6 L-5 3.4" stroke="#6b4226" stroke-width="2.6"/>`,
+  vball: () => `<circle r="5.5" fill="#fff"/><path d="M-5 -2 Q0 -6 5 -2 L5 0 Q0 -4 -5 0Z" fill="#2f6fd4"/><path d="M-5 2 Q0 6 5 2 L4.6 3.4 Q0 7 -4.6 3.4Z" fill="#f6c445"/>`,
+  golfball: () => `<circle r="4.5" fill="#fff" stroke="#d8d8d8" stroke-width=".5"/>${[[-1.8, -1.6], [1.4, -1.8], [0, 0.4], [-2, 2], [2, 1.8]].map(([x, y]) => `<circle cx="${x}" cy="${y}" r=".6" fill="#d0d0d0"/>`).join('')}`,
+  flag: () => `<ellipse cy="0" rx="4" ry="1.4" fill="#1a1418"/><path d="M0 0 V-22" stroke="#fff" stroke-width="1.4"/><path d="M0 -22 L10 -18.5 L0 -15Z" fill="#d43b3b"/>`,
+};
+// side cells: (th0, th1, y0, y1) in cylinder space -> polygon
+const THEME3D = {
+  gothic: { side: [['rose', 7, 0.55, 1.2]], top: { scatter: [['rose', 4, 1.1]] }, band: 'lace' },
+  gothic2: { side: [['moon', 6, 0.45, 1.2], ['bat', 6, 0.75, 1.3, '#1a1418', 0.5]], top: { scatter: [['moon', 3, 1], ['bat', 3, 1.2]] } },
+  emo: { cells: (k, j) => ((k + j) % 2 ? '#1a1418' : null), rows: [0.45, 1], cols: 14, side: [], top: { scatter: [['star', 6, 1.1], ['heart', 1, 1.2]] } },
+  emo2: { cells: (k, j) => (k % 3 === 0 || j % 3 === 0 ? '#b5262e' : (k + j) % 2 ? '#3a1018' : null), rows: [0.4, 1], cols: 22, rowsN: 6, side: [['pin', 5, 0.2, 1.2]], top: { scatter: [['star', 6, 1, '#ff5fa2'], ['pin', 2, 1.2]] } },
+  halloween2: { side: [['bat', 6, 0.4, 1.4, '#3a2e44'], ['ghost', 5, 0.75, 1.3, null, 0.4]], top: { scatter: [['pumpkin', 5, 1.2], ['ghost', 3, 1.1]] } },
+  halloween3: { side: [['candycorn', 9, 0.6, 1.2]], top: { scatter: [['pumpkin', 4, 1.1], ['hat', 1, 1.6], ['candycorn', 5, 0.9]] } },
+  christmas: { side: [['holly', 7, 0.5, 1.1], ['flake', 6, 0.8, 1, '#d8e6f2', 0.5]], top: { scatter: [['flake', 7, 1.1, '#c43b3b'], ['holly', 3, 1]] } },
+  christmas2: { side: [['ginger', 6, 0.55, 1.4], ['bow', 6, 0.25, 1, '#c43b3b', 0.5]], top: { scatter: [['flake', 6, 1.1, '#9cc0e0'], ['ginger', 2, 1.3]] } },
+  cottagecore: { side: [['daisy', 9, 0.55, 1.1, '#ffffff'], ['daisy', 8, 0.82, 0.8, '#f6a5bc', 0.4]], band: 'gingham', top: { scatter: [['daisy', 6, 1.1, '#ffffff'], ['daisy', 4, 1, '#c7b6f2']] } },
+  cottagecore2: { side: [['hex', 11, 0.7, 1.1], ['bee', 6, 0.38, 1.2, null, 0.4]], top: { scatter: [['daisy', 6, 1.1], ['bee', 3, 1.2]] } },
+  gamer: { side: [['pxheart', 7, 0.55, 1.2], ['pad', 4, 0.55, 1.2, '#a58cf0', 0.5]], top: { scatter: [['pxheart', 5, 1, '#7affc1'], ['pxstar', 4, 1, '#ff7ab6']] } },
+  gamer2: { side: [['pxstar', 8, 0.5, 1.1, '#ff7ab6'], ['console', 4, 0.6, 1.3, null, 0.5]], top: { scatter: [['pxheart', 5, 1, '#b48cff'], ['console', 1, 1.6]] } },
+  minecraft: { cells: (k, j, R) => (j === 0 ? ['#5aa83c', '#4f9e38', '#62b445'][Math.floor(R() * 3)] : j === 1 && R() < 0.4 ? '#5aa83c' : ['#8a5f3c', '#7a5232', '#94683f', '#6e4a2c'][Math.floor(R() * 4)]), rows: [0, 1], cols: 20, rowsN: 6, side: [], top: { grid: (R) => ['#5aa83c', '#4f9e38', '#62b445', '#3f8a2e'][Math.floor(R() * 4)] } },
+  minecraft2: { cells: (k, j, R) => (R() < 0.12 ? '#6fe3ff' : ['#8a8a8a', '#7a7a7a', '#9a9a9a', '#6e6e6e'][Math.floor(R() * 4)]), rows: [0, 1], cols: 20, rowsN: 6, side: [], top: { grid: (R) => (R() < 0.12 ? '#6fe3ff' : ['#8a8a8a', '#7a7a7a', '#9a9a9a'][Math.floor(R() * 3)]) } },
+  chess: { side: [['pawn', 6, 0.6, 1.4], ['knight', 6, 0.6, 1.4, '#1a1418', 0.5]], top: { checker: ['#1a1418', '#f6efe2'] } },
+  soccer: { side: [['soccer', 7, 0.55, 1.3]], top: { lines: 'pitch' } },
+  basketball: { side: [], seams: 'basket', top: { lines: 'basket' } },
+  tennis: { side: [['tball', 6, 0.55, 1.3], ['racket', 4, 0.5, 1.3, null, 0.5]], top: { lines: 'court' } },
+  baseball: { side: [], seams: 'baseball', top: { scatter: [['baseball', 3, 1.4], ['bat2', 1, 1.6]] } },
+  volleyball: { side: [], waves: ['#2f6fd4', '#f6c445'], top: { scatter: [['vball', 2, 1.6]] } },
+  golf: { side: [['golfball', 7, 0.6, 1.2]], top: { golf: true } },
+};
+function themeSide(T, design, t, i, R, id, cx) {
+  const rx = t.w / 2, ry = t.ry, H = t.bottom - t.top;
+  const P = (th, yy) => `${(cx - Math.cos(th) * rx).toFixed(1)},${(yy + Math.sin(th) * ry).toFixed(1)}`;
+  let o = '';
+  if (T.cells) {
+    const n = T.cols, rn = T.rowsN || 2, y0 = t.top + H * T.rows[0], y1 = t.top + H * T.rows[1];
+    for (let j = 0; j < rn; j++) for (let k = 0; k < n; k++) {
+      const f = T.cells(k, j, R); if (!f) continue;
+      const a = (k / n) * Math.PI, b = ((k + 1) / n) * Math.PI, m = (a + b) / 2, ya = y0 + ((y1 - y0) * j) / rn, yb = y0 + ((y1 - y0) * (j + 1)) / rn;
+      o += `<polygon points="${P(a, ya)} ${P(m, ya)} ${P(b, ya)} ${P(b, yb + 0.6)} ${P(m, yb + 0.6)} ${P(a, yb + 0.6)}" fill="${f}"/>`;
+    }
+  }
+  const curve = (yy, amp, ph, col, w, dash = '') => { let d = ''; for (let q = 0; q <= 40; q++) { const th = (q / 40) * Math.PI; d += `${q ? 'L' : 'M'}${P(th, yy + Math.sin(th * 3 + ph) * amp)}`; } return `<path d="${d}" fill="none" stroke="${col}" stroke-width="${w}" ${dash}/>`; };
+  if (T.band === 'lace') o += curve(t.top + H * 0.2, 0, 0, '#1a1418', 5, 'stroke-dasharray="3 2"');
+  if (T.band === 'gingham') { o += curve(t.top + H * 0.22, 0, 0, '#f2a7b8', 9); o += curve(t.top + H * 0.22, 0, 0, '#fff', 9, 'stroke-dasharray="3 3" opacity=".7"'); }
+  if (T.waves) { o += curve(t.top + H * 0.45, 5, 0, T.waves[0], 9); o += curve(t.top + H * 0.68, 5, 1.6, T.waves[1], 9); }
+  if (T.seams === 'basket') { o += curve(t.top + H * 0.5, 0, 0, '#2a1a10', 2); for (const th0 of [0.35, 0.95, 1.55, 2.15, 2.75]) o += `<path d="M${P(th0, t.top)} L${P(th0, t.bottom)}" stroke="#2a1a10" stroke-width="${(2 * Math.sin(th0)).toFixed(2)}"/>`; }
+  if (T.seams === 'baseball') { [0.35, 0.72].forEach((f, z) => { o += curve(t.top + H * f, 7, z * 1.4, '#d43b3b', 1.4); for (let q = 1; q < 24; q++) { const th = (q / 24) * Math.PI, yy = t.top + H * f + Math.sin(th * 3 + z * 1.4) * 7; const [x, y] = P(th, yy).split(','); o += `<path d="M${(+x - 2).toFixed(1)} ${(+y - 2.6).toFixed(1)} l2 2.6 l2 -2.6" stroke="#d43b3b" stroke-width="1" fill="none"/>`; } }); }
+  for (const [name, n, yf, sc, col, off = 0] of T.side) for (let k = 0; k < n; k++) {
+    const th = ((k + 0.5 + off) / n) * Math.PI; if (th >= Math.PI) continue;
+    const s = sc * 2.3 * (0.45 + 0.55 * Math.sin(th)), [x, y] = P(th, t.top + H * yf).split(',');
+    o += `<g transform="translate(${x},${y}) scale(${(s * Math.max(0.35, Math.sin(th))).toFixed(2)},${s.toFixed(2)})">${TM[name](col || undefined)}</g>`;
+  }
+  return `<clipPath id="${id}cs${i}"><path d="M${cx - rx} ${t.top} L${cx - rx} ${t.bottom} A${rx} ${ry} 0 0 0 ${cx + rx} ${t.bottom} L${cx + rx} ${t.top} Z"/></clipPath><g clip-path="url(#${id}cs${i})">${o}</g>`;
+}
+function themeTop(T, cx, top, rx, ry, R, id) {
+  const E = (u, v) => `${(cx + u * rx).toFixed(1)},${(top + v * ry).toFixed(1)}`;
+  const tp = T.top; let o = '';
+  const cellGrid = (n, fill) => { for (let a = 0; a < n; a++) for (let b = 0; b < n; b++) { const f = fill(a, b); if (!f) continue; const u0 = -1 + (2 * a) / n, u1 = u0 + 2 / n + 0.01, v0 = -1 + (2 * b) / n, v1 = v0 + 2 / n + 0.01; o += `<polygon points="${E(u0, v0)} ${E(u1, v0)} ${E(u1, v1)} ${E(u0, v1)}" fill="${f}"/>`; } };
+  if (tp.checker) cellGrid(8, (a, b) => tp.checker[(a + b) % 2]);
+  if (tp.grid) cellGrid(10, () => tp.grid(R));
+  const L = (pts, w = 1.8, c = '#fff') => `<polyline points="${pts.map(([u, v]) => E(u, v)).join(' ')}" fill="none" stroke="${c}" stroke-width="${w}" stroke-linejoin="round"/>`;
+  const ell = (u, v, a, b, c, fill = 'none', w = 1.8) => `<ellipse cx="${(cx + u * rx).toFixed(1)}" cy="${(top + v * ry).toFixed(1)}" rx="${(a * rx).toFixed(1)}" ry="${(b * ry).toFixed(1)}" fill="${fill}" stroke="${c}" stroke-width="${w}"/>`;
+  if (tp.lines === 'pitch') { for (let k = 0; k < 6; k++) o += `<polygon points="${E(-1 + k / 3, -1)} ${E(-1 + (k + 0.5) / 3, -1)} ${E(-1 + (k + 0.5) / 3, 1)} ${E(-1 + k / 3, 1)}" fill="#000" opacity=".07"/>`; o += L([[0, -1], [0, 1]]) + ell(0, 0, 0.2, 0.2, '#fff') + L([[-0.86, -0.35], [-0.6, -0.35], [-0.6, 0.35], [-0.86, 0.35]]) + L([[0.86, -0.35], [0.6, -0.35], [0.6, 0.35], [0.86, 0.35]]) + ell(0, 0, 0.86, 0.86, '#fff'); }
+  if (tp.lines === 'court') o += L([[-0.62, -0.55], [0.62, -0.55], [0.62, 0.55], [-0.62, 0.55], [-0.62, -0.55]], 2) + L([[0, -0.55], [0, 0.55]], 2.6, '#2a2228') + L([[-0.34, -0.55], [-0.34, 0.55]]) + L([[0.34, -0.55], [0.34, 0.55]]) + L([[-0.34, 0], [0.34, 0]]);
+  if (tp.lines === 'basket') o += L([[-1, 0], [1, 0]], 2, '#2a1a10') + L([[0, -1], [0, 1]], 2, '#2a1a10') + `<path d="M${E(-0.55, -0.85)} Q${E(-0.2, 0)} ${E(-0.55, 0.85)} M${E(0.55, -0.85)} Q${E(0.2, 0)} ${E(0.55, 0.85)}" fill="none" stroke="#2a1a10" stroke-width="2"/>`;
+  if (tp.golf) o += ell(-0.45, 0.3, 0.26, 0.2, 'none', '#efe0b8', 0) + ell(0.4, -0.2, 0.32, 0.28, 'none', '#8fd46a', 0);
+  const scatter = tp.scatter || [];
+  const pos = []; const items = [];
+  for (const [name, n, sc, col] of scatter) for (let k = 0; k < n; k++) {
+    let u, v, tries = 0;
+    do { const a = R() * Math.PI * 2, r = 0.55 + R() * 0.3; u = Math.cos(a) * r; v = Math.sin(a) * r; tries++; } while (tries < 20 && pos.some(([pu, pv]) => (pu - u) ** 2 + ((pv - v) * 0.6) ** 2 < 0.06));
+    pos.push([u, v]); items.push({ v, s: `<g transform="translate(${E(u, v).replace(',', ' ')}) scale(${sc * 1.9})">${TM[name](col)}</g>` });
+  }
+  if (tp.golf) items.push({ v: -0.2, s: `<g transform="translate(${E(0.4, -0.2).replace(',', ' ')}) scale(2)">${TM.flag()}</g>` }, { v: 0.1, s: `<g transform="translate(${E(0.15, 0.1).replace(',', ' ')}) scale(1.9)">${TM.golfball()}</g>` });
+  items.sort((a, b) => a.v - b.v);
+  return `<clipPath id="${id}ct"><ellipse cx="${cx}" cy="${top}" rx="${rx - 2}" ry="${ry - 1}"/></clipPath><g clip-path="url(#${id}ct)">${o}</g>${items.map((x) => x.s).join('')}`;
+}
 function cakeSVG3D(design, candles = [], toppers = [], opts = {}) {
   const R = rng(opts.seed || design.id);
   const id = uid();
@@ -1182,6 +1287,7 @@ function cakeSVG3D(design, candles = [], toppers = [], opts = {}) {
     const side = `M${x1} ${t.top} L${x1} ${t.bottom} A${rx} ${t.ry} 0 0 0 ${x2} ${t.bottom} L${x2} ${t.top} Z`;
     out += `<path d="${side}" fill="url(#${id}s${i})"/>`;
     out += sideDeco(design, t, i, R, id);
+    if (THEME3D[design.id]) out += themeSide(THEME3D[design.id], design, t, i, R, id, cx);
     out += topperSide(toppers, t, R, id);
     out += `<path d="${side}" fill="url(#${id}edge)"/><path d="${side}" fill="url(#${id}vb)"/>`;
     if (design.drip) {
@@ -1208,6 +1314,7 @@ function cakeSVG3D(design, candles = [], toppers = [], opts = {}) {
   const rxT = tt.w / 2, ryT = tt.ry;
   const onTop = (f, th) => ({ x: cx + Math.cos(th) * rxT * f, y: tt.top + Math.sin(th) * ryT * f });
   const rimItem = (n, f, draw, off = 0) => { for (let k = 0; k < n; k++) { const th = off + (k / n) * Math.PI * 2; const p = onTop(f, th); items.push({ y: p.y, s: draw(p.x, p.y, 0.85 + 0.15 * Math.sin(th)) }); } };
+  if (THEME3D[design.id]) items.push({ y: -1e9, s: themeTop(THEME3D[design.id], cx, tt.top, rxT, ryT, R, id) });
   if (design.deco === 'strawberries') rimItem(9, 0.84, strawberry3D, 0.2);
   if (design.deco === 'berries') rimItem(14, 0.86, berry3D, 0.1);
   if (toppers.includes('cherries')) rimItem(6, 0.78, cherry3D, 0.5);
