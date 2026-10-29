@@ -25,39 +25,39 @@ const isSpring = m >= 2 && m <= 4;
 const isFinals = m === 11 || m === 4 || m === 3;
 
 export const RARITY = {
-  common: { label: 'Common', color: '#e8d9b5' },
-  rare: { label: 'Rare', color: '#7fd1ff' },
-  legendary: { label: 'Legendary', color: '#ffb84d' },
-  seasonal: { label: 'Limited', color: '#ff7ab6' },
-  custom: { label: 'Studio', color: '#c59bff' },
+  common: { label: 'Common', color: '#eef0e6' },
+  rare: { label: 'Rare', color: '#d6ebf3' },
+  legendary: { label: 'Legendary', color: '#f8e7b5' },
+  seasonal: { label: 'Limited', color: '#f9d9e6' },
+  custom: { label: 'Studio', color: '#e3defb' },
 };
 
 export const CANDLES = [
-  { id: 'classic', name: 'Classic Ivory Taper', rarity: 'common', price: 0, pattern: 'solid', c1: '#f6ecd6', c2: '#e6d3ad', drip: '#fff6e4' },
-  { id: 'striped', name: 'Striped Birthday', rarity: 'common', price: 0, pattern: 'stripes', c1: '#ffffff', c2: '#ff5f8f', drip: '#ffe0ea' },
-  { id: 'polka', name: 'Pastel Polka', rarity: 'common', price: 60, pattern: 'polka', c1: '#c9f0e4', c2: '#ff9ec7', drip: '#e9fff8' },
-  { id: 'butter', name: 'Buttercream Swirl', rarity: 'common', price: 80, pattern: 'spiral', c1: '#fff1b8', c2: '#ffffff', drip: '#fffbe6' },
-  { id: 'ombre', name: 'Twisted Sunset Ombré', rarity: 'rare', price: 220, pattern: 'ombre-twist', c1: '#ff6f61', c2: '#ffd36e', c3: '#b05cff', drip: '#ffc7a8' },
-  { id: 'marble', name: 'Gilded Marble', rarity: 'rare', price: 260, pattern: 'marble', c1: '#fbf8f2', c2: '#d4a537', drip: '#ffffff' },
-  { id: 'rose', name: 'Rose Garden', rarity: 'rare', price: 300, pattern: 'floral', c1: '#ffd6e0', c2: '#e0245e', c3: '#3f8f4f', drip: '#ffe8ee' },
-  { id: 'lace', name: 'Pearl & Lace', rarity: 'rare', price: 340, pattern: 'lace', c1: '#f3e9ff', c2: '#ffffff', drip: '#ffffff' },
-  { id: 'disco', name: 'Disco Ball', rarity: 'legendary', price: 650, pattern: 'disco', c1: '#c9ced6', c2: '#ffffff', drip: '#e6e9ee' },
-  { id: 'cherub', name: 'Burning Cherub', rarity: 'legendary', price: 800, pattern: 'cherub', c1: '#fff4f0', c2: '#f2c14e', drip: '#fff9f5', topper: 'cherub' },
-  { id: 'galaxy', name: 'Midnight Galaxy', rarity: 'legendary', price: 720, pattern: 'galaxy', c1: '#1b0b3a', c2: '#7a3cff', c3: '#ff5fd2', drip: '#6b4bd6' },
-  { id: 'geode', name: 'Amethyst Geode', rarity: 'legendary', price: 900, pattern: 'geode', c1: '#8e44ad', c2: '#d7b4ff', c3: '#4a1a6b', drip: '#c8a2ff' },
-  { id: 'pumpkin', name: 'Jack-o’-Lantern', rarity: 'seasonal', price: 280, pattern: 'pumpkin', c1: '#ff8a1f', c2: '#c25700', drip: '#ffb15c', available: isHalloween, season: 'Halloween' },
-  { id: 'sakura', name: 'Sakura Petal', rarity: 'seasonal', price: 280, pattern: 'sakura', c1: '#ffe3ec', c2: '#ff8fb3', drip: '#fff0f5', available: isSpring, season: 'Spring' },
+  { id: 'classic', name: 'Vanilla Ribbon Pillar', rarity: 'common', price: 0, shape: 'pillar', c1: '#fff8ea', c2: '#f1dfc0', drip: '#fffaf0', holder: 'wood', decor: ['ribbon'], accent: '#e7a8b8' },
+  { id: 'striped', name: 'Watercolor Heart', rarity: 'common', price: 0, shape: 'pillar', c1: '#fbe1e8', c2: '#efb6c6', drip: '#fdeaf0', holder: 'wood', decor: ['heart'], accent: '#d9668a' },
+  { id: 'pearl', name: 'Pearl & Bow Taper', rarity: 'common', price: 80, shape: 'taper', c1: '#fde9ec', c2: '#f5c9d2', drip: '#fff2f4', holder: 'glass', decor: ['pearls', 'bow'], accent: '#ef9fb2' },
+  { id: 'lavender', name: 'Lavender Fields', rarity: 'common', price: 120, shape: 'pillar', c1: '#efe8fc', c2: '#d4c4f1', drip: '#f6f1fe', holder: 'ceramic', hc: '#f7f3ea', decor: ['lavender', 'twine'], accent: '#9b7fd6' },
+  { id: 'strawberry', name: 'Strawberry Milk', rarity: 'common', price: 140, shape: 'pillar', c1: '#fff3f4', c2: '#ffd0d8', drip: '#fff7f8', holder: 'ceramic', hc: '#ffe6ea', decor: ['strawberries'], accent: '#ee5d6c' },
+  { id: 'spiral', name: 'Twisted Sorbet', rarity: 'rare', price: 220, shape: 'spiral', c1: '#dcf3ec', c2: '#bfe6dc', c3: '#f7bccd', drip: '#eefaf6', holder: 'brass', decor: [], accent: '#f29db7' },
+  { id: 'rosestick', name: 'Rose Candlestick', rarity: 'rare', price: 300, shape: 'taper', c1: '#fff5e4', c2: '#f2ddbb', drip: '#fff9ee', holder: 'ornate', hc: '#eaa9b6', holderFlowers: true, decor: ['roses', 'vine'], accent: '#c9466b' },
+  { id: 'teacup', name: 'Teatime Teacup', rarity: 'rare', price: 320, shape: 'teacup', c1: '#fff6e8', c2: '#f6e3c4', drip: '#fff8ee', hc: '#ffffff', decor: ['blossoms'], accent: '#8fb4e3' },
+  { id: 'moon', name: 'Moon & Stars', rarity: 'rare', price: 360, shape: 'taper', c1: '#cfd2f5', c2: '#9ea5e3', drip: '#e2e5fb', holder: 'brass', decor: ['moon'], accent: '#e7c46f' },
+  { id: 'butterfly', name: 'Butterfly Dream', rarity: 'legendary', price: 650, shape: 'taper', c1: '#f5ecff', c2: '#dbc9f6', drip: '#faf5ff', holder: 'ornate', hc: '#f6f0e6', decor: ['butterflies'], accent: '#b48be8' },
+  { id: 'garden', name: 'Secret Garden Jar', rarity: 'legendary', price: 720, shape: 'jar', c1: '#fffaf0', c2: '#f4e6cc', drip: '#fffdf6', decor: ['pressed'], accent: '#e98aa5' },
+  { id: 'cherub', name: "Cherub's Wish", rarity: 'legendary', price: 800, shape: 'pillar', c1: '#fffaf4', c2: '#f3e5d4', drip: '#fffdf9', holder: 'ceramic', hc: '#fdf3e3', decor: ['wings', 'pearls'], topper: 'cherub', accent: '#e2b65c' },
+  { id: 'pumpkin', name: 'Pumpkin Spice', rarity: 'seasonal', price: 280, shape: 'pillar', c1: '#fcd6ad', c2: '#f0a464', drip: '#fde5ca', holder: 'wood', decor: ['leaves', 'twine'], accent: '#b5532a', available: isHalloween, season: 'Halloween' },
+  { id: 'sakura', name: 'Sakura Branch', rarity: 'seasonal', price: 280, shape: 'taper', c1: '#fff1f5', c2: '#ffd3e0', drip: '#fff7f9', holder: 'ornate', hc: '#fdfaf6', decor: ['branch'], accent: '#f28cab', available: isSpring, season: 'Spring' },
 ];
 
 export const CAKES = [
-  { id: 'vanilla', name: 'Classic Vanilla', rarity: 'common', price: 0, tiers: [{ w: 300, h: 110, c: '#fff4dc' }], piping: '#ffffff', deco: 'none', plate: '#e9e2f5' },
+  { id: 'vanilla', name: 'Classic Vanilla', rarity: 'common', price: 0, tiers: [{ w: 300, h: 110, c: '#fff4dc' }], piping: '#ffffff', deco: 'none', plate: '#f3ede4' },
   { id: 'strawberry', name: 'Strawberry Shortcake', rarity: 'common', price: 180, tiers: [{ w: 300, h: 115, c: '#ffe0e6' }], piping: '#ffffff', drip: '#ff4d6d', deco: 'strawberries', plate: '#ffffff' },
   { id: 'chocolate', name: 'Chocolate Drip', rarity: 'common', price: 220, tiers: [{ w: 300, h: 120, c: '#8a4b2a' }], piping: '#f4d9b8', drip: '#3b1d0f', deco: 'none', plate: '#f0e6d8' },
   { id: 'heart', name: 'Vintage Heart (Lambeth)', rarity: 'rare', price: 420, tiers: [{ w: 310, h: 120, c: '#ffb3c7' }], piping: '#ff5c8a', piping2: '#ffffff', deco: 'bows', plate: '#ffe6ee', lambeth: true },
-  { id: 'funfetti', name: 'Rainbow Funfetti', rarity: 'rare', price: 380, tiers: [{ w: 300, h: 80, c: '#ffffff' }, { w: 220, h: 70, c: '#fff6fb' }], piping: '#7fd1ff', deco: 'confetti', plate: '#e8f7ff' },
+  { id: 'funfetti', name: 'Rainbow Funfetti', rarity: 'rare', price: 380, tiers: [{ w: 300, h: 80, c: '#ffffff' }, { w: 220, h: 70, c: '#fff6fb' }], piping: '#b9dff0', deco: 'confetti', plate: '#e8f7ff' },
   { id: 'matcha', name: 'Matcha Tier', rarity: 'rare', price: 450, tiers: [{ w: 300, h: 85, c: '#b7d89a' }, { w: 210, h: 75, c: '#d9edc5' }], piping: '#fffbea', drip: '#6f9a4a', deco: 'none', plate: '#f4f1e6' },
-  { id: 'royal', name: 'Royal Gold Tier', rarity: 'legendary', price: 1100, tiers: [{ w: 320, h: 80, c: '#2b1640' }, { w: 240, h: 70, c: '#3d1f5c' }, { w: 160, h: 60, c: '#2b1640' }], piping: '#e8b84a', piping2: '#fff1c2', deco: 'gold', plate: '#e8b84a', lambeth: true },
-  { id: 'halloween', name: 'Halloween Drip', rarity: 'seasonal', price: 500, tiers: [{ w: 300, h: 90, c: '#2a1a33' }, { w: 210, h: 70, c: '#ff7a1a' }], piping: '#a6ff4d', drip: '#7cff3a', deco: 'bats', plate: '#3a2a44', available: isHalloween, season: 'Halloween' },
+  { id: 'royal', name: 'Royal Gold Tier', rarity: 'legendary', price: 1100, tiers: [{ w: 320, h: 80, c: '#e4def7' }, { w: 240, h: 70, c: '#efeafb' }, { w: 160, h: 60, c: '#e4def7' }], piping: '#d8ad5e', piping2: '#ffffff', deco: 'gold', plate: '#f3ead8', lambeth: true },
+  { id: 'halloween', name: 'Halloween Drip', rarity: 'seasonal', price: 500, tiers: [{ w: 300, h: 90, c: '#5b4a66' }, { w: 210, h: 70, c: '#f6a35c' }], piping: '#fff3e0', drip: '#4a3a55', deco: 'bats', plate: '#efe6dc', available: isHalloween, season: 'Halloween' },
   { id: 'blossom', name: 'Cherry Blossom Tier', rarity: 'seasonal', price: 500, tiers: [{ w: 300, h: 90, c: '#ffeef4' }, { w: 210, h: 75, c: '#ffd3e2' }], piping: '#ffffff', deco: 'blossoms', plate: '#ffffff', available: isSpring, season: 'Spring' },
   { id: 'finals', name: 'Finals Week Survival', rarity: 'seasonal', price: 450, tiers: [{ w: 300, h: 100, c: '#d9c7a7' }], piping: '#6b4226', drip: '#4a2c17', deco: 'finals', plate: '#cfd8e3', available: isFinals, season: 'Finals season' },
 ];
@@ -73,6 +73,9 @@ export const TOPPERS = [
 ];
 
 export const STUDIO = {
+  shapes: ['taper', 'pillar', 'spiral'],
+  holders: ['glass', 'wood', 'ceramic', 'brass', 'ornate'],
+  decors: ['none', 'heart', 'bow', 'pearls', 'roses', 'moon', 'butterflies', 'blossoms', 'lavender', 'strawberries'],
   patterns: ['solid', 'stripes', 'spiral', 'polka', 'ombre', 'sparkle'],
   scents: ['Vanilla Bean', 'Old Library', 'Rain on Stone', 'Burnt Sugar', 'Fig & Cedar', 'Midnight Espresso', 'Pink Peppercorn', 'Strawberry Milk'],
 };

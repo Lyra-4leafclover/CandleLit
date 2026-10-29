@@ -23,7 +23,7 @@ const cakeOpts = (extra = {}) => ({ getDesign: getCandle, ...extra });
 
 const ui = {
   view: 'focus', shopTab: 'candles', recapWeek: 0, agitatedUntil: 0, lastRem: -1, lastAgitated: false,
-  studio: { name: '', c1: '#ffc1d6', c2: '#fff6e0', pattern: 'stripes', scent: STUDIO.scents[0] },
+  studio: { name: '', c1: '#fde4ec', c2: '#f6c6d6', c3: '#e2668e', pattern: 'solid', shape: 'taper', holder: 'ornate', decor: 'roses', scent: STUDIO.scents[0] },
   joinCode: '', blown: false, newSubject: '',
 };
 
@@ -42,7 +42,7 @@ function modal(html) {
 }
 function closeModal() { $('#modal').classList.add('hidden'); $('#modal').innerHTML = ''; }
 function confetti(n = 60) {
-  const cols = ['#ffd27a', '#ff7aa8', '#7fd1ff', '#c77dff', '#a6ff4d', '#fff'];
+  const cols = ['#f7c6d9', '#cfcaf7', '#bfe3ee', '#f8e3a8', '#cfe6c4', '#f2a7bf'];
   for (let i = 0; i < n; i++) {
     const c = document.createElement('div');
     c.className = 'confetti';
@@ -105,9 +105,9 @@ VIEWS.focus = () => {
   view.innerHTML = `
   <section class="focus-grid">
     <div class="altar">
-      ${candleSVG(d, kind, 1, { lit: false, cls: 'candle-svg' })}
-      <div class="plate"></div>
-      <p class="muted" style="margin-top:14px">${esc(d.name)} · ${KINDS[kind].label} (${KINDS[kind].desc})</p>
+      ${candleSVG(d, kind, 1, { lit: true, sparkles: true, cls: 'candle-svg' })}
+      <div class="altar-name">${esc(d.name)}</div>
+      <p class="muted" style="margin:2px 0 0;position:relative">${KINDS[kind].label} · ${KINDS[kind].desc}</p>
     </div>
     <div class="card">
       ${party.active ? `<div class="banner">You're in study party <b>${party.code}</b>. <a href="#/party">Light candles together →</a></div>` : ''}
@@ -181,7 +181,7 @@ function tick() {
       return;
     }
     const p = Math.min(1, elapsed / a.durationMs);
-    setDim(0.12 + p * 0.65);
+    setDim(0.05 + p * 0.45);
     const left = a.durationMs - elapsed;
     const t = $('#time');
     if (t) t.textContent = fmt(left);
@@ -189,7 +189,7 @@ function tick() {
     const rem = Math.round((1 - p) * 400) / 400;
     const agitated = now < ui.agitatedUntil;
     if (stage && (rem !== ui.lastRem || agitated !== ui.lastAgitated)) {
-      stage.innerHTML = candleSVG(getCandle(a.design), a.kind, rem, { lit: true, blue: a.blue, agitated, cls: 'candle-big' });
+      stage.innerHTML = candleSVG(getCandle(a.design), a.kind, rem, { lit: true, blue: a.blue, agitated, sparkles: true, cls: 'candle-big' });
       ui.lastRem = rem;
       ui.lastAgitated = agitated;
       renderFriends(p);
@@ -410,17 +410,16 @@ async function shareCard(cakeId) {
   let inner = cakeSVG(getCake(cake.design), cake.candles, cake.toppers, cakeOpts({ seed: cake.id }));
   inner = inner.replace('<svg ', '<svg x="90" y="330" width="900" height="760" ');
   const card = `<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="1350" viewBox="0 0 1080 1350">
-    <defs><radialGradient id="bgG" cx="50%" cy="45%" r="70%"><stop offset="0" stop-color="#5a1a40"/><stop offset="1" stop-color="#1a0612"/></radialGradient>
-    <radialGradient id="glowG" cx="50%" cy="50%" r="50%"><stop offset="0" stop-color="#ffb347" stop-opacity=".35"/><stop offset="1" stop-color="#ffb347" stop-opacity="0"/></radialGradient></defs>
+    <defs><radialGradient id="bgG" cx="50%" cy="45%" r="70%"><stop offset="0" stop-color="#fdf3ec"/><stop offset="1" stop-color="#f4e6dc"/></radialGradient>
+    <radialGradient id="glowG" cx="50%" cy="50%" r="50%"><stop offset="0" stop-color="#ffd9a8" stop-opacity=".6"/><stop offset="1" stop-color="#ffd9a8" stop-opacity="0"/></radialGradient></defs>
     <rect width="1080" height="1350" fill="url(#bgG)"/>
     <circle cx="540" cy="700" r="520" fill="url(#glowG)"/>
-    <rect x="30" y="30" width="1020" height="1290" rx="40" fill="none" stroke="#e8b84a" stroke-width="6"/>
-    <rect x="50" y="50" width="980" height="1250" rx="30" fill="none" stroke="#e8b84a" stroke-width="2" stroke-dasharray="2 10"/>
-    <text x="540" y="150" text-anchor="middle" font-family="Georgia, serif" font-style="italic" font-size="54" fill="#e8b84a">✦ Candlelit ✦</text>
-    <text x="540" y="250" text-anchor="middle" font-family="Georgia, serif" font-weight="bold" font-size="66" fill="#fbefdc">${esc(headline)}</text>
-    <text x="540" y="310" text-anchor="middle" font-family="Georgia, serif" font-size="36" fill="#ff9cc0">${Math.floor(mins / 60)}h ${mins % 60}m · studying until my candle melts</text>
+    <rect x="40" y="40" width="1000" height="1270" rx="56" fill="none" stroke="#1f1a1c" stroke-opacity=".08" stroke-width="3"/>
+    <text x="540" y="150" text-anchor="middle" font-family="Georgia, serif" font-style="italic" font-size="46" fill="#e2668e">Candlelit</text>
+    <text x="540" y="250" text-anchor="middle" font-family="Helvetica, Arial, sans-serif" font-weight="bold" font-size="64" fill="#1f1a1c">${esc(headline)}</text>
+    <text x="540" y="310" text-anchor="middle" font-family="Helvetica, Arial, sans-serif" font-size="34" fill="#8a7f82">${Math.floor(mins / 60)}h ${mins % 60}m · studying until my candle melts</text>
     ${inner}
-    <text x="540" y="1240" text-anchor="middle" font-family="Georgia, serif" font-size="34" fill="#d7b8c6">${esc(getCake(cake.design).name)} · ${streak()}-day streak</text>
+    <text x="540" y="1240" text-anchor="middle" font-family="Helvetica, Arial, sans-serif" font-size="32" fill="#8a7f82">${esc(getCake(cake.design).name)} · ${streak()}-day streak</text>
   </svg>`;
   const url = URL.createObjectURL(new Blob([card], { type: 'image/svg+xml' }));
   const img = new Image();
@@ -489,9 +488,10 @@ VIEWS.shop = () => {
 const catalog = (type, id) => (type === 'candle' ? CANDLES : type === 'cake' ? CAKES : TOPPERS).find((x) => x.id === id);
 
 /* ---------- studio ---------- */
+const mixLight = (c) => '#' + [1, 3, 5].map((i) => Math.round(parseInt(c.slice(i, i + 2), 16) + (255 - parseInt(c.slice(i, i + 2), 16)) * 0.5).toString(16).padStart(2, '0')).join('');
 function studioDesign() {
   const s = ui.studio;
-  return { id: 'preview', name: s.name || 'Untitled candle', pattern: s.pattern, c1: s.c1, c2: s.c2, c3: s.c2, drip: s.c1, rarity: 'custom' };
+  return { id: 'preview', name: s.name || 'Untitled candle', pattern: s.pattern === 'solid' ? undefined : s.pattern, c1: s.c1, c2: s.c2, c3: s.c3, accent: s.c3, hc: s.holder === 'ornate' ? '#f6f0e6' : '#fbf3ea', drip: mixLight(s.c1), shape: s.shape, holder: s.holder, decor: s.decor === 'none' ? [] : [s.decor], rarity: 'custom' };
 }
 function renderStudioPreview() {
   const el = $('#studio-preview');
@@ -505,7 +505,8 @@ VIEWS.studio = () => {
       <h1>Wax Studio</h1>
       <p class="muted">Pour your own candle with the wax drips you collect from sessions and breaks. Each pour costs <b>${STUDIO_COST} drips</b>. You have ${state.wax}.</p>
       <label class="field">Name</label><input type="text" data-studio="name" value="${esc(s.name)}" placeholder="e.g. Exam Season Survivor" style="width:100%">
-      <label class="field">Colours</label><div class="row"><input type="color" data-studio="c1" value="${s.c1}"><input type="color" data-studio="c2" value="${s.c2}"><span class="muted">base · accent</span></div>
+      <label class="field">Colours</label><div class="row"><input type="color" data-studio="c1" value="${s.c1}"><input type="color" data-studio="c2" value="${s.c2}"><input type="color" data-studio="c3" value="${s.c3}"><span class="muted">top · bottom · accent</span></div>
+      ${[['shape', 'Shape', STUDIO.shapes], ['holder', 'Holder', STUDIO.holders], ['decor', 'Decoration', STUDIO.decors]].map(([k, label, list]) => `<label class="field">${label}</label><div class="chips">${list.map((x) => `<button class="chip ${s[k] === x ? 'on' : ''}" data-act="studioOpt" data-key="${k}" data-id="${x}">${x}</button>`).join('')}</div>`).join('')}
       <label class="field">Pattern</label><div class="chips">${STUDIO.patterns.map((p) => `<button class="chip ${s.pattern === p ? 'on' : ''}" data-act="studioPattern" data-id="${p}">${p}</button>`).join('')}</div>
       <label class="field">Scent</label><select data-studio="scent">${STUDIO.scents.map((x) => `<option ${x === s.scent ? 'selected' : ''}>${x}</option>`).join('')}</select>
       <div class="row" style="margin-top:22px"><button class="btn big" data-act="pour" ${state.wax < STUDIO_COST ? 'disabled' : ''}>Pour candle · ${DROP} ${STUDIO_COST}</button></div>
@@ -697,6 +698,7 @@ const actions = {
     route();
   },
   copy: ({ text }) => { navigator.clipboard?.writeText(text).then(() => toast('Copied'), () => toast(text)); },
+  studioOpt: ({ key, id }) => { ui.studio[key] = id; document.querySelectorAll(`[data-act="studioOpt"][data-key="${key}"]`).forEach((el) => el.classList.toggle('on', el.dataset.id === id)); renderStudioPreview(); },
   studioPattern: ({ id }) => { ui.studio.pattern = id; document.querySelectorAll('[data-act="studioPattern"]').forEach((el) => el.classList.toggle('on', el.dataset.id === id)); renderStudioPreview(); },
   pour: () => {
     if (!spend('wax', STUDIO_COST)) return toast('Not enough wax drips');
