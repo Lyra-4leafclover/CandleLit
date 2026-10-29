@@ -471,8 +471,9 @@ async function shareCard(cakeId) {
       const file = new File([blob], 'candlelit-cake.png', { type: 'image/png' });
       const canShare = navigator.canShare && navigator.canShare({ files: [file] });
       modal(`<h2>Your cake card</h2><img class="share-img" src="${png}" alt="Share card">
-        <div class="row" style="margin-top:14px"><a class="btn" href="${png}" download="candlelit-cake.png">Download PNG</a>${canShare ? '<button class="btn rose" data-act="nativeShare">Share…</button>' : ''}</div>`);
+        <div class="row" style="margin-top:14px"><button class="btn" data-act="downloadCard">Download PNG</button>${canShare ? '<button class="btn rose" data-act="nativeShare">Share…</button>' : ''}</div>`);
       ui.shareFile = file;
+      ui.shareBlob = blob;
     }, 'image/png');
   };
   img.src = url;
@@ -602,13 +603,13 @@ VIEWS.studio = () => {
       ${getArtMode() === 'painted' ? paintedStudioOpts(s) : `${[['shape', 'Shape', STUDIO.shapes], ['holder', 'Holder', STUDIO.holders], ['decor', 'Decoration', STUDIO.decors]].map(([k, label, list]) => `<label class="field">${label}</label><div class="chips">${list.map((x) => `<button class="chip ${s[k] === x ? 'on' : ''}" data-act="studioOpt" data-key="${k}" data-id="${x}">${x}</button>`).join('')}</div>`).join('')}
       <label class="field">Pattern</label><div class="chips">${STUDIO.patterns.map((p) => `<button class="chip ${s.pattern === p ? 'on' : ''}" data-act="studioPattern" data-id="${p}">${p}</button>`).join('')}</div>`}
       <label class="field">Scent</label><select data-studio="scent">${STUDIO.scents.map((x) => `<option ${x === s.scent ? 'selected' : ''}>${x}</option>`).join('')}</select>
-      <label class="field">Presets</label><div class="chips">${state.studioPresets.map((p, i) => `<button class="chip" data-act="loadPreset" data-id="${i}">${esc(p.name || 'Preset ' + (i + 1))}</button>`).join('')}<button class="chip" data-act="savePreset">+ Save current design</button></div>
+      <label class="field">Presets</label><div class="chips">${state.studioPresets.map((p, i) => `<span class="chip-del-wrap"><button class="chip" data-act="loadPreset" data-id="${i}">${esc(p.name || 'Preset ' + (i + 1))}</button><button class="chip-del" data-act="delPreset" data-id="${i}" aria-label="Delete preset ${esc(p.name || '')}" title="Delete preset">×</button></span>`).join('')}<button class="chip" data-act="savePreset">+ Save current design</button></div>
       <div class="row" style="margin-top:22px"><button class="btn big" data-act="pour" ${state.wax < STUDIO_COST ? 'disabled' : ''}>Pour candle · ${DROP} ${STUDIO_COST}</button></div>
     </div>
     <div class="card">
       <div id="studio-preview" class="studio-preview"></div>
       <h3 style="margin-top:20px">Your poured candles</h3>
-      ${state.custom.length ? `<div class="candle-picker">${state.custom.map((c) => `<div class="candle-opt ${state.settings.design === c.id ? 'on' : ''}" data-act="design" data-id="${c.id}">${candleThumb(c, 'taper')}${esc(c.name)}<br><span class="muted">${esc(c.scent)}</span></div>`).join('')}</div>` : '<p class="muted">Nothing poured yet.</p>'}
+      ${state.custom.some((c) => !c.deleted) ? `<div class="candle-picker">${state.custom.filter((c) => !c.deleted).map((c) => `<div class="candle-opt ${state.settings.design === c.id ? 'on' : ''}" data-act="design" data-id="${c.id}"><button class="opt-del" data-act="delCustom" data-id="${c.id}" aria-label="Delete ${esc(c.name)}" title="Delete candle">×</button>${candleThumb(c, 'taper')}${esc(c.name)}<br><span class="muted">${esc(c.scent)}</span></div>`).join('')}</div>` : '<p class="muted">Nothing poured yet.</p>'}
     </div>
   </section>`;
   renderStudioPreview();
@@ -1022,6 +1023,32 @@ const actions = {
   shopCol: ({ id }) => { ui.shopCol = id; route(); },
   exportCsv: () => exportCsv(),
   editGoals: () => goalsEditor(),
+  delPreset: ({ id }) => { state.studioPresets.splice(+id, 1); save(); route(); toast('Preset deleted'); },
+  delCustom: ({ id }) => {
+    const c = state.custom.find((x) => x.id === id);
+    if (c) modal(`<h2>Delete "${esc(c.name)}"?</h2><p>It disappears from your candles. The wax drips you spent aren't refunded. Cakes it already sits on keep it.</p>
+      <div class="row" style="margin-top:16px"><button class="btn" data-act="confirmDelCustom" data-id="${c.id}">Delete candle</button><button class="btn ghost" data-act="closeModal">Keep it</button></div>`);
+  },
+  confirmDelCustom: ({ id }) => {
+    const c = state.custom.find((x) => x.id === id);
+    if (c) c.deleted = true;
+    if (state.settings.design === id) state.settings.design = state.owned.candles[0] || 'classic';
+    save(); closeModal(); route(); toast('Candle deleted');
+  },
+  downloadCard: () => {
+    if (!ui.shareBlob) return;
+    const fr = new FileReader();
+    fr.onload = () => {
+      const a = document.createElement('a');
+      a.href = fr.result;
+      a.download = 'candlelit-cake.png';
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      toast('Saved candlelit-cake.png');
+    };
+    fr.readAsDataURL(ui.shareBlob);
+  },
   savePreset: () => { state.studioPresets.push({ ...ui.studio, name: ui.studio.name || `Preset ${state.studioPresets.length + 1}` }); state.studioPresets = state.studioPresets.slice(-12); save(); route(); toast('Preset saved'); },
   loadPreset: ({ id }) => { const p = state.studioPresets[+id]; if (p) { ui.studio = { ...ui.studio, ...p }; route(); } },
   scene: ({ id }) => { state.settings.scene = id; save(); route(); },

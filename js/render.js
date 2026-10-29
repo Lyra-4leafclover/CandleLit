@@ -28,9 +28,16 @@ export function mix(hex, other, amt) {
 const light = (c, a = 0.35) => mix(c, '#ffffff', a);
 const dark = (c, a = 0.3) => mix(c, '#000000', a);
 
+const lum = (hex) => { const v = parseInt((hex || '#888888').slice(1, 7), 16); return (0.299 * (v >> 16) + 0.587 * ((v >> 8) & 255) + 0.114 * (v & 255)) / 255; };
+/* Keep a motif colour readable on its background: if the two are too close in brightness, push the motif lighter or darker. */
+const onColor = (fg, bg, min = 0.22) => {
+  if (Math.abs(lum(fg) - lum(bg)) >= min) return fg;
+  return lum(bg) < 0.55 ? mix(fg, '#ffffff', 0.62) : mix(fg, '#000000', 0.38);
+};
 function patternDefs(d, P, h) {
-  const { c1, c2 } = d;
-  const c3 = d.c3 || c2;
+  const c1 = d.c1;
+  const c2 = d.pattern === 'ombre' || d.pattern === 'ombre-twist' || d.pattern === 'tiedye' ? d.c2 : onColor(d.c2 || d.c1, c1);
+  const c3 = d.c3 ? onColor(d.c3, c1) : c2;
   const pat = (w, ht, inner, extra = '') => `<pattern id="${P}" patternUnits="userSpaceOnUse" width="${w}" height="${ht}" ${extra}>${inner}</pattern>`;
   switch (d.pattern) {
     case 'stripes': return pat(12, 12, `<rect width="12" height="12" fill="${c1}"/><rect width="5" height="12" fill="${c2}"/>`, 'patternTransform="rotate(-35)"');
@@ -1267,13 +1274,14 @@ function studioPainted(d, r, id, opts) {
   const yb = H.stick ? -hh + hh * (hk === 'chamber' ? 0.12 : 0.05) : -hh * 0.42;
   const himg = `<image href="/art4/holder_${hk}.webp" x="${(-hw / 2).toFixed(1)}" y="${(-hh).toFixed(1)}" width="${hw.toFixed(1)}" height="${hh.toFixed(1)}"/>`;
   const p = paintedCandle(bd, r, id, opts);
-  const tint = d.c1 || '#fdf6ec';
-  let defs = `<filter id="${id}tn" x="-20%" y="-20%" width="140%" height="140%"><feFlood flood-color="${tint}" result="f"/><feBlend in="f" in2="SourceGraphic" mode="multiply" result="b"/><feComposite in="b" in2="SourceGraphic" operator="in"/></filter>`;
-  let bodyG = `<g filter="url(#${id}tn)">${p.out}</g>`;
+  const top = d.c1 || '#fdf6ec', bot = d.c2 || top, acc = onColor(d.c3 || d.c2 || top, mix(top, bot, 0.5), 0.2);
+  const box = `x="${-bw}" y="${-bh * 1.1}" width="${bw * 2}" height="${bh * 1.2}"`;
+  let defs = `<linearGradient id="${id}tg" gradientUnits="userSpaceOnUse" x1="0" y1="${-bh}" x2="0" y2="0"><stop offset=".08" stop-color="${top}"/><stop offset=".92" stop-color="${bot}"/></linearGradient><mask id="${id}pm" mask-type="alpha" maskUnits="userSpaceOnUse" ${box}><g>${p.art}</g></mask>`;
+  let bodyG = `${p.out}<g mask="url(#${id}pm)" style="mix-blend-mode:multiply"><rect ${box} fill="url(#${id}tg)"/></g>`;
   if (d.pattern && ART4.pattern.includes(d.pattern)) {
     const ps = 84;
-    defs += `<pattern id="${id}pp" patternUnits="userSpaceOnUse" width="${ps}" height="${ps}"><image href="/art4/pat_${d.pattern}.webp" width="${ps}" height="${ps}"/></pattern><mask id="${id}pm" mask-type="alpha" maskUnits="userSpaceOnUse" x="${-bw}" y="${-bh * 1.1}" width="${bw * 2}" height="${bh * 1.2}"><g>${p.art}</g></mask>`;
-    bodyG += `<g mask="url(#${id}pm)" style="mix-blend-mode:multiply"><rect x="${-bw}" y="${-bh * 1.1}" width="${bw * 2}" height="${bh * 1.2}" fill="url(#${id}pp)" opacity=".85"/></g>`;
+    defs += `<pattern id="${id}pp" patternUnits="userSpaceOnUse" width="${ps}" height="${ps}"><image href="/art4/pat_${d.pattern}.webp" width="${ps}" height="${ps}"/></pattern><filter id="${id}pc" x="0" y="0" width="1" height="1" color-interpolation-filters="sRGB"><feColorMatrix type="matrix" values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  -1.1 -1.1 -1.1 0 3.15" result="a"/><feFlood flood-color="${acc}"/><feComposite in2="a" operator="in"/></filter>`;
+    bodyG += `<g mask="url(#${id}pm)"><rect ${box} fill="url(#${id}pp)" filter="url(#${id}pc)" opacity=".92"/></g>`;
   }
   if (d.decor && ART4.decor[d.decor]) {
     const D = ART4.decor[d.decor], dw = Math.max(bw * (body === 'taper' ? 1.5 : 0.62), 26), dh = dw / D.ar;

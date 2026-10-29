@@ -85,7 +85,7 @@ export const allCandles = () => [...CANDLES, ...state.custom];
 export const getCandle = (id) => allCandles().find((c) => c.id === id) || CANDLES[0];
 export const getCake = (id) => CAKES.find((c) => c.id === id) || CAKES[0];
 export const getTopper = (id) => TOPPERS.find((t) => t.id === id);
-export const ownsCandle = (id) => state.owned.candles.includes(id) || state.custom.some((c) => c.id === id);
+export const ownsCandle = (id) => state.owned.candles.includes(id) || state.custom.some((c) => c.id === id && !c.deleted);
 
 export const FREEZES_PER_MONTH = 3;
 /** Refill monthly freezes and spend them to cover missed days since the last study day. */

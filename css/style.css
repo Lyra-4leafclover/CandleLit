@@ -559,3 +559,11 @@ img.scene-bg { object-fit: cover; pointer-events: none; }
 .color-slot { min-width: 0; }
 .color-slot .cs-text { min-width: 0; overflow: hidden; }
 .color-slot .cs-text b { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+.chip-del-wrap { display: inline-flex; align-items: center; }
+.chip-del-wrap .chip { border-top-right-radius: 0; border-bottom-right-radius: 0; }
+.chip-del { border: 1px solid var(--line); border-left: 0; background: var(--surface); color: var(--ink2); border-radius: 0 999px 999px 0; padding: 0 10px; align-self: stretch; cursor: pointer; font-size: 1rem; }
+.chip-del:hover { color: #c0395f; }
+.candle-opt { position: relative; }
+.opt-del { position: absolute; top: 6px; right: 6px; width: 24px; height: 24px; border-radius: 50%; border: 1px solid var(--line); background: var(--surface); color: var(--ink2); cursor: pointer; line-height: 1; font-size: 15px; opacity: .75; }
+.opt-del:hover { opacity: 1; color: #c0395f; }
