@@ -1,5 +1,7 @@
 #!/usr/bin/env python3
-"""Candlelit server: static files, accounts, per-user progress sync, and study parties."""
+"""Candlelit server: static files, accounts, per-user progress sync, and study parties.
+
+Uses SQLite locally. When DATABASE_URL (or POSTGRES_URL) is set, e.g. on Vercel with Neon, it uses Postgres."""
 import hashlib
 import hmac
 import json
@@ -32,13 +34,78 @@ lock = threading.Lock()
 db_lock = threading.Lock()
 
 
+DATABASE_URL = os.environ.get("DATABASE_URL") or os.environ.get("POSTGRES_URL")
+INTEGRITY_ERRORS = (sqlite3.IntegrityError,)
+if DATABASE_URL:
+    import psycopg
+    from psycopg.rows import dict_row
+
+    INTEGRITY_ERRORS += (psycopg.IntegrityError,)
+
+
+class PgConn:
+    """Wraps a psycopg connection so the SQLite-style '?' queries below work unchanged."""
+
+    def __init__(self):
+        self.conn = psycopg.connect(DATABASE_URL, row_factory=dict_row)
+
+    def execute(self, sql, params=()):
+        return self.conn.execute(sql.replace("?", "%s"), params)
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, *exc):
+        with self.conn:
+            if exc[0]:
+                self.conn.rollback()
+        return False
+
+
 def db():
+    if DATABASE_URL:
+        return PgConn()
     conn = sqlite3.connect(DB_PATH, timeout=10)
     conn.row_factory = sqlite3.Row
     return conn
 
 
+PG_SCHEMA = """
+CREATE TABLE IF NOT EXISTS users (
+  id BIGSERIAL PRIMARY KEY,
+  username TEXT UNIQUE NOT NULL,
+  display_name TEXT NOT NULL,
+  pw_hash TEXT NOT NULL,
+  salt TEXT NOT NULL,
+  created DOUBLE PRECISION NOT NULL
+);
+CREATE TABLE IF NOT EXISTS sessions (
+  token TEXT PRIMARY KEY,
+  user_id BIGINT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  expires DOUBLE PRECISION NOT NULL
+);
+CREATE TABLE IF NOT EXISTS saved_rooms (
+  code TEXT PRIMARY KEY,
+  owner BIGINT NOT NULL,
+  name TEXT NOT NULL,
+  cake TEXT NOT NULL
+);
+CREATE TABLE IF NOT EXISTS states (
+  user_id BIGINT PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
+  data TEXT NOT NULL,
+  version INTEGER NOT NULL DEFAULT 1,
+  updated DOUBLE PRECISION NOT NULL
+);
+"""
+
+
 def init_db():
+    if DATABASE_URL:
+        with db() as c:
+            for stmt in PG_SCHEMA.split(";"):
+                if stmt.strip():
+                    c.execute(stmt)
+        return
     os.makedirs(os.path.dirname(DB_PATH), exist_ok=True)
     with db() as c:
         c.executescript(
@@ -237,7 +304,7 @@ class Handler(SimpleHTTPRequestHandler):
         if not isinstance(data, dict):
             return self.send_json({"error": "Bad data"}, 400)
         with db_lock, db() as c:
-            row = c.execute("SELECT version FROM states WHERE user_id = ?", (user["id"],)).fetchone()
+            row = c.execute("SELECT version FROM states WHERE user_id = ?" + (" FOR UPDATE" if DATABASE_URL else ""), (user["id"],)).fetchone()
             base = body.get("base")
             if row and (not isinstance(base, int) or base < row["version"]):
                 return self.send_json({"error": "stale", "version": row["version"]}, 409)
@@ -282,12 +349,11 @@ class Handler(SimpleHTTPRequestHandler):
             salt = secrets.token_hex(16)
             try:
                 with db_lock, db() as c:
-                    cur = c.execute(
-                        "INSERT INTO users (username, display_name, pw_hash, salt, created) VALUES (?, ?, ?, ?, ?)",
+                    uid = c.execute(
+                        "INSERT INTO users (username, display_name, pw_hash, salt, created) VALUES (?, ?, ?, ?, ?) RETURNING id",
                         (username, name, hash_pw(password, salt), salt, time.time()),
-                    )
-                    uid = cur.lastrowid
-            except sqlite3.IntegrityError:
+                    ).fetchone()["id"]
+            except INTEGRITY_ERRORS:
                 return self.send_json({"error": "An account with that email already exists. Try signing in."}, 409)
             return self.send_json({"user": {"id": uid, "username": username, "name": name}}, cookie=self.start_session(uid))
         if path == "/api/auth/login":
@@ -385,7 +451,10 @@ class Handler(SimpleHTTPRequestHandler):
                 room["saved"] = True
                 room["name"] = str(body.get("name") or f"{user['name']}'s study room")[:40]
                 with db() as c:
-                    c.execute("INSERT OR REPLACE INTO saved_rooms VALUES (?, ?, ?, ?)", (code, uid, room["name"], room["cake"]))
+                    c.execute(
+                        "INSERT INTO saved_rooms VALUES (?, ?, ?, ?) ON CONFLICT(code) DO UPDATE SET owner = excluded.owner, name = excluded.name, cake = excluded.cake",
+                        (code, uid, room["name"], room["cake"]),
+                    )
             elif path == "/api/party/chat":
                 text = str(body.get("text") or "").strip()[:240]
                 if text:
