@@ -235,7 +235,7 @@ const ART = {
   abalone: { ar: 1.295, h: 82, drip: '#bfe8da', st: [[0.502, 0.29, 0.4], [0.507, 0.364, 0.4], [0.508, 0.364, 0.4], [0.506, 0.413, 0.4], [0.506, 0.495, 0.38], [0.524, 0.54, 0.36]] },
 };
 const artSize = (d) => { const a = ART[d.art]; return { w: Math.round(a.h * a.ar), h: a.h }; };
-const artStops = (a) => a.rs || (a.rs = a.st.map(([, y]) => (a.st[a.st.length - 1][1] - y) / (a.st[a.st.length - 1][1] - a.st[0][1])));
+const artStops = (a) => a.rs || (a.rs = a.st.map(([, y]) => (a.st[a.st.length - 1][1] - y) / (a.st[a.st.length - 1][1] - a.st[0][1])).map((v, i, arr) => Math.min(v, ...arr.slice(0, i + 1)) - i * 0.01).map((v, i, arr) => (i === arr.length - 1 ? 0 : v)));
 const phaseVar = (dur, off = 0) => `--ph:${(-((Date.now() / 1000 + off) % dur)).toFixed(2)}s`;
 const phase = (dur, off = 0) => `animation-duration:${dur}s;animation-delay:${(-((Date.now() / 1000 + off) % dur)).toFixed(2)}s`;
 function paintedCandle(d, r, id, opts) {
@@ -243,11 +243,19 @@ function paintedCandle(d, r, id, opts) {
   let k = 0;
   while (k < n - 2 && r < rs[k + 1]) k++;
   const t = Math.max(0, Math.min(1, (r - rs[k + 1]) / (rs[k] - rs[k + 1] || 1)));
-  const up = t * t * (3 - 2 * t) > 0 ? Math.min(1, t / 0.4) : 0;
-  const img = (i, op) => `<image href="/art/${d.art}_${i}.webp" x="${-w / 2}" y="${-h}" width="${w}" height="${h}" preserveAspectRatio="xMidYMax meet"${op < 1 ? ` opacity="${op.toFixed(2)}"` : ''}/>`;
-  const lerp = (j) => a.st[k][j] * t + a.st[k + 1][j] * (1 - t);
+  const src = (i) => `href="/art/${d.art}_${i}.webp" x="${-w / 2}" y="${-h}" width="${w}" height="${h}" preserveAspectRatio="xMidYMax meet"`;
+  const sm = (x) => x * x * (3 - 2 * x);
+  const q = 1 - Math.min(1, t / 0.4), qa = sm(Math.min(1, q / 0.7)), qb = Math.max(0, (q - 0.7) / 0.3);
+  const lerp = (j) => a.st[k][j] * (1 - qa) + a.st[k + 1][j] * qa;
   const wx = (lerp(0) - 0.5) * w, wy = -h + lerp(1) * h, span = lerp(2) * w;
-  let out = `<ellipse cy="1" rx="${w * 0.4}" ry="4" fill="#3a2420" opacity=".1"/>${img(k + 1, 1)}${up > 0.01 ? img(k, up * up * (3 - 2 * up)) : ''}`;
+  const box = `maskUnits="userSpaceOnUse" x="${-w / 2}" y="${-h}" width="${w}" height="${h}"`;
+  let art;
+  if (q <= 0) art = `<image ${src(k)}/>`;
+  else if (qb <= 0) {
+    const cy = wy + h * 0.03, f = h * 0.035;
+    art = `<image ${src(k + 1)}/><linearGradient id="${id}ag" gradientUnits="userSpaceOnUse" x1="0" y1="${(cy - f).toFixed(1)}" x2="0" y2="${(cy + f).toFixed(1)}"><stop offset="0" stop-color="#000"/><stop offset="1" stop-color="#fff"/></linearGradient><mask id="${id}am" ${box}><rect x="${-w / 2}" y="${-h}" width="${w}" height="${h}" fill="url(#${id}ag)"/></mask><image ${src(k)} mask="url(#${id}am)"/>`;
+  } else art = `<image ${src(k + 1)}/>${qb < 0.99 ? `<mask id="${id}am" mask-type="alpha" ${box}><image ${src(k + 1)}/></mask><image ${src(k)} opacity="${(1 - sm(qb)).toFixed(2)}" mask="url(#${id}am)"/>` : ''}`;
+  let out = `<ellipse cy="1" rx="${w * 0.4}" ry="4" fill="#3a2420" opacity=".1"/>${art}`;
   if (opts.lit && r > 0.01) {
     const py = wy + h * 0.05, ry = Math.max(2, span * 0.3), u = h / 110;
     out += `<defs><radialGradient id="${id}wg"><stop offset="0" stop-color="#fff2c8" stop-opacity=".75"/><stop offset=".5" stop-color="#ffd38a" stop-opacity=".3"/><stop offset="1" stop-color="#ffc070" stop-opacity="0"/></radialGradient></defs>`;
