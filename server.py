@@ -34,7 +34,7 @@ lock = threading.Lock()
 db_lock = threading.Lock()
 
 
-DATABASE_URL = os.environ.get("DATABASE_URL") or os.environ.get("POSTGRES_URL")
+DATABASE_URL = os.environ.get("DATABASE_URL") or os.environ.get("POSTGRES_URL") or os.environ.get("STORAGE_URL")
 INTEGRITY_ERRORS = (sqlite3.IntegrityError,)
 if DATABASE_URL:
     import psycopg

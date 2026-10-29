@@ -20,7 +20,7 @@ const fmt = (ms) => {
   const h = Math.floor(t / 3600), m = Math.floor((t % 3600) / 60), s = t % 60;
   return (h ? `${h}:${String(m).padStart(2, '0')}` : m) + ':' + String(s).padStart(2, '0');
 };
-const msPerMin = () => (state.settings.demo ? 1000 : 60000);
+const msPerMin = () => 60000;
 const FLAME = '<svg class="ico" viewBox="0 0 24 24"><path fill="currentColor" d="M12 1c1.5 4 6.5 6.5 6.5 12.5a6.5 6.5 0 0 1-13 0c0-3.2 1.8-5.4 3.2-7.3.2 2.2 1.2 3.4 2.4 3.6-.4-3.3.1-6.2.9-8.8z"/></svg>';
 const DROP = '<svg class="ico" viewBox="0 0 24 24"><path fill="currentColor" d="M12 2s-7 8-7 13a7 7 0 0 0 14 0c0-5-7-13-7-13z"/></svg>';
 const cakeOpts = (extra = {}) => ({ getDesign: getCandle, ...extra });
@@ -84,6 +84,8 @@ function route() {
   else if (name === 'done' && !state.pending) name = 'focus';
   else if (name === 'break') name = 'focus';
   if (!VIEWS[name]) name = 'focus';
+  const viewKey = name + (a ? ':' + a.type : '');
+  if (ui.viewKey !== viewKey) { ui.viewKey = viewKey; window.scrollTo(0, 0); }
   ui.view = name;
   document.body.classList.toggle('immersive', !!a);
   document.querySelectorAll('#nav a').forEach((el) => el.classList.toggle('on', el.dataset.view === name));
@@ -151,7 +153,6 @@ VIEWS.focus = () => {
       ${ambienceControls()}
       <div class="row" style="margin-top:22px">
         <button class="btn big" data-act="light">Light the candle</button>
-        <label class="muted" title="1 minute = 1 second, for trying things out"><input type="checkbox" data-change="demo" ${st.demo ? 'checked' : ''}> Demo speed</label>
       </div>
       <p class="muted" style="margin-top:12px">Finish and the candle goes on today's cake, plus you earn <b>${Math.round(st.minutes * (s >= 7 ? 2 : 1))} flames</b>. Blow it out early and a half-melted stub goes on the cake instead. You'll see the cake once the timer ends.</p>
       <label class="field">Candle <span style="text-transform:none;letter-spacing:0;font-weight:500">· recently used first</span></label>
@@ -656,7 +657,7 @@ function partyControlsHTML(room) {
   if (!party.isHost) return '<p class="muted">Waiting for the host to light the candles…</p>';
   return `<h3>Light everyone's candles</h3>
     <div class="chips" style="justify-content:center">${DURATIONS.map((x) => `<button class="chip ${state.settings.minutes === x.minutes ? 'on' : ''}" data-act="minutes" data-min="${x.minutes}">${x.minutes} min</button>`).join('')}</div>
-    <p class="muted">Everyone uses their own equipped candle and tag${state.settings.demo ? ' · demo speed is on' : ''}.</p>
+    <p class="muted">Everyone uses their own equipped candle and tag.</p>
     <button class="btn big" data-act="partyStart">Light together</button>`;
 }
 function partySetupHTML(room) {
@@ -696,6 +697,20 @@ VIEWS.party = () => {
     <h1>Study Party</h1>
     <p class="muted">Soon you'll be able to light candles with friends: everyone's candle burns together, then you blow them out at the same time and each get a party cake.</p>
     <a class="btn big" href="#/focus" style="margin-top:12px">Light a candle on your own</a>
+  </div></section>`;
+};
+
+const SOCIALS = [
+  { label: 'GitHub', handle: '@Lyra-4leafclover', url: 'https://github.com/Lyra-4leafclover', icon: '<path d="M12 .5a11.5 11.5 0 0 0-3.64 22.41c.58.1.79-.25.79-.56v-2c-3.2.7-3.88-1.37-3.88-1.37-.53-1.33-1.28-1.69-1.28-1.69-1.05-.71.08-.7.08-.7 1.16.08 1.77 1.19 1.77 1.19 1.03 1.77 2.7 1.26 3.36.96.1-.75.4-1.26.73-1.55-2.55-.29-5.24-1.28-5.24-5.68 0-1.26.45-2.28 1.19-3.09-.12-.29-.52-1.46.11-3.05 0 0 .97-.31 3.17 1.18a11 11 0 0 1 5.77 0c2.2-1.49 3.17-1.18 3.17-1.18.63 1.59.23 2.76.11 3.05.74.81 1.19 1.83 1.19 3.09 0 4.41-2.69 5.39-5.25 5.67.41.36.78 1.06.78 2.14v3.17c0 .31.21.67.8.56A11.5 11.5 0 0 0 12 .5Z"/>' },
+  { label: 'X', handle: '@Lyra_void', url: 'https://x.com/Lyra_void', icon: '<path d="M18.24 2.25h3.31l-7.23 8.26 8.5 11.24h-6.66l-5.21-6.82-5.97 6.82H1.67l7.73-8.84L1.25 2.25h6.83l4.71 6.23 5.45-6.23Zm-1.16 17.52h1.83L7.08 4.13H5.12l11.96 15.64Z"/>' },
+  { label: 'Portfolio', handle: 'lyradossier.vercel.app', url: 'https://lyradossier.vercel.app/', icon: '<path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20Zm6.93 6h-2.95a15.7 15.7 0 0 0-1.38-3.56A8.03 8.03 0 0 1 18.93 8ZM12 4.04c.83 1.2 1.48 2.53 1.91 3.96h-3.82A13.9 13.9 0 0 1 12 4.04ZM4.26 14a8.2 8.2 0 0 1 0-4h3.38a16.5 16.5 0 0 0 0 4H4.26Zm.81 2h2.95c.32 1.25.78 2.45 1.38 3.56A7.99 7.99 0 0 1 5.07 16Zm2.95-8H5.07a7.99 7.99 0 0 1 4.33-3.56A15.7 15.7 0 0 0 8.02 8ZM12 19.96A14 14 0 0 1 10.09 16h3.82A14 14 0 0 1 12 19.96ZM14.34 14H9.66a14.7 14.7 0 0 1 0-4h4.68a14.7 14.7 0 0 1 0 4Zm.26 5.56c.6-1.11 1.06-2.31 1.38-3.56h2.95a8.03 8.03 0 0 1-4.33 3.56ZM16.36 14a16.5 16.5 0 0 0 0-4h3.38a8.2 8.2 0 0 1 0 4h-3.38Z"/>' }
+];
+VIEWS.connect = () => {
+  view.innerHTML = `<section class="grid" style="max-width:640px;margin:0 auto"><div class="card" style="text-align:center;padding:44px 32px">
+    <p class="eyebrow">Connect with me</p>
+    <h1>Hi, I'm Lyra</h1>
+    <p class="muted">I made Candlelit. Say hi, see what else I'm building, or follow along.</p>
+    <div class="socials">${SOCIALS.map((x) => `<a class="social" href="${x.url}" target="_blank" rel="noopener noreferrer"><svg viewBox="0 0 24 24" aria-hidden="true">${x.icon}</svg><span><b>${x.label}</b><small>${x.handle}</small></span></a>`).join('')}</div>
   </div></section>`;
 };
 
@@ -1158,7 +1173,6 @@ document.addEventListener('change', (e) => {
   const v = e.target.type === 'checkbox' ? e.target.checked : e.target.value;
   if (k === 'customMin') { const n = Math.max(1, Math.min(180, parseInt(v, 10) || 25)); state.settings.minutes = n; save(); route(); }
   if (k === 'newSubject' && v.trim()) { const s = v.trim().slice(0, 24); if (!state.subjects.includes(s)) state.subjects.push(s); state.settings.subject = s; save(); route(); }
-  if (k === 'demo') { state.settings.demo = v; save(); route(); }
   if (e.target.dataset.tagrename !== undefined) { if (renameTag(e.target.dataset.tagrename, v)) { route(); tagEditor(); } return; }
   if (k === 'newTagModal' && v.trim()) { const s = v.trim().slice(0, 24); if (!state.subjects.includes(s)) state.subjects.push(s); save(); route(); tagEditor(); return; }
   if (e.target.dataset.goal !== undefined) { state.goals[e.target.dataset.goal] = Math.max(0, Math.round((parseFloat(v) || 0) * 60)); save(); route(); return; }

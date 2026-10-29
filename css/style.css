@@ -577,3 +577,50 @@ a.btn, a.btn:hover { color: var(--on-ink); text-decoration: none; }
 
 .scene-chess h2, .scene-soccer h2, .scene-basketball h2, .scene-tennis h2, .scene-baseball h2, .scene-volleyball h2, .scene-golf h2 { background: rgba(255, 252, 248, 0.86); color: #1f1a1c; display: inline-block; padding: 6px 14px; border-radius: 999px; font-size: 1.15rem; }
 .scene-chess .muted, .scene-soccer .muted, .scene-basketball .muted, .scene-tennis .muted, .scene-baseball .muted, .scene-volleyball .muted, .scene-golf .muted { background: rgba(255, 252, 248, 0.86); border-radius: 999px; padding: 4px 12px; width: fit-content; margin: 8px auto 0; color: #6a5f62; }
+
+/* fit tall artwork to the viewport height so nothing hides above or below the fold */
+.time { font-size: clamp(2.6rem, 9vh, 5.4rem); margin-top: clamp(4px, 1.4vh, 14px); }
+.stage, .stage .candle-big { height: clamp(200px, calc(91vh - 330px), 470px); }
+.stage .candle-big { width: auto; max-width: 340px; aspect-ratio: 340 / 470; }
+.stage::before { width: min(420px, 60vh, 90vw); height: min(420px, 60vh, 90vw); }
+.altar { min-height: clamp(380px, calc(100vh - 140px), 600px); }
+.altar .candle-svg { height: clamp(220px, calc(100vh - 330px), 470px); width: auto; max-width: 300px; aspect-ratio: 300 / 470; }
+.altar::before { width: min(340px, 50vh, 90vw); height: min(340px, 50vh, 90vw); }
+.studio-preview { height: clamp(220px, calc(100vh - 400px), 380px); }
+.studio-preview svg { height: calc(100% - 20px); }
+.auth-candles { height: clamp(200px, 48vh, 420px); }
+.auth-candle { height: clamp(180px, 44vh, 380px); width: auto; aspect-ratio: 200 / 380; }
+.chat-card { height: min(560px, calc(100vh - 160px)); }
+@media (max-height: 820px) {
+  #topbar { padding-top: 8px; padding-bottom: 8px; }
+  main { padding-top: 8px; }
+  .burn-actions { margin-top: 10px; padding-top: 6px; padding-bottom: 6px; }
+  .hint { margin-top: 8px; }
+  .burn-subject { padding: 4px 14px; }
+}
+@media (max-width: 900px) {
+  .stage, .stage .candle-big { height: clamp(200px, calc(91vh - 430px), 360px); }
+  .altar .candle-svg { height: clamp(220px, 42vh, 340px); }
+  .altar { min-height: 0; }
+  .burn-actions { border-radius: 28px; padding: 12px; }
+}
+@supports (height: 100dvh) {
+  .stage, .stage .candle-big { height: clamp(200px, calc(91dvh - 330px), 470px); }
+  @media (max-width: 900px) { .stage, .stage .candle-big { height: clamp(200px, calc(91dvh - 430px), 360px); } }
+}
+.socials { display: grid; gap: 12px; margin-top: 24px; text-align: left; }
+.social { display: flex; align-items: center; gap: 14px; padding: 14px 18px; border-radius: 18px; border: 1.5px solid var(--line); background: var(--surface); color: var(--ink); text-decoration: none; transition: background 0.15s, transform 0.15s; }
+.social:hover { background: var(--hover); transform: translateY(-1px); }
+.social svg { width: 26px; height: 26px; fill: currentColor; flex: none; }
+.social span { display: flex; flex-direction: column; }
+.social small { color: var(--muted); font-size: 0.82rem; }
+#topbar .btn, #wallet .pill { white-space: nowrap; }
+@media (max-width: 1700px) and (min-width: 1481px) { #nav a { padding: 8px 12px; font-size: 0.9rem; } #topbar { gap: 14px; padding-left: 24px; padding-right: 24px; } }
+@media (max-width: 900px) {
+  body.immersive #nav, body.immersive #wallet { display: none; }
+  .burn-actions > .row { flex-wrap: nowrap; overflow-x: auto; max-width: calc(100vw - 56px); scrollbar-width: none; padding-bottom: 2px; }
+  .burn-actions > .row::-webkit-scrollbar { display: none; }
+  .burn-actions > .row .chip, .burn-actions > .row input { flex: none; }
+  .stage, .stage .candle-big { height: clamp(200px, calc(91vh - 380px), 360px); }
+}
+@supports (height: 100dvh) { @media (max-width: 900px) { .stage, .stage .candle-big { height: clamp(200px, calc(91dvh - 380px), 360px); } } }
