@@ -35,9 +35,8 @@ const onColor = (fg, bg, min = 0.22) => {
   return lum(bg) < 0.55 ? mix(fg, '#ffffff', 0.62) : mix(fg, '#000000', 0.38);
 };
 function patternDefs(d, P, h) {
-  const c1 = d.c1;
-  const c2 = d.pattern === 'ombre' || d.pattern === 'ombre-twist' || d.pattern === 'tiedye' ? d.c2 : onColor(d.c2 || d.c1, c1);
-  const c3 = d.c3 ? onColor(d.c3, c1) : c2;
+  const { c1, c2 } = d;
+  const c3 = d.c3 || c2;
   const pat = (w, ht, inner, extra = '') => `<pattern id="${P}" patternUnits="userSpaceOnUse" width="${w}" height="${ht}" ${extra}>${inner}</pattern>`;
   switch (d.pattern) {
     case 'stripes': return pat(12, 12, `<rect width="12" height="12" fill="${c1}"/><rect width="5" height="12" fill="${c2}"/>`, 'patternTransform="rotate(-35)"');
