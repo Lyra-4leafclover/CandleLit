@@ -58,12 +58,23 @@ function patternDefs(d, P, h) {
     case 'geode': return pat(18, 18, `<rect width="18" height="18" fill="${c1}"/><polygon points="0,0 9,5 0,12" fill="${c2}"/><polygon points="9,5 18,0 18,11" fill="${c3}"/><polygon points="0,12 9,5 10,18" fill="${light(c1, 0.2)}"/><polygon points="9,5 18,11 10,18" fill="${dark(c1, 0.15)}"/><polygon points="0,0 18,0 9,5" fill="${light(c2, 0.4)}"/>`);
     case 'pumpkin': return pat(12, 20, `<rect width="12" height="20" fill="${c1}"/><rect x="5.5" width="1.6" height="20" fill="${c2}" opacity=".55"/><rect x="0" width="1" height="20" fill="${light(c1, 0.25)}" opacity=".6"/>`);
     case 'sakura': return pat(24, 24, `<rect width="24" height="24" fill="${c1}"/><g fill="${c2}"><ellipse cx="6" cy="6" rx="3" ry="1.6" transform="rotate(30 6 6)"/><ellipse cx="18" cy="16" rx="2.6" ry="1.4" transform="rotate(-40 18 16)"/></g><circle cx="16" cy="5" r="1" fill="#fff"/>`);
+    case 'gingham': return pat(14, 14, `<rect width="14" height="14" fill="${c1}"/><rect width="7" height="14" fill="${c2}" opacity=".45"/><rect width="14" height="7" fill="${c2}" opacity=".45"/>`);
+    case 'hearts': return pat(18, 18, `<rect width="18" height="18" fill="${c1}"/><path d="M5 7 C3 5 1 7 3 9 L5 11 L7 9 C9 7 7 5 5 7Z" fill="${c2}"/><path d="M14 16 C12.5 14.5 11 16 12.5 17.5 L14 19 L15.5 17.5 C17 16 15.5 14.5 14 16Z" fill="${c2}" opacity=".7"/>`);
+    case 'checker': return pat(14, 14, `<rect width="14" height="14" fill="${c1}"/><rect width="7" height="7" fill="${c2}"/><rect x="7" y="7" width="7" height="7" fill="${c2}"/>`);
+    case 'leopard': return pat(26, 26, `<rect width="26" height="26" fill="${c1}"/><path d="M4 5 q3 -3 6 0 q-1 4 -4 4 q-3 -1 -2 -4z M16 14 q4 -2 6 1 q-1 4 -5 3 q-2 -1 -1 -4z M3 18 q3 -1 4 2 q-2 3 -4 1z" fill="none" stroke="${c2}" stroke-width="1.8"/><circle cx="7" cy="7" r="1.4" fill="${dark(c1, 0.2)}"/><circle cx="19" cy="16" r="1.4" fill="${dark(c1, 0.2)}"/>`);
+    case 'cow': return pat(36, 36, `<rect width="36" height="36" fill="${c1}"/><path d="M4 6 q6 -4 10 1 q2 6 -5 7 q-7 -1 -5 -8z M22 20 q8 -3 11 3 q0 7 -7 6 q-6 -2 -4 -9z M2 28 q4 -2 5 2 q-1 4 -5 2z" fill="${c2}"/>`);
+    case 'waves': return pat(20, 12, `<rect width="20" height="12" fill="${c1}"/><path d="M0 6 q5 -5 10 0 t10 0" stroke="${c2}" stroke-width="2.2" fill="none"/>`);
+    case 'stars': return pat(22, 22, `<rect width="22" height="22" fill="${c1}"/><path d="M6 2 l1.4 3 3.2 .4 -2.4 2.2 .7 3.2 -2.9 -1.6 -2.9 1.6 .7 -3.2 -2.4 -2.2 3.2 -.4z" fill="${c2}"/><circle cx="16" cy="15" r="1.3" fill="${c2}"/><circle cx="18" cy="5" r=".8" fill="${c2}"/>`);
+    case 'argyle': return pat(20, 28, `<rect width="20" height="28" fill="${c1}"/><polygon points="10,0 20,14 10,28 0,14" fill="${c2}" opacity=".6"/><path d="M0 0 L20 28 M20 0 L0 28" stroke="#fff" stroke-width=".7" stroke-dasharray="2 2" opacity=".8"/>`);
+    case 'strawberry': return pat(20, 20, `<rect width="20" height="20" fill="${c1}"/><path d="M6 13 C1 9 2 4 6 5 C10 4 11 9 6 13Z" fill="#ef5f6e"/><path d="M4 5 l2 -2 l2 2z" fill="#5a9a4f"/><circle cx="5" cy="8" r=".5" fill="#fff6d6"/><circle cx="7" cy="9" r=".5" fill="#fff6d6"/><circle cx="15" cy="16" r="1" fill="${c2}"/>`);
+    case 'tiedye': return `<radialGradient id="${P}" gradientUnits="userSpaceOnUse" cx="0" cy="${-h * 0.5}" r="${h * 0.6}" spreadMethod="reflect"><stop offset="0" stop-color="${c1}"/><stop offset=".33" stop-color="${c2}"/><stop offset=".66" stop-color="${c3 === c2 ? light(c1, 0.4) : c3}"/><stop offset="1" stop-color="${c1}"/></radialGradient>`;
+    case 'scallop': return pat(16, 10, `<rect width="16" height="10" fill="${c1}"/><path d="M0 10 a8 8 0 0 1 16 0" fill="none" stroke="${c2}" stroke-width="1.6"/>`);
     default: return `<linearGradient id="${P}" x1="0" x2="1"><stop offset="0" stop-color="${c1}"/><stop offset="1" stop-color="${c2 || c1}"/></linearGradient>`;
   }
 }
 
 const KMUL = { birthday: 0.78, taper: 1, pillar: 1.15 };
-const SHAPES = { taper: { w: 30, h: 200 }, spiral: { w: 30, h: 200 }, pillar: { w: 74, h: 130 }, jar: { w: 84, h: 96 }, teacup: { w: 96, h: 50 } };
+const SHAPES = { pumpkin: { w: 96, h: 74 }, seashell: { w: 100, h: 78 }, tamagotchi: { w: 70, h: 88 }, taper: { w: 30, h: 200 }, spiral: { w: 30, h: 200 }, pillar: { w: 74, h: 130 }, jar: { w: 84, h: 96 }, teacup: { w: 96, h: 50 } };
 const GOLD = '#e0bb72';
 
 function flameMarkup(blue, agitated, id) {
@@ -89,6 +100,40 @@ function cherubMarkup(y) {
     <ellipse cy="-31" rx="6" ry="1.8" fill="none" stroke="${GOLD}" stroke-width="1.2"/>
   </g>`;
 }
+
+const FIGS = {
+  bunny: (y) => `<g transform="translate(0,${y})"><ellipse cx="-4" cy="-30" rx="3.2" ry="10" fill="#fff" stroke="#f0d2dc"/><ellipse cx="-4" cy="-30" rx="1.4" ry="7" fill="#ffc6d6"/><ellipse cx="4" cy="-30" rx="3.2" ry="10" fill="#fff" stroke="#f0d2dc"/><ellipse cx="4" cy="-30" rx="1.4" ry="7" fill="#ffc6d6"/><ellipse cy="-7" rx="10" ry="8" fill="#fff"/><circle cy="-18" r="7.5" fill="#fff"/><circle cx="-2.6" cy="-19" r=".9" fill="#5a4040"/><circle cx="2.6" cy="-19" r=".9" fill="#5a4040"/><ellipse cy="-16" rx="1.3" ry=".9" fill="#ff9fb8"/><ellipse cx="-4.5" cy="-16" rx="1.6" ry="1" fill="#ffc6d6" opacity=".8"/><ellipse cx="4.5" cy="-16" rx="1.6" ry="1" fill="#ffc6d6" opacity=".8"/><circle cx="9" cy="-4" r="3" fill="#fff"/></g>`,
+  kitty: (y) => `<g transform="translate(0,${y})"><path d="M-9 -22 L-7 -31 L-2 -25Z M9 -22 L7 -31 L2 -25Z" fill="#f6f1ea" stroke="#e5d9cc" stroke-width=".7"/><ellipse cy="-7" rx="10" ry="8" fill="#f6f1ea"/><circle cy="-19" r="8" fill="#f6f1ea"/><path d="M-4.5 -19.5 q1.5 -1.5 3 0 M1.5 -19.5 q1.5 -1.5 3 0" stroke="#5a4040" stroke-width=".9" fill="none"/><path d="M-1 -16.5 l1 1 l1 -1" stroke="#e48aa0" stroke-width=".8" fill="none"/><path d="M-6 -16 l-5 -1 M-6 -15 l-5 1 M6 -16 l5 -1 M6 -15 l5 1" stroke="#cbbcae" stroke-width=".4"/><path d="M9 -4 C16 -6 16 -16 12 -18" stroke="#f6f1ea" stroke-width="3" fill="none" stroke-linecap="round"/><path d="M-4 -26 l1 -2 l1 2 M2 -26 l1 -2 l1 2" stroke="${GOLD}" stroke-width=".6" fill="none"/><path d="M-5 -26.5 h10 l-1 -3 -2 2 -2 -3 -2 3 -2 -2z" fill="${GOLD}"/></g>`,
+  swan: (y) => `<g transform="translate(0,${y})"><path d="M-12 -4 C-12 -14 4 -14 10 -6 C12 -2 8 0 0 0 C-8 0 -12 -1 -12 -4Z" fill="#fff" stroke="#e6e0ea" stroke-width=".7"/><path d="M-8 -6 C-14 -16 -6 -26 -2 -22 C0 -20 -2 -16 -5 -14" stroke="#fff" stroke-width="3.4" fill="none" stroke-linecap="round"/><path d="M-2 -22 l3 1 -3 1z" fill="#f2a65a"/><circle cx="-3.4" cy="-22.3" r=".6" fill="#333"/><path d="M-4 -10 C2 -14 6 -12 8 -8" stroke="#e6e0ea" stroke-width=".7" fill="none"/><path d="M-4 -27 h5 l-.5 -2.5 -1 1.2 -1 -1.8 -1 1.8 -1 -1.2z" fill="${GOLD}"/></g>`,
+  teddy: (y) => `<g transform="translate(0,${y})"><circle cx="-6.5" cy="-25" r="3.2" fill="#c99470"/><circle cx="6.5" cy="-25" r="3.2" fill="#c99470"/><circle cx="-6.5" cy="-25" r="1.6" fill="#f0c6a6"/><circle cx="6.5" cy="-25" r="1.6" fill="#f0c6a6"/><ellipse cy="-7" rx="10" ry="8.5" fill="#c99470"/><ellipse cy="-6" rx="5.5" ry="5" fill="#f0c6a6"/><circle cy="-19" r="8" fill="#c99470"/><ellipse cy="-16.5" rx="3.6" ry="2.8" fill="#f0c6a6"/><ellipse cy="-17.5" rx="1.3" ry=".9" fill="#4a3020"/><circle cx="-3" cy="-20.5" r=".9" fill="#4a3020"/><circle cx="3" cy="-20.5" r=".9" fill="#4a3020"/><path d="M-5 -12 l5 2 5 -2 -1 3 -4 -1 -4 1z" fill="#f28fae"/></g>`,
+  froggy: (y) => `<g transform="translate(0,${y})"><ellipse cy="-7" rx="11" ry="8" fill="#9fd68c"/><ellipse cy="-5" rx="6" ry="4.5" fill="#d9f2cc"/><ellipse cy="-15" rx="9" ry="6.5" fill="#9fd68c"/><circle cx="-5" cy="-20" r="3.6" fill="#9fd68c"/><circle cx="5" cy="-20" r="3.6" fill="#9fd68c"/><circle cx="-5" cy="-20" r="1.6" fill="#2a3a20"/><circle cx="5" cy="-20" r="1.6" fill="#2a3a20"/><path d="M-4 -13 q4 3 8 0" stroke="#3f7a32" stroke-width=".9" fill="none"/><ellipse cx="-6.5" cy="-13.5" rx="1.6" ry="1" fill="#ffa6b8"/><ellipse cx="6.5" cy="-13.5" rx="1.6" ry="1" fill="#ffa6b8"/>${'<g transform="translate(4,-25)">' + [0, 72, 144, 216, 288].map((r) => `<ellipse cy="-2.4" rx="1.6" ry="2.4" fill="#ffd1e0" transform="rotate(${r})"/>`).join('') + '<circle r="1.1" fill="#ffd36e"/></g>'}</g>`,
+  fairy: (y) => `<g transform="translate(0,${y})"><path d="M-2 -16 C-14 -30 -22 -18 -14 -12 C-10 -9 -5 -12 -2 -14Z M2 -16 C14 -30 22 -18 14 -12 C10 -9 5 -12 2 -14Z" fill="#e6f6ff" fill-opacity=".85" stroke="#b9d9f0" stroke-width=".6"/><path d="M-7 0 L0 -14 L7 0Z" fill="#c9b6f2"/><path d="M-7 0 Q0 3 7 0" fill="#b49ce8"/><circle cy="-18" r="5.5" fill="#ffe6d4"/><path d="M-5.5 -19 C-6 -25 6 -25 5.5 -19 C4 -22 -4 -22 -5.5 -19Z" fill="#f3c98b"/><circle cx="-2" cy="-18" r=".6" fill="#5a4040"/><circle cx="2" cy="-18" r=".6" fill="#5a4040"/><path d="M6 -10 L12 -20" stroke="${GOLD}" stroke-width=".8"/><path d="M12 -23 l.8 2 2 .8 -2 .8 -.8 2 -.8 -2 -2 -.8 2 -.8z" fill="${GOLD}"/></g>`,
+  mermaid: (y) => `<g transform="translate(0,${y})"><path d="M-4 -12 C-6 -4 -2 2 6 2 C10 2 12 6 14 4 C13 0 10 -2 8 -2 C4 -3 4 -8 4 -12Z" fill="#7fd1c7"/><path d="M8 -2 C12 -6 16 -4 16 -2 C14 0 12 0 8 -2Z" fill="#a7e3db"/><path d="M-4 -12 h8 l-1 -8 h-6z" fill="#ffe0cc"/><path d="M-4 -16 a2 2 0 0 0 4 0 a2 2 0 0 0 4 0" fill="#c9b6f2"/><circle cy="-23" r="5" fill="#ffe6d4"/><path d="M-5 -24 C-8 -16 -7 -10 -9 -6 M5 -24 C8 -16 7 -10 9 -6" stroke="#f08a9e" stroke-width="2.6" fill="none" stroke-linecap="round"/><path d="M-5 -24 C-5 -29 5 -29 5 -24" stroke="#f08a9e" stroke-width="2.6" fill="none"/><circle cx="-1.8" cy="-23" r=".6" fill="#5a4040"/><circle cx="1.8" cy="-23" r=".6" fill="#5a4040"/><path d="M-3 -29 l1 -2 1 1.5 1 -2.2 1 2.2 1 -1.5 1 2z" fill="#fff4c4"/></g>`,
+};
+
+/* ---- shaped (figure) candles: drawn whole, then clipped as they melt ---- */
+const FIGURES = {
+  pumpkin: (d, w, h, id) => {
+    const lobes = [[-0.3, 0.34], [0.3, 0.34], [-0.16, 0.4], [0.16, 0.4], [0, 0.42]];
+    return `<path d="M-2 ${-h + 2} C-1 ${-h - 8} 6 ${-h - 12} 9 ${-h - 10}" stroke="#7a9a4a" stroke-width="5" fill="none" stroke-linecap="round"/>${lobes.map(([x, rx]) => `<ellipse cx="${x * w}" cy="${-h / 2}" rx="${rx * w}" ry="${h / 2}" fill="url(#${id}p)" stroke="${dark(d.c2, 0.18)}" stroke-width="1.2"/>`).join('')}<ellipse cx="${-w * 0.08}" cy="${-h * 0.7}" rx="${w * 0.06}" ry="${h * 0.16}" fill="#fff" opacity=".35"/><path d="M${w * 0.28} ${-h + 6} q10 -6 12 4" stroke="#8fae5a" stroke-width="1.4" fill="none"/>`;
+  },
+  seashell: (d, w, h, id) => {
+    let ribs = '';
+    for (let i = -4; i <= 4; i++) ribs += `<path d="M0 -4 L${i * w * 0.11} ${-h + Math.abs(i) * h * 0.08 + 4}" stroke="${dark(d.c2, 0.15)}" stroke-width="1.2" opacity=".7"/>`;
+    let edge = `M${-w / 2} ${-h * 0.45}`;
+    for (let i = 0; i < 9; i++) { const a0 = Math.PI + (i / 9) * Math.PI, a1 = Math.PI + ((i + 1) / 9) * Math.PI; const x1 = Math.cos(a1) * w / 2, y1 = -h * 0.45 + Math.sin(a1) * h * 0.55; const xm = Math.cos((a0 + a1) / 2) * w * 0.56, ym = -h * 0.45 + Math.sin((a0 + a1) / 2) * h * 0.62; edge += ` Q${xm.toFixed(1)} ${ym.toFixed(1)} ${x1.toFixed(1)} ${y1.toFixed(1)}`; }
+    edge += ` L${w * 0.14} -4 L${-w * 0.14} -4 Z`;
+    return `<path d="${edge}" fill="url(#${id}p)" stroke="${dark(d.c2, 0.2)}" stroke-width="1"/>${ribs}<path d="M${-w * 0.2} -2 h${w * 0.4} v-8 h${-w * 0.4}z" fill="${dark(d.c2, 0.08)}"/><ellipse cx="${-w * 0.18}" cy="${-h * 0.62}" rx="${w * 0.08}" ry="${h * 0.14}" fill="#fff" opacity=".35"/><circle cx="${w * 0.25}" cy="${-h * 0.15}" r="4" fill="#fffaf2" stroke="#eadfcf" stroke-width=".6"/>`;
+  },
+  tamagotchi: (d, w, h, id) => {
+    const px = [[2, 0], [3, 0], [1, 1], [4, 1], [0, 2], [2, 2], [3, 2], [5, 2], [0, 3], [5, 3], [1, 4], [4, 4], [2, 5], [3, 5]];
+    return `<path d="M-6 ${-h - 4} a6 6 0 1 1 12 0" stroke="${GOLD}" stroke-width="2.4" fill="none"/><path d="M0 ${-h} C${w * 0.62} ${-h} ${w * 0.6} 0 0 0 C${-w * 0.6} 0 ${-w * 0.62} ${-h} 0 ${-h}Z" fill="url(#${id}p)" stroke="${dark(d.c2, 0.15)}" stroke-width="1.2"/>
+      <rect x="${-w * 0.26}" y="${-h * 0.7}" width="${w * 0.52}" height="${h * 0.36}" rx="5" fill="#e4f0d0" stroke="${dark(d.c2, 0.2)}" stroke-width="1.5"/>
+      <g transform="translate(${-w * 0.11},${-h * 0.64})">${px.map(([x, y]) => `<rect x="${x * 2.6}" y="${y * 2.6}" width="2.4" height="2.4" fill="#3a4a2a"/>`).join('')}</g>
+      ${[-0.18, 0, 0.18].map((x, i) => `<circle cx="${x * w}" cy="${-h * (0.22 - (i === 1 ? 0.04 : 0))}" r="${w * 0.055}" fill="${d.accent}" stroke="${dark(d.accent, 0.2)}" stroke-width=".8"/>`).join('')}
+      <ellipse cx="${-w * 0.2}" cy="${-h * 0.82}" rx="${w * 0.08}" ry="${h * 0.06}" fill="#fff" opacity=".5"/>`;
+  },
+};
 
 /* ---- little illustrated motifs ---- */
 const rose = (x, y, s, col) => `<g transform="translate(${x.toFixed(1)},${y.toFixed(1)}) scale(${s})">
@@ -399,6 +444,12 @@ export function candleGroup(d, kind, rem, opts = {}) {
       <rect x="${-w / 2 + 8}" y="${-h + 12}" width="5" height="${h - 30}" rx="2.5" fill="#fff" opacity=".7"/>
       <ellipse cy="${-h}" rx="${w / 2 - 1}" ry="5" fill="none" stroke="#fff" stroke-width="2"/>
       <g transform="translate(0,${-h * 0.42})"><rect x="-22" y="-14" width="44" height="30" rx="6" fill="#fffaf2" stroke="#ead9c4" stroke-width=".8"/>${leaf(-14, 6, -50, 0.7)}${blossom(-8, -2, 0.9, d.accent)}${blossom(9, 4, 0.7, '#f7d27a')}${leaf(6, 8, 20, 0.6)}</g>`;
+  } else if (FIGURES[shape]) {
+    const cut = -h * r;
+    defs += `<linearGradient id="${id}p" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="${light(d.c1, 0.2)}"/><stop offset=".5" stop-color="${d.c1}"/><stop offset="1" stop-color="${d.c2}"/></linearGradient><clipPath id="${id}cl"><rect x="-200" y="${r >= 0.999 ? -h - 40 : cut}" width="400" height="${h + 60}"/></clipPath>`;
+    out += `<ellipse cy="2" rx="${(w * 0.45 + (1 - r) * w * 0.2).toFixed(1)}" ry="${(4 + (1 - r) * 3).toFixed(1)}" fill="${d.drip}"/><g clip-path="url(#${id}cl)">${FIGURES[shape](d, w, h, id)}</g>`;
+    if (r < 0.999) out += `<ellipse cy="${cut}" rx="${(w * 0.42 * Math.sqrt(Math.max(0.15, 1 - Math.pow((cut + h / 2) / (h / 2), 2)))).toFixed(1)}" ry="${(w * 0.07).toFixed(1)}" fill="${opts.lit ? mix(d.drip, '#ffd27a', 0.3) : d.drip}"/>`;
+    wickBase = r >= 0.999 ? -h + (shape === 'pumpkin' ? 4 : shape === 'seashell' ? h * 0.12 : 2) : cut;
   } else if (shape === 'teacup') {
     const cw = w, ch = h;
     const hc = d.hc || '#ffffff';
@@ -421,8 +472,9 @@ export function candleGroup(d, kind, rem, opts = {}) {
 
   let wickTop = wickBase - 9;
   let topper = '';
-  if (d.topper === 'cherub' && shape === 'pillar') { topper = cherubMarkup(wickBase); wickTop = wickBase - 40; }
-  const wick = topper ? `<path d="M0 ${wickBase - 33} q1.5 -4 0 -8" stroke="#3a2a22" stroke-width="1.6" fill="none"/>` : `<path d="M0 ${wickBase} q1.6 -4.5 0 -9" stroke="#3a2a22" stroke-width="1.7" fill="none" stroke-linecap="round"/>`;
+  const figK = d.topper && FIGS[d.topper] ? 1.5 : 1;
+  if (d.topper && (shape === 'pillar' || shape === 'taper' || shape === 'spiral')) { topper = FIGS[d.topper] ? `<g transform="translate(0,${wickBase}) scale(${figK})">${FIGS[d.topper](0)}</g>` : cherubMarkup(wickBase); wickTop = wickBase - 40 * figK; }
+  const wick = topper ? `<path d="M0 ${wickBase - 33 * figK} q1.5 -4 0 -${8 * figK}" stroke="#3a2a22" stroke-width="1.6" fill="none"/>` : `<path d="M0 ${wickBase} q1.6 -4.5 0 -9" stroke="#3a2a22" stroke-width="1.7" fill="none" stroke-linecap="round"/>`;
   const fl = opts.lit ? `<g transform="translate(0,${wickTop + 1})">${flameMarkup(opts.blue, opts.agitated, id)}</g>` : '';
   const smoke = opts.smoke ? `<path class="smoke" d="M0 ${wickTop} c-6 -10 6 -16 0 -26 c-6 -10 6 -16 0 -26" stroke="#cfc6cc" stroke-width="2" fill="none" opacity=".7"/>` : '';
   const sp = opts.sparkles ? sparkles(w, h + (holder ? 0 : 0), R, d.accent || '#e7a8b8') : '';
@@ -437,7 +489,7 @@ export function candleMetrics(d, kind, bare = false) {
   const S = SHAPES[shape];
   const h = S.h * (KMUL[kind] || 1);
   const hold = bare || shape === 'jar' || shape === 'teacup' ? { h: shape === 'teacup' || shape === 'jar' ? 12 : 0, hw: S.w + 60 } : ({ ornate: { h: 150, hw: 120 }, brass: { h: 22, hw: S.w + 84 }, wood: { h: 18, hw: S.w + 48 }, ceramic: { h: 16, hw: S.w + 44 } }[d.holder] || { h: 14, hw: S.w + 40 });
-  return { w: S.w, h, holderH: hold.h, holderW: hold.hw, extraTop: d.topper === 'cherub' ? 40 : 0 };
+  return { w: S.w, h, holderH: hold.h, holderW: hold.hw, extraTop: d.topper ? (FIGS[d.topper] ? 60 : 40) : 0 };
 }
 
 export function candleSVG(d, kind, rem, opts = {}) {
@@ -881,7 +933,7 @@ function cakeSVG3D(design, candles = [], toppers = [], opts = {}) {
   candles.forEach((c, k) => {
     let p;
     if (n === 1) p = { x: cx, y: tt.top };
-    else if (k < outer) p = onTop(n <= 3 ? 0.42 : 0.6, Math.PI / 2 + (k / outer) * Math.PI * 2 + (n % 2 ? 0 : Math.PI / outer));
+    else if (k < outer) p = onTop(n <= 3 ? 0.42 : 0.6, Math.PI / 2 + (k / outer) * Math.PI * 2 + (n % 2 ? 0 : Math.PI / (2 * outer)));
     else p = onTop(0.2, Math.PI / 2 + ((k - outer) / (n - outer)) * Math.PI * 2 + 0.6);
     const cd = opts.getDesign(c.design);
     const rem = c.melted ? Math.max(0.12, c.remaining ?? 0.5) : 1;

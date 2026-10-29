@@ -8,6 +8,7 @@ import { candleSVG, cakeSVG, sculptureSVG, setCakeStyle } from './render.js';
 import * as audio from './audio.js';
 import { party } from './party.js';
 import { api, auth } from './api.js';
+import { sceneSVG } from './scenes.js';
 import { periodStats, barChart, donut, hourChart, trendChart, heatmap, tagColor, fmtMin, PALETTE } from './stats.js';
 
 const $ = (s, r = document) => r.querySelector(s);
@@ -366,7 +367,7 @@ VIEWS.bakery = () => {
   view.innerHTML = `
   <section class="grid">
     <div class="bakery-top">
-      <div class="card scene-${state.settings.scene || 'plain'}">
+      <div class="card scene-card scene-${state.settings.scene || 'plain'}">${sceneSVG(state.settings.scene)}
         <h2>Cake in the oven</h2>
         ${cakeSVG(getCake(cake.design), cake.candles, cake.toppers, cakeOpts({ seed: cake.id }))}
         <p style="text-align:center" class="muted">${cake.candles.length}/${CAKE_SLOTS} candles · started ${cake.started}</p>

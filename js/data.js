@@ -60,6 +60,16 @@ export const CANDLES = [
   { id: 'swan', name: 'Swan Lake Taper', collection: 'Ballet', rarity: 'rare', price: 300, shape: 'taper', c1: '#ffffff', c2: '#ece8f2', drip: '#ffffff', holder: 'glass', decor: ['feathers', 'pearls', 'bow'], accent: '#f2b8c8' },
   { id: 'nebula', name: 'Nebula Taper', collection: 'Celestial', rarity: 'legendary', price: 720, shape: 'taper', c1: '#4a3a8a', c2: '#241c4f', drip: '#7a68c8', holder: 'brass', decor: ['nebula'], accent: '#f29de0' },
   { id: 'cloudnine', name: 'Cloud Nine Pillar', collection: 'Celestial', rarity: 'common', price: 140, shape: 'pillar', c1: '#e3f1fb', c2: '#c7e2f5', drip: '#f2f9fe', holder: 'ceramic', hc: '#eef6fc', decor: ['clouds'], accent: '#9fc9ea' },
+  { id: 'pumpkinshape', name: 'Little Pumpkin', collection: 'Shaped', rarity: 'rare', price: 320, shape: 'pumpkin', c1: '#ffc58a', c2: '#f08a3c', drip: '#ffd9b0', accent: '#e07a45', drop: true },
+  { id: 'shellshape', name: 'Pearl Seashell', collection: 'Shaped', rarity: 'rare', price: 340, shape: 'seashell', c1: '#fff1ee', c2: '#f6c9cf', drip: '#fff6f4', accent: '#e8a9b4', drop: true },
+  { id: 'tamashape', name: 'Tamagotchi', collection: 'Shaped', rarity: 'legendary', price: 700, shape: 'tamagotchi', c1: '#d9ccfa', c2: '#b5a2ef', drip: '#ede6fd', accent: '#f6a6c1', drop: true },
+  { id: 'bunnywish', name: "Bunny's Garden", collection: 'Figurines', rarity: 'legendary', price: 780, shape: 'pillar', c1: '#fff6f8', c2: '#fbdbe4', drip: '#fffafb', holder: 'ceramic', hc: '#fdf0f3', decor: ['blossoms', 'pearls'], topper: 'bunny', accent: '#f4a6b9' },
+  { id: 'kittywish', name: 'Princess Kitty', collection: 'Figurines', rarity: 'legendary', price: 780, shape: 'pillar', c1: '#f3effc', c2: '#ddd3f5', drip: '#faf8ff', holder: 'ceramic', hc: '#f5f1fb', decor: ['bow', 'pearls'], topper: 'kitty', accent: '#c4a6ec' },
+  { id: 'swanwish', name: 'Swan Princess', collection: 'Figurines', rarity: 'legendary', price: 820, shape: 'pillar', c1: '#ffffff', c2: '#eceaf3', drip: '#ffffff', holder: 'glass', decor: ['feathers', 'pearls'], topper: 'swan', accent: '#e8c3d2' },
+  { id: 'teddywish', name: 'Teddy Picnic', collection: 'Figurines', rarity: 'legendary', price: 760, shape: 'pillar', c1: '#fff1e2', c2: '#f3d6b6', pattern: 'gingham', drip: '#fff7ee', holder: 'wood', decor: ['strawberries'], topper: 'teddy', accent: '#f28fae' },
+  { id: 'frogwish', name: 'Froggy Pond', collection: 'Figurines', rarity: 'legendary', price: 760, shape: 'pillar', c1: '#e6f5df', c2: '#c4e3b6', drip: '#f2faee', holder: 'ceramic', hc: '#eef7ea', decor: ['daisies'], topper: 'froggy', accent: '#8cc77a' },
+  { id: 'fairywish', name: 'Moon Fairy', collection: 'Figurines', rarity: 'legendary', price: 840, shape: 'taper', c1: '#e9e6fb', c2: '#c9c3f1', drip: '#f5f3fe', holder: 'ornate', hc: '#f3ecdc', decor: ['moon', 'glow'], topper: 'fairy', accent: '#b49ce8' },
+  { id: 'mermaidwish', name: 'Little Mermaid', collection: 'Figurines', rarity: 'legendary', price: 840, shape: 'pillar', c1: '#dff5f2', c2: '#bfe3ea', drip: '#f0fbfa', holder: 'ceramic', hc: '#e8f7f5', decor: ['shells', 'pearls'], topper: 'mermaid', accent: '#7fd1c7' },
   { id: 'pumpkin', name: 'Pumpkin Spice', rarity: 'seasonal', price: 280, shape: 'pillar', c1: '#fcd6ad', c2: '#f0a464', drip: '#fde5ca', holder: 'wood', decor: ['leaves', 'twine'], accent: '#b5532a', available: isHalloween, season: 'Halloween' },
   { id: 'sakura', name: 'Sakura Branch', rarity: 'seasonal', price: 280, shape: 'taper', c1: '#fff1f5', c2: '#ffd3e0', drip: '#fff7f9', holder: 'ornate', hc: '#fdfaf6', decor: ['branch'], accent: '#f28cab', available: isSpring, season: 'Spring' },
 ];
@@ -91,10 +101,10 @@ export const TOPPERS = [
 ];
 
 export const STUDIO = {
-  shapes: ['taper', 'pillar', 'spiral', 'jar', 'teacup'],
+  shapes: ['taper', 'pillar', 'spiral', 'jar', 'teacup', 'pumpkin', 'seashell', 'tamagotchi'],
   holders: ['glass', 'wood', 'ceramic', 'brass', 'ornate'],
   decors: ['none', 'heart', 'bow', 'pearls', 'roses', 'moon', 'butterflies', 'blossoms', 'lavender', 'strawberries', 'fairywings', 'mushrooms', 'scales', 'shells', 'carvedrose', 'carveddamask', 'honeycomb', 'crystals', 'daisies', 'clouds', 'nebula'],
-  patterns: ['solid', 'stripes', 'spiral', 'polka', 'ombre', 'sparkle'],
+  patterns: ['solid', 'stripes', 'spiral', 'polka', 'ombre', 'sparkle', 'gingham', 'hearts', 'checker', 'leopard', 'cow', 'waves', 'stars', 'argyle', 'strawberry', 'tiedye', 'scallop', 'marble', 'lace', 'floral'],
   scents: ['Vanilla Bean', 'Old Library', 'Rain on Stone', 'Burnt Sugar', 'Fig & Cedar', 'Midnight Espresso', 'Pink Peppercorn', 'Strawberry Milk'],
 };
 
