@@ -1,3 +1,4 @@
+import { ART3, CAKE_ART } from './art3.js';
 
 let uidN = 0;
 const uid = () => `u${++uidN}${Math.random().toString(36).slice(2, 5)}`;
@@ -234,6 +235,7 @@ const ART = {
   conch: { ar: 0.527, h: 150, drip: '#f9c2a4', molded: true, st: [[0.463, 0.006, 0.08], [0.447, 0.12, 0.16], [0.451, 0.143, 0.2], [0.453, 0.259, 0.26], [0.452, 0.462, 0.28], [0.469, 0.728, 0.3]] },
   abalone: { ar: 1.295, h: 82, drip: '#bfe8da', st: [[0.502, 0.29, 0.4], [0.507, 0.364, 0.4], [0.508, 0.364, 0.4], [0.506, 0.413, 0.4], [0.506, 0.495, 0.38], [0.524, 0.54, 0.36]] },
 };
+Object.assign(ART, ART3);
 const artSize = (d) => { const a = ART[d.art]; return { w: Math.round(a.h * a.ar), h: a.h }; };
 const artStops = (a) => a.rs || (a.rs = a.st.map(([, y]) => (a.st[a.st.length - 1][1] - y) / (a.st[a.st.length - 1][1] - a.st[0][1])).map((v, i, arr) => Math.min(v, ...arr.slice(0, i + 1)) - i * 0.01).map((v, i, arr) => (i === arr.length - 1 ? 0 : v)));
 const phaseVar = (dur, off = 0) => `--ph:${(-((Date.now() / 1000 + off) % dur)).toFixed(2)}s`;
@@ -243,7 +245,7 @@ function paintedCandle(d, r, id, opts) {
   let k = 0;
   while (k < n - 2 && r < rs[k + 1]) k++;
   const t = Math.max(0, Math.min(1, (r - rs[k + 1]) / (rs[k] - rs[k + 1] || 1)));
-  const src = (i) => `href="/art/${d.art}_${i}.webp" x="${-w / 2}" y="${-h}" width="${w}" height="${h}" preserveAspectRatio="xMidYMax meet"`;
+  const src = (i) => `href="/${a.dir || 'art'}/${a.file || d.art}_${i}.webp" x="${-w / 2}" y="${-h}" width="${w}" height="${h}" preserveAspectRatio="xMidYMax meet"`;
   const sm = (x) => x * x * (3 - 2 * x);
   const q = 1 - Math.min(1, t / 0.4), qa = sm(Math.min(1, q / 0.7)), qb = Math.max(0, (q - 0.7) / 0.3);
   const lerp = (j) => a.st[k][j] * (1 - qa) + a.st[k + 1][j] * qa;
@@ -981,9 +983,10 @@ export function sculptureSVG(s, growth = 1) {
 }
 
 /* ---------- 3D cake ---------- */
-let CAKE_STYLE = 'new';
-export const setCakeStyle = (s) => { CAKE_STYLE = s === 'classic' ? 'classic' : 'new'; };
+let CAKE_STYLE = 'painted';
+export const setCakeStyle = (s) => { CAKE_STYLE = s === 'classic' || s === 'new' ? s : 'painted'; };
 export function cakeSVG(design, candles = [], toppers = [], opts = {}) {
+  if (CAKE_STYLE === 'painted' && CAKE_ART[design.id]) return cakeSVGPainted(design, candles, toppers, opts);
   return CAKE_STYLE === 'classic' ? cakeSVGClassic(design, candles, toppers, opts) : cakeSVG3D(design, candles, toppers, opts);
 }
 
@@ -1197,4 +1200,33 @@ function cakeSVG3D(design, candles = [], toppers = [], opts = {}) {
   if (toppers.includes('frog')) out += fig(cx + PR - 26, plateY + 8, `<ellipse cy="-8" rx="13" ry="9" fill="#8bd47a"/><circle cx="-6" cy="-17" r="5" fill="#8bd47a"/><circle cx="6" cy="-17" r="5" fill="#8bd47a"/><circle cx="-6" cy="-17" r="2" fill="#222"/><circle cx="6" cy="-17" r="2" fill="#222"/><path d="M-5 -8 q5 4 10 0" stroke="#2f6b25" stroke-width="1.2" fill="none"/><ellipse cx="-8" cy="-6" rx="2" ry="1.2" fill="#ff9eb5"/><ellipse cx="8" cy="-6" rx="2" ry="1.2" fill="#ff9eb5"/>`);
 
   return `<svg class="${opts.cls || 'cake-svg'}" viewBox="0 ${minY} 400 ${plateY + 90 - minY}" xmlns="http://www.w3.org/2000/svg"><defs>${defs}</defs>${out}</svg>`;
+}
+
+const CAKE_TOP = { cx: 0.5, cy: 0.165, rx: 0.33, ry: 0.1 };
+function cakeSVGPainted(design, candles = [], toppers = [], opts = {}) {
+  const R = rng(opts.seed || design.id);
+  const art = CAKE_ART[design.id], top = { ...CAKE_TOP, ...(art.top || {}) };
+  const W = 360, H = Math.round(W / art.ar), X0 = 20, Y0 = 130;
+  const cx = X0 + top.cx * W, cy = Y0 + top.cy * H, rxT = top.rx * W, ryT = top.ry * H;
+  const onTop = (f, th) => ({ x: cx + Math.cos(th) * rxT * f, y: cy + Math.sin(th) * ryT * f });
+  const items = [];
+  if (toppers.includes('cherries')) for (let k = 0; k < 6; k++) { const th = 0.5 + (k / 6) * Math.PI * 2; const p = onTop(0.8, th); items.push({ y: p.y, s: cherry3D(p.x, p.y, 0.85 + 0.15 * Math.sin(th)) }); }
+  if (toppers.includes('sprinkles')) {
+    const cols = ['#f06292', '#ffd166', '#5fd0a6', '#5fb2e8', '#b388ff', '#ffffff'];
+    let sp = '';
+    for (let k = 0; k < 40; k++) { const a = R() * Math.PI * 2, rr = Math.sqrt(R()) * 0.86; const p = onTop(rr, a); sp += `<rect x="${p.x.toFixed(1)}" y="${p.y.toFixed(1)}" width="5" height="1.8" rx=".9" fill="${cols[k % 6]}" transform="rotate(${(R() * 180).toFixed(0)} ${p.x.toFixed(1)} ${p.y.toFixed(1)})"/>`; }
+    items.push({ y: -1e9, s: sp });
+  }
+  const n = candles.length, outer = n <= 6 ? n : Math.ceil(n * 0.62);
+  candles.forEach((c, k) => {
+    let p;
+    if (n === 1) p = { x: cx, y: cy };
+    else if (k < outer) p = onTop(n <= 3 ? 0.42 : 0.62, Math.PI / 2 + (k / outer) * Math.PI * 2 + (n % 2 ? 0 : Math.PI / (2 * outer)));
+    else p = onTop(0.22, Math.PI / 2 + ((k - outer) / (n - outer)) * Math.PI * 2 + 0.6);
+    const cd = opts.getDesign(c.design);
+    const rem = c.melted ? Math.max(0.12, c.remaining ?? 0.5) : 1;
+    items.push({ y: p.y, s: `<ellipse cx="${p.x.toFixed(1)}" cy="${(p.y + 1).toFixed(1)}" rx="13" ry="3.6" fill="#3a2420" opacity=".14"/><g transform="translate(${p.x.toFixed(1)},${p.y.toFixed(1)}) scale(.6)"><title>${c.subject || ''} · ${c.minutes} min${c.melted ? ' (blown out early)' : ''}</title>${candleGroup(cd, c.kind, rem, { bare: true, lit: !c.melted && opts.lit !== false, blue: c.blue })}</g>` });
+  });
+  const body = items.sort((a, b) => a.y - b.y).map((it) => it.s).join('');
+  return `<svg class="${opts.cls || 'cake-svg'}" viewBox="0 0 400 ${Y0 + H + 12}" xmlns="http://www.w3.org/2000/svg"><ellipse cx="200" cy="${Y0 + H - 4}" rx="${W * 0.3}" ry="9" fill="#3a2420" opacity=".1"/><image href="/art3/cake_${design.id}.webp" x="${X0}" y="${Y0}" width="${W}" height="${H}"/>${body}</svg>`;
 }

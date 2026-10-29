@@ -375,7 +375,7 @@ VIEWS.bakery = () => {
         <p style="text-align:center" class="muted">${cake.candles.length}/${CAKE_SLOTS} candles · started ${cake.started}</p>
       </div>
       <div class="card">
-        <div class="row" style="margin-bottom:14px"><h3 style="margin:0">Cake style</h3><span class="spacer"></span><div class="seg">${[['new', '3D'], ['classic', 'Classic']].map(([k, l]) => `<button class="${(state.settings.cakeStyle || 'new') === k ? 'on' : ''}" data-act="cakeStyle" data-id="${k}">${l}</button>`).join('')}</div></div>
+        <div class="row" style="margin-bottom:14px"><h3 style="margin:0">Cake style</h3><span class="spacer"></span><div class="seg">${[['painted', 'Painted'], ['new', '3D'], ['classic', 'Classic']].map(([k, l]) => `<button class="${(state.settings.cakeStyle || 'painted') === k ? 'on' : ''}" data-act="cakeStyle" data-id="${k}">${l}</button>`).join('')}</div></div>
         <div class="row" style="margin-bottom:14px"><h3 style="margin:0">Scene</h3><span class="spacer"></span><div class="chips">${['plain', 'gingham', 'window', 'garden', 'night'].map((k) => `<button class="chip sm ${(state.settings.scene || 'plain') === k ? 'on' : ''}" data-act="scene" data-id="${k}">${k[0].toUpperCase() + k.slice(1)}</button>`).join('')}</div></div>
         <h3>Cake design</h3>
         <div class="chips">${ownedCakes.map((c) => `<button class="chip ${cake.design === c.id ? 'on' : ''}" data-act="cakeDesign" data-id="${c.id}">${esc(c.name)}</button>`).join('')}</div>
@@ -1224,6 +1224,7 @@ async function enterAccount(user) {
 let started = false;
 function startApp() {
   document.body.classList.remove('auth-mode');
+  if (!state.settings.v3art) { state.settings.v3art = true; state.settings.cakeStyle = 'painted'; }
   setCakeStyle(state.settings.cakeStyle);
   audio.setVolume(state.settings.volume);
   rolloverIfNewDay();
