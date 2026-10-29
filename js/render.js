@@ -1353,9 +1353,10 @@ function cakeSVG3D(design, candles = [], toppers = [], opts = {}) {
 }
 
 const CAKE_TOP = { cx: 0.5, cy: 0.165, rx: 0.33, ry: 0.1 };
+const CAKE_TOP_THEME = { cy: 0.2, rx: 0.34, ry: 0.135 };
 function cakeSVGPainted(design, candles = [], toppers = [], opts = {}) {
   const R = rng(opts.seed || design.id);
-  const art = CAKE_ART[design.id], top = { ...CAKE_TOP, ...(art.top || {}) };
+  const art = CAKE_ART[design.id], top = { ...CAKE_TOP, ...(art.dir === 'art6' || art.dir === 'art7' ? CAKE_TOP_THEME : {}), ...(art.top || {}) };
   const W = 360, H = Math.round(W / art.ar), X0 = 20, Y0 = 130;
   const cx = X0 + top.cx * W, cy = Y0 + top.cy * H, rxT = top.rx * W, ryT = top.ry * H;
   const onTop = (f, th) => ({ x: cx + Math.cos(th) * rxT * f, y: cy + Math.sin(th) * ryT * f });
