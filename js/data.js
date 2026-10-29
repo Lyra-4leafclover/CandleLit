@@ -47,6 +47,7 @@ export const CANDLES = [
   { id: 'cherub', name: "Cherub's Wish", rarity: 'legendary', price: 800, shape: 'pillar', c1: '#fffaf4', c2: '#f3e5d4', drip: '#fffdf9', holder: 'ceramic', hc: '#fdf3e3', decor: ['wings', 'pearls'], topper: 'cherub', accent: '#e2b65c' },
   { id: 'faeriewing', name: 'Faerie Glow Taper', collection: 'Faerie', rarity: 'rare', price: 340, shape: 'taper', c1: '#e9f7ef', c2: '#d7c9f3', drip: '#f6f2ff', holder: 'ornate', hc: '#f3ead6', decor: ['fairywings', 'glow'], accent: '#a98be0', drop: true },
   { id: 'faeriemush', name: 'Mushroom Ring Pillar', collection: 'Faerie', rarity: 'rare', price: 300, shape: 'pillar', c1: '#fbf3e4', c2: '#e9dcc0', drip: '#fffaf0', holder: 'wood', decor: ['mushrooms', 'glow'], accent: '#e5484d' },
+  { id: 'faerietoad', name: 'Enchanted Toadstool', collection: 'Faerie', rarity: 'legendary', price: 760, shape: 'toadstool', c1: '#fbf1df', c2: '#ead8b8', drip: '#fff6ea', accent: '#e2554f', drop: true },
   { id: 'faeriecrown', name: 'Faerie Queen', collection: 'Faerie', rarity: 'legendary', price: 760, shape: 'spiral', c1: '#f3ecff', c2: '#dcd0f7', c3: '#c8f0dc', drip: '#faf7ff', holder: 'ornate', hc: '#efe6d4', decor: ['fairywings', 'blossoms', 'glow'], accent: '#c79be8' },
   { id: 'mermaidscale', name: 'Mermaid Scales', collection: 'Mermaid', rarity: 'rare', price: 340, shape: 'pillar', c1: '#d6f3f1', c2: '#c9c6f2', drip: '#eefbfa', holder: 'ceramic', hc: '#e3f6f3', decor: ['scales', 'shells'], accent: '#6cc7c1', drop: true },
   { id: 'mermaidtail', name: 'Siren Tail Taper', collection: 'Mermaid', rarity: 'legendary', price: 680, shape: 'taper', c1: '#c8f1ee', c2: '#9fd8e6', drip: '#e6fbfa', holder: 'glass', decor: ['scales', 'tailfin', 'pearls'], accent: '#7a8fe6' },
@@ -101,7 +102,7 @@ export const TOPPERS = [
 ];
 
 export const STUDIO = {
-  shapes: ['taper', 'pillar', 'spiral', 'jar', 'teacup', 'pumpkin', 'seashell', 'tamagotchi'],
+  shapes: ['taper', 'pillar', 'spiral', 'jar', 'teacup', 'pumpkin', 'seashell', 'tamagotchi', 'toadstool'],
   holders: ['glass', 'wood', 'ceramic', 'brass', 'ornate'],
   decors: ['none', 'heart', 'bow', 'pearls', 'roses', 'moon', 'butterflies', 'blossoms', 'lavender', 'strawberries', 'fairywings', 'mushrooms', 'scales', 'shells', 'carvedrose', 'carveddamask', 'honeycomb', 'crystals', 'daisies', 'clouds', 'nebula'],
   patterns: ['solid', 'stripes', 'spiral', 'polka', 'ombre', 'sparkle', 'gingham', 'hearts', 'checker', 'leopard', 'cow', 'waves', 'stars', 'argyle', 'strawberry', 'tiedye', 'scallop', 'marble', 'lace', 'floral'],

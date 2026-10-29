@@ -74,7 +74,7 @@ function patternDefs(d, P, h) {
 }
 
 const KMUL = { birthday: 0.78, taper: 1, pillar: 1.15 };
-const SHAPES = { pumpkin: { w: 96, h: 74 }, seashell: { w: 100, h: 78 }, tamagotchi: { w: 70, h: 88 }, taper: { w: 30, h: 200 }, spiral: { w: 30, h: 200 }, pillar: { w: 74, h: 130 }, jar: { w: 84, h: 96 }, teacup: { w: 96, h: 50 } };
+const SHAPES = { pumpkin: { w: 104, h: 80 }, seashell: { w: 100, h: 86 }, tamagotchi: { w: 74, h: 92 }, toadstool: { w: 104, h: 122 }, taper: { w: 30, h: 200 }, spiral: { w: 30, h: 200 }, pillar: { w: 74, h: 130 }, jar: { w: 84, h: 96 }, teacup: { w: 96, h: 50 } };
 const GOLD = '#e0bb72';
 
 function flameMarkup(blue, agitated, id) {
@@ -107,33 +107,155 @@ const FIGS = {
   swan: (y) => `<g transform="translate(0,${y})"><path d="M-12 -4 C-12 -14 4 -14 10 -6 C12 -2 8 0 0 0 C-8 0 -12 -1 -12 -4Z" fill="#fff" stroke="#e6e0ea" stroke-width=".7"/><path d="M-8 -6 C-14 -16 -6 -26 -2 -22 C0 -20 -2 -16 -5 -14" stroke="#fff" stroke-width="3.4" fill="none" stroke-linecap="round"/><path d="M-2 -22 l3 1 -3 1z" fill="#f2a65a"/><circle cx="-3.4" cy="-22.3" r=".6" fill="#333"/><path d="M-4 -10 C2 -14 6 -12 8 -8" stroke="#e6e0ea" stroke-width=".7" fill="none"/><path d="M-4 -27 h5 l-.5 -2.5 -1 1.2 -1 -1.8 -1 1.8 -1 -1.2z" fill="${GOLD}"/></g>`,
   teddy: (y) => `<g transform="translate(0,${y})"><circle cx="-6.5" cy="-25" r="3.2" fill="#c99470"/><circle cx="6.5" cy="-25" r="3.2" fill="#c99470"/><circle cx="-6.5" cy="-25" r="1.6" fill="#f0c6a6"/><circle cx="6.5" cy="-25" r="1.6" fill="#f0c6a6"/><ellipse cy="-7" rx="10" ry="8.5" fill="#c99470"/><ellipse cy="-6" rx="5.5" ry="5" fill="#f0c6a6"/><circle cy="-19" r="8" fill="#c99470"/><ellipse cy="-16.5" rx="3.6" ry="2.8" fill="#f0c6a6"/><ellipse cy="-17.5" rx="1.3" ry=".9" fill="#4a3020"/><circle cx="-3" cy="-20.5" r=".9" fill="#4a3020"/><circle cx="3" cy="-20.5" r=".9" fill="#4a3020"/><path d="M-5 -12 l5 2 5 -2 -1 3 -4 -1 -4 1z" fill="#f28fae"/></g>`,
   froggy: (y) => `<g transform="translate(0,${y})"><ellipse cy="-7" rx="11" ry="8" fill="#9fd68c"/><ellipse cy="-5" rx="6" ry="4.5" fill="#d9f2cc"/><ellipse cy="-15" rx="9" ry="6.5" fill="#9fd68c"/><circle cx="-5" cy="-20" r="3.6" fill="#9fd68c"/><circle cx="5" cy="-20" r="3.6" fill="#9fd68c"/><circle cx="-5" cy="-20" r="1.6" fill="#2a3a20"/><circle cx="5" cy="-20" r="1.6" fill="#2a3a20"/><path d="M-4 -13 q4 3 8 0" stroke="#3f7a32" stroke-width=".9" fill="none"/><ellipse cx="-6.5" cy="-13.5" rx="1.6" ry="1" fill="#ffa6b8"/><ellipse cx="6.5" cy="-13.5" rx="1.6" ry="1" fill="#ffa6b8"/>${'<g transform="translate(4,-25)">' + [0, 72, 144, 216, 288].map((r) => `<ellipse cy="-2.4" rx="1.6" ry="2.4" fill="#ffd1e0" transform="rotate(${r})"/>`).join('') + '<circle r="1.1" fill="#ffd36e"/></g>'}</g>`,
-  fairy: (y) => `<g transform="translate(0,${y})"><path d="M-2 -16 C-14 -30 -22 -18 -14 -12 C-10 -9 -5 -12 -2 -14Z M2 -16 C14 -30 22 -18 14 -12 C10 -9 5 -12 2 -14Z" fill="#e6f6ff" fill-opacity=".85" stroke="#b9d9f0" stroke-width=".6"/><path d="M-7 0 L0 -14 L7 0Z" fill="#c9b6f2"/><path d="M-7 0 Q0 3 7 0" fill="#b49ce8"/><circle cy="-18" r="5.5" fill="#ffe6d4"/><path d="M-5.5 -19 C-6 -25 6 -25 5.5 -19 C4 -22 -4 -22 -5.5 -19Z" fill="#f3c98b"/><circle cx="-2" cy="-18" r=".6" fill="#5a4040"/><circle cx="2" cy="-18" r=".6" fill="#5a4040"/><path d="M6 -10 L12 -20" stroke="${GOLD}" stroke-width=".8"/><path d="M12 -23 l.8 2 2 .8 -2 .8 -.8 2 -.8 -2 -2 -.8 2 -.8z" fill="${GOLD}"/></g>`,
-  mermaid: (y) => `<g transform="translate(0,${y})"><path d="M-4 -12 C-6 -4 -2 2 6 2 C10 2 12 6 14 4 C13 0 10 -2 8 -2 C4 -3 4 -8 4 -12Z" fill="#7fd1c7"/><path d="M8 -2 C12 -6 16 -4 16 -2 C14 0 12 0 8 -2Z" fill="#a7e3db"/><path d="M-4 -12 h8 l-1 -8 h-6z" fill="#ffe0cc"/><path d="M-4 -16 a2 2 0 0 0 4 0 a2 2 0 0 0 4 0" fill="#c9b6f2"/><circle cy="-23" r="5" fill="#ffe6d4"/><path d="M-5 -24 C-8 -16 -7 -10 -9 -6 M5 -24 C8 -16 7 -10 9 -6" stroke="#f08a9e" stroke-width="2.6" fill="none" stroke-linecap="round"/><path d="M-5 -24 C-5 -29 5 -29 5 -24" stroke="#f08a9e" stroke-width="2.6" fill="none"/><circle cx="-1.8" cy="-23" r=".6" fill="#5a4040"/><circle cx="1.8" cy="-23" r=".6" fill="#5a4040"/><path d="M-3 -29 l1 -2 1 1.5 1 -2.2 1 2.2 1 -1.5 1 2z" fill="#fff4c4"/></g>`,
+  fairy: (y) => { const g = uid(); return `<g transform="translate(0,${y})"><defs><linearGradient id="${g}w" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#fdf6ff"/><stop offset=".5" stop-color="#e8dcff"/><stop offset="1" stop-color="#cfeaff"/></linearGradient><linearGradient id="${g}m" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff4c2"/><stop offset="1" stop-color="#efc760"/></linearGradient><linearGradient id="${g}d" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#e3d6fb"/><stop offset="1" stop-color="#b49ce8"/></linearGradient></defs>
+    <path d="M-1 -17 C-10 -33 -25 -29 -20 -19 C-17 -13 -8 -14 -1 -15Z M1 -17 C10 -33 25 -29 20 -19 C17 -13 8 -14 1 -15Z" fill="url(#${g}w)" fill-opacity=".9" stroke="#c9b6f2" stroke-width=".6"/>
+    <path d="M-1 -14 C-9 -14 -15 -7 -11 -4 C-7 -2 -3 -8 -1 -12Z M1 -14 C9 -14 15 -7 11 -4 C7 -2 3 -8 1 -12Z" fill="url(#${g}w)" fill-opacity=".9" stroke="#c9b6f2" stroke-width=".6"/>
+    <path d="M-3 -18 C-9 -24 -16 -25 -18 -21 M3 -18 C9 -24 16 -25 18 -21 M-3 -13 C-7 -11 -10 -8 -10 -6 M3 -13 C7 -11 10 -8 10 -6" stroke="#fff" stroke-width=".7" fill="none" opacity=".9"/>
+    <path d="M-15 -9 A15 11 0 0 0 15 -9 A13 7 0 0 1 -15 -9Z" fill="url(#${g}m)" stroke="#e0b44e" stroke-width=".6"/>
+    <path d="M5 -8 C7 -6 8 -3 9 0 M7 -8 C9 -6 11 -4 12 -1" stroke="#ffe0cc" stroke-width="2.2" stroke-linecap="round" fill="none"/><ellipse cx="9.3" cy=".4" rx="1.6" ry="1.1" fill="#c9b6f2"/><ellipse cx="12.3" cy="-.6" rx="1.6" ry="1.1" fill="#c9b6f2"/>
+    <path d="M-7 -8 C-8 -11 -5 -13 0 -13 C5 -13 9 -11 8 -7 C4 -5 -3 -5 -7 -8Z" fill="url(#${g}d)"/><path d="M-6 -8 q2 2 4 0 q2 2 4 0 q2 2 4 0 q2 2 3 0" stroke="#fff" stroke-width=".6" fill="none" opacity=".8"/>
+    <path d="M-3 -13 L-2.4 -18.5 L2.4 -18.5 L3 -13Z" fill="url(#${g}d)"/><path d="M-2.4 -18 C-5 -16 -6 -13 -5 -11 M2.4 -18 C6 -18 9 -21 11 -23" stroke="#ffe0cc" stroke-width="1.5" stroke-linecap="round" fill="none"/>
+    <path d="M11 -23 L13 -27" stroke="${GOLD}" stroke-width=".8"/><path d="M13.5 -30.5 l.9 2.1 2.2 .2 -1.7 1.4 .5 2.2 -1.9 -1.2 -1.9 1.2 .5 -2.2 -1.7 -1.4 2.2 -.2z" fill="#ffe27a" stroke="${GOLD}" stroke-width=".4"/>
+    <path d="M-6.3 -24 C-7.5 -19 -6.5 -16 -4.5 -15 L4.5 -15 C6.5 -16 7.5 -19 6.3 -24Z" fill="#f6dcae"/>
+    <circle cy="-24" r="5.6" fill="#ffe8d8"/><circle cx="4.6" cy="-29" r="2.6" fill="#f3d39a"/>
+    <path d="M-5.8 -24.5 C-6 -30.5 6 -30.5 5.8 -24.5 C4 -27 1 -27.6 -.5 -26.4 C-2 -27.2 -4.2 -26.6 -5.8 -24.5Z" fill="#f3d39a"/>
+    <path d="M-3.2 -23.6 q1.2 1 2.2 0 M1 -23.6 q1.2 1 2.2 0" stroke="#6b4a3a" stroke-width=".7" fill="none" stroke-linecap="round"/><path d="M-.8 -21.4 q.8 .6 1.6 0" stroke="#e48aa0" stroke-width=".6" fill="none"/>
+    <ellipse cx="-3.6" cy="-22" rx="1.4" ry=".8" fill="#ffb3c1" opacity=".7"/><ellipse cx="3.6" cy="-22" rx="1.4" ry=".8" fill="#ffb3c1" opacity=".7"/>
+    ${[-4.2, -1.4, 1.4, 4.2].map((x, i) => `<circle cx="${x}" cy="${-28.6 + Math.abs(x) * 0.25}" r="1.2" fill="${i % 2 ? '#fff' : '#f9c6d8'}"/>`).join('')}
+    <path d="M-14 -24 l.5 1.2 1.2 .5 -1.2 .5 -.5 1.2 -.5 -1.2 -1.2 -.5 1.2 -.5z M17 -12 l.4 1 1 .4 -1 .4 -.4 1 -.4 -1 -1 -.4 1 -.4z" fill="#ffe9a8"/></g>`; },
+  mermaid: (y) => { const g = uid(); return `<g transform="translate(0,${y})"><defs><linearGradient id="${g}t" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#9fe3d6"/><stop offset=".55" stop-color="#5cc2b8"/><stop offset="1" stop-color="#6aa6d8"/></linearGradient><linearGradient id="${g}s" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff2f0"/><stop offset="1" stop-color="#f6bfc8"/></linearGradient><linearGradient id="${g}h" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#f58a8f"/><stop offset="1" stop-color="#e9667a"/></linearGradient><radialGradient id="${g}p" cx=".35" cy=".3" r=".7"><stop offset="0" stop-color="#fff"/><stop offset="1" stop-color="#e6dad2"/></radialGradient></defs>
+    <path d="M-14 -5 C-20 -22 -9 -33 0 -33 C9 -33 20 -22 14 -5Z" fill="url(#${g}s)" stroke="#eaa7b3" stroke-width=".6"/>
+    ${[-60, -35, -12, 12, 35, 60].map((a) => `<path d="M0 -5 L${(Math.sin(a * Math.PI / 180) * 16).toFixed(1)} ${(-5 - Math.cos(a * Math.PI / 180) * 26).toFixed(1)}" stroke="#eaa7b3" stroke-width=".6" opacity=".7"/>`).join('')}
+    <path d="M-6.8 -24 C-8.5 -17 -9.5 -12 -8 -7 C-6 -9 -5.5 -12 -4.5 -15 L4.5 -15 C5.5 -12 6 -9 8 -7 C9.5 -12 8.5 -17 6.8 -24Z" fill="url(#${g}h)"/>
+    <path d="M-4.5 -11 C-6.5 -5 -3 -1 4 -1.5 C7.5 -1.8 9.5 -.5 11 1.5 L13.4 .6 C12.4 -2.6 9 -5 5 -5 C2.5 -5 3 -8 4 -11Z" fill="url(#${g}t)" stroke="#3f9e98" stroke-width=".5"/>
+    ${[[-2.5, -7], [0, -4.5], [3, -3], [6, -3.2], [-3, -4]].map(([x, yy]) => `<path d="M${x - 1.2} ${yy} q1.2 1.4 2.4 0" stroke="#d9fbf4" stroke-width=".5" fill="none" opacity=".8"/>`).join('')}
+    <path d="M12 1 C13.5 -3.5 19 -4 19.5 -.5 C17.5 1 15 1.6 12.8 1.8Z M12.6 1.6 C13.5 5 17.5 7.4 18.8 5 C17.5 3 15.4 2.2 12.8 1.8Z" fill="#b6ece4" stroke="#5cc2b8" stroke-width=".5"/><path d="M13.5 1.2 L18 -1.5 M13.5 2 L17.5 4.6" stroke="#fff" stroke-width=".4" opacity=".8"/>
+    <path d="M-16 -4 C-16 -9 16 -9 16 -4 Q0 2 -16 -4Z" fill="url(#${g}s)" stroke="#e79fae" stroke-width=".6"/>${[-11, -5.5, 0, 5.5, 11].map((x) => `<path d="M0 0 L${x} -6.6" stroke="#eaa7b3" stroke-width=".5" opacity=".7"/>`).join('')}
+    <path d="M-4.4 -11 C-4.4 -14 -3.8 -16.5 -2.4 -18 L2.4 -18 C3.8 -16.5 4.4 -14 4.4 -11Z" fill="#ffe2cf"/>
+    <path d="M-2.4 -17.5 C-5.5 -15 -6.5 -11 -4.8 -8.6 M2.4 -17.5 C5.5 -15 6.5 -11 4.8 -8.6" stroke="#ffe2cf" stroke-width="1.5" stroke-linecap="round" fill="none"/>
+    <path d="M-4 -14.6 C-4 -16.4 -.6 -16.4 -.3 -14.4 Q-2 -13.4 -4 -14.6Z M4 -14.6 C4 -16.4 .6 -16.4 .3 -14.4 Q2 -13.4 4 -14.6Z" fill="#c9b6f2" stroke="#a48ad8" stroke-width=".3"/>
+    <circle cy="-24" r="5.6" fill="#ffe8d8"/>
+    <path d="M-6 -24 C-6.4 -30.6 6.4 -30.6 6 -24 C5 -27.2 2 -27.8 0 -26.6 C-2 -27.8 -4.6 -26.8 -6 -24Z" fill="url(#${g}h)"/><path d="M-6 -24 C-7.5 -20 -5.8 -17 -6.5 -13" stroke="#ec7484" stroke-width="2.2" stroke-linecap="round" fill="none"/>
+    <circle cx="-2.1" cy="-23.6" r=".85" fill="#4a3a4a"/><circle cx="2.1" cy="-23.6" r=".85" fill="#4a3a4a"/><circle cx="-1.8" cy="-23.9" r=".3" fill="#fff"/><circle cx="2.4" cy="-23.9" r=".3" fill="#fff"/><path d="M-1 -21.3 q1 .9 2 0" stroke="#e48aa0" stroke-width=".6" fill="none"/>
+    <ellipse cx="-3.7" cy="-22" rx="1.3" ry=".8" fill="#ffb3c1" opacity=".75"/><ellipse cx="3.7" cy="-22" rx="1.3" ry=".8" fill="#ffb3c1" opacity=".75"/>
+    <path d="M4.5 -30 l.7 1.6 1.7 .2 -1.3 1.1 .4 1.7 -1.5 -.9 -1.5 .9 .4 -1.7 -1.3 -1.1 1.7 -.2z" fill="#ffd36e" stroke="#e0a83e" stroke-width=".3"/>
+    <circle cx="-9" cy="-3.6" r="2.2" fill="url(#${g}p)"/><circle cx="-5.6" cy="-2.8" r="1.6" fill="url(#${g}p)"/></g>`; },
 };
 
-/* ---- shaped (figure) candles: drawn whole, then clipped as they melt ---- */
+/* ---- molded (figure) candles: shaded 3D body that melts from the top with a wax pool, drips and a puddle ---- */
+const ptsPath = (pts) => 'M' + pts.map((p) => `${p[0].toFixed(1)} ${p[1].toFixed(1)}`).join(' L') + 'Z';
+const mirrorPts = (right) => [...right, ...right.slice().reverse().map(([x, y]) => [-x, y])];
+function halfAt(right, y) {
+  for (let i = 0; i < right.length - 1; i++) {
+    const [x0, y0] = right[i], [x1, y1] = right[i + 1];
+    if (y <= y0 && y >= y1) return y0 === y1 ? Math.max(x0, x1) : x0 + ((x1 - x0) * (y - y0)) / (y1 - y0);
+  }
+  return 0;
+}
+const cubic = (p0, p1, p2, p3, t) => { const u = 1 - t; return u * u * u * p0 + 3 * u * u * t * p1 + 3 * u * t * t * p2 + t * t * t * p3; };
+const shellPt = (w, h, deg, k = 1) => { const a = (deg * Math.PI) / 180; return [Math.cos(a) * w * 0.5 * k, -8 + Math.sin(a) * (h - 8) * k]; };
+const OUTLINE = {
+  pumpkin: (w, h) => { const r = []; for (let i = 0; i <= 24; i++) { const t = 0.03 + (i / 24) * 0.94, v = 2 * t - 1; r.push([(w / 2) * Math.pow(1 - Math.pow(Math.abs(v), 2.4), 1 / 2.4), -t * h]); } r[0][1] = 0; r.push([0, -h]); return r; },
+  tamagotchi: (w, h) => { const r = []; for (let i = 0; i <= 30; i++) { const p = Math.PI - (i / 30) * Math.PI; r.push([Math.max(i ? 0 : w * 0.2, (w / 2) * Math.sin(p) * (1 - 0.1 * Math.cos(p))), -h / 2 - (h / 2) * Math.cos(p)]); } r[0] = [w * 0.2, 0]; return r.filter((p, i) => i === 0 || p[1] < -2); },
+  seashell: (w, h) => { const E = shellPt(w, h, -18); const r = [[w * 0.22, 0], [w * 0.22, -9]]; for (let i = 1; i <= 6; i++) { const t = i / 6; r.push([E[0] * t, -8 + (E[1] + 8) * t]); } for (let a = -26; a >= -90; a -= 8) r.push(shellPt(w, h, a)); r.push([0, -h]); return r.filter((p, i) => i < 2 || p[1] < r[1][1]); },
+  toadstool: (w, h) => { const r = [[w * 0.46, 0], [w * 0.4, -h * 0.06], [w * 0.22, -h * 0.11], [w * 0.2, -h * 0.2], [w * 0.17, -h * 0.44], [w * 0.48, -h * 0.47]]; for (let i = 0; i <= 14; i++) { const t = 1 - (i / 14) * 0.5; r.push([cubic(-w / 2, -w / 2, w / 2, w / 2, t), cubic(-h * 0.5, -h * 1.16, -h * 1.16, -h * 0.5, t)]); } return r; },
+};
+const MOLD = { pumpkin: { k: 0.3, top: 0.06, tw: 0.16 }, tamagotchi: { k: 0.3, top: 0.025, tw: 0.09 }, seashell: { k: 0.2, top: 0.02, tw: 0 }, toadstool: { k: 0.32, top: 0.02, tw: 0.1 } };
+
 const FIGURES = {
   pumpkin: (d, w, h, id) => {
-    const lobes = [[-0.3, 0.34], [0.3, 0.34], [-0.16, 0.4], [0.16, 0.4], [0, 0.42]];
-    return `<path d="M-2 ${-h + 2} C-1 ${-h - 8} 6 ${-h - 12} 9 ${-h - 10}" stroke="#7a9a4a" stroke-width="5" fill="none" stroke-linecap="round"/>${lobes.map(([x, rx]) => `<ellipse cx="${x * w}" cy="${-h / 2}" rx="${rx * w}" ry="${h / 2}" fill="url(#${id}p)" stroke="${dark(d.c2, 0.18)}" stroke-width="1.2"/>`).join('')}<ellipse cx="${-w * 0.08}" cy="${-h * 0.7}" rx="${w * 0.06}" ry="${h * 0.16}" fill="#fff" opacity=".35"/><path d="M${w * 0.28} ${-h + 6} q10 -6 12 4" stroke="#8fae5a" stroke-width="1.4" fill="none"/>`;
+    const lobes = [[-0.33, 0.19, 0.86], [0.33, 0.19, 0.86], [-0.22, 0.21, 0.95], [0.22, 0.21, 0.95], [-0.1, 0.2, 0.99], [0.1, 0.2, 0.99], [0, 0.17, 1]];
+    const defs = `<radialGradient id="${id}lb" cx=".42" cy=".36" r=".66"><stop offset="0" stop-color="${light(d.c1, 0.4)}"/><stop offset=".42" stop-color="${d.c1}"/><stop offset=".82" stop-color="${d.c2}"/><stop offset="1" stop-color="${dark(d.c2, 0.28)}"/></radialGradient><linearGradient id="${id}st" x1="0" x2="1"><stop offset="0" stop-color="#5e7c3c"/><stop offset=".5" stop-color="#8fae5f"/><stop offset="1" stop-color="#55703a"/></linearGradient>`;
+    let body = lobes.map(([x, rx, sy]) => `<ellipse cx="${(x * w).toFixed(1)}" cy="${(-sy * h / 2).toFixed(1)}" rx="${(rx * w).toFixed(1)}" ry="${(sy * h / 2).toFixed(1)}" fill="url(#${id}lb)" stroke="${dark(d.c2, 0.3)}" stroke-width=".8" stroke-opacity=".45"/>`).join('');
+    body += [[-0.1, 0.99], [0, 1], [0.22, 0.95]].map(([x, sy]) => `<path d="M${(x * w - w * 0.07).toFixed(1)} ${(-h * sy * 0.78).toFixed(1)} q${(-w * 0.025).toFixed(1)} ${(h * 0.22).toFixed(1)} ${(w * 0.005).toFixed(1)} ${(h * 0.42).toFixed(1)}" stroke="#fff" stroke-width="${(w * 0.028).toFixed(1)}" stroke-linecap="round" fill="none" opacity=".28"/>`).join('');
+    body += `<ellipse cy="${(-h * 0.06).toFixed(1)}" rx="${(w * 0.3).toFixed(1)}" ry="${(h * 0.05).toFixed(1)}" fill="${dark(d.c2, 0.3)}" opacity=".18"/>`;
+    body += `<path d="M${w * 0.06} ${-h + 7} C${w * 0.05} ${-h - 2} ${w * 0.09} ${-h - 9} ${w * 0.16} ${-h - 11} L${w * 0.18} ${-h - 7} C${w * 0.13} ${-h - 5} ${w * 0.13} ${-h} ${w * 0.14} ${-h + 7}Z" fill="url(#${id}st)" stroke="#4c6632" stroke-width=".6"/>${leaf(w * 0.17, -h + 4, -15, 0.95, '#9cbf6e')}<path d="M${w * 0.06} ${-h + 5} c-6 -2 -10 -8 -6 -11 c3 -2 5 2 2 3" stroke="#7c9a52" stroke-width="1.1" fill="none" stroke-linecap="round"/>`;
+    return { defs, body };
   },
   seashell: (d, w, h, id) => {
-    let ribs = '';
-    for (let i = -4; i <= 4; i++) ribs += `<path d="M0 -4 L${i * w * 0.11} ${-h + Math.abs(i) * h * 0.08 + 4}" stroke="${dark(d.c2, 0.15)}" stroke-width="1.2" opacity=".7"/>`;
-    let edge = `M${-w / 2} ${-h * 0.45}`;
-    for (let i = 0; i < 9; i++) { const a0 = Math.PI + (i / 9) * Math.PI, a1 = Math.PI + ((i + 1) / 9) * Math.PI; const x1 = Math.cos(a1) * w / 2, y1 = -h * 0.45 + Math.sin(a1) * h * 0.55; const xm = Math.cos((a0 + a1) / 2) * w * 0.56, ym = -h * 0.45 + Math.sin((a0 + a1) / 2) * h * 0.62; edge += ` Q${xm.toFixed(1)} ${ym.toFixed(1)} ${x1.toFixed(1)} ${y1.toFixed(1)}`; }
-    edge += ` L${w * 0.14} -4 L${-w * 0.14} -4 Z`;
-    return `<path d="${edge}" fill="url(#${id}p)" stroke="${dark(d.c2, 0.2)}" stroke-width="1"/>${ribs}<path d="M${-w * 0.2} -2 h${w * 0.4} v-8 h${-w * 0.4}z" fill="${dark(d.c2, 0.08)}"/><ellipse cx="${-w * 0.18}" cy="${-h * 0.62}" rx="${w * 0.08}" ry="${h * 0.14}" fill="#fff" opacity=".35"/><circle cx="${w * 0.25}" cy="${-h * 0.15}" r="4" fill="#fffaf2" stroke="#eadfcf" stroke-width=".6"/>`;
+    const N = 11, a0 = -164, a1 = -16, st = (a1 - a0) / N;
+    let defs = '', body = '';
+    for (let i = 0; i < N; i++) {
+      const a = a0 + i * st, b = a + st, pa = shellPt(w, h, a), pb = shellPt(w, h, b), pm = shellPt(w, h, (a + b) / 2, 1.075);
+      defs += `<linearGradient id="${id}r${i}" gradientUnits="userSpaceOnUse" x1="${pa[0].toFixed(1)}" y1="${pa[1].toFixed(1)}" x2="${pb[0].toFixed(1)}" y2="${pb[1].toFixed(1)}"><stop offset="0" stop-color="${dark(d.c2, 0.14)}"/><stop offset=".45" stop-color="${light(d.c1, 0.5)}"/><stop offset=".62" stop-color="${d.c1}"/><stop offset="1" stop-color="${dark(d.c2, 0.2)}"/></linearGradient>`;
+      body += `<path d="M0 -8 L${pa[0].toFixed(1)} ${pa[1].toFixed(1)} Q${pm[0].toFixed(1)} ${pm[1].toFixed(1)} ${pb[0].toFixed(1)} ${pb[1].toFixed(1)}Z" fill="url(#${id}r${i})" stroke="${dark(d.c2, 0.18)}" stroke-width=".5" stroke-opacity=".5"/>`;
+    }
+    defs += `<radialGradient id="${id}sh" cx=".36" cy=".2" r=".8"><stop offset="0" stop-color="#fff" stop-opacity=".55"/><stop offset=".5" stop-color="#fff" stop-opacity="0"/><stop offset="1" stop-color="${dark(d.c2, 0.4)}" stop-opacity=".25"/></radialGradient><radialGradient id="${id}pl" cx=".35" cy=".3" r=".7"><stop offset="0" stop-color="#fff"/><stop offset=".7" stop-color="#f6ede6"/><stop offset="1" stop-color="#dccfc4"/></radialGradient>`;
+    body += `<path d="${ptsPath(mirrorPts(OUTLINE.seashell(w, h)).filter((p) => p[1] < -9))}" fill="url(#${id}sh)"/>`;
+    [0.42, 0.62, 0.82].forEach((f) => { let p = ''; for (let a = a0 + 4; a <= a1 - 4; a += 6) { const q = shellPt(w, h, a, f); p += `${p ? ' L' : 'M'}${q[0].toFixed(1)} ${(q[1] + (1 - f) * 2).toFixed(1)}`; } body += `<path d="${p}" stroke="${dark(d.c2, 0.25)}" stroke-width=".6" fill="none" opacity=".35"/>`; });
+    const ear = (s) => `<path d="M${s * w * 0.05} -6 L${s * w * 0.23} -1 L${s * w * 0.23} -11 L${s * w * 0.07} -13Z" fill="${d.c2}" stroke="${dark(d.c2, 0.2)}" stroke-width=".6"/><path d="M${s * w * 0.1} -5 L${s * w * 0.1} -12 M${s * w * 0.16} -3 L${s * w * 0.16} -12" stroke="${dark(d.c2, 0.2)}" stroke-width=".5" opacity=".6"/>`;
+    body += ear(-1) + ear(1) + `<rect x="${-w * 0.08}" y="-12" width="${w * 0.16}" height="12" rx="3" fill="${dark(d.c2, 0.06)}"/><circle cx="${w * 0.3}" cy="-5" r="5.5" fill="url(#${id}pl)"/><circle cx="${w * 0.39}" cy="-3.5" r="3.4" fill="url(#${id}pl)"/><circle cx="${w * 0.285}" cy="-6.5" r="1.4" fill="#fff"/>`;
+    return { defs, body };
   },
   tamagotchi: (d, w, h, id) => {
-    const px = [[2, 0], [3, 0], [1, 1], [4, 1], [0, 2], [2, 2], [3, 2], [5, 2], [0, 3], [5, 3], [1, 4], [4, 4], [2, 5], [3, 5]];
-    return `<path d="M-6 ${-h - 4} a6 6 0 1 1 12 0" stroke="${GOLD}" stroke-width="2.4" fill="none"/><path d="M0 ${-h} C${w * 0.62} ${-h} ${w * 0.6} 0 0 0 C${-w * 0.6} 0 ${-w * 0.62} ${-h} 0 ${-h}Z" fill="url(#${id}p)" stroke="${dark(d.c2, 0.15)}" stroke-width="1.2"/>
-      <rect x="${-w * 0.26}" y="${-h * 0.7}" width="${w * 0.52}" height="${h * 0.36}" rx="5" fill="#e4f0d0" stroke="${dark(d.c2, 0.2)}" stroke-width="1.5"/>
-      <g transform="translate(${-w * 0.11},${-h * 0.64})">${px.map(([x, y]) => `<rect x="${x * 2.6}" y="${y * 2.6}" width="2.4" height="2.4" fill="#3a4a2a"/>`).join('')}</g>
-      ${[-0.18, 0, 0.18].map((x, i) => `<circle cx="${x * w}" cy="${-h * (0.22 - (i === 1 ? 0.04 : 0))}" r="${w * 0.055}" fill="${d.accent}" stroke="${dark(d.accent, 0.2)}" stroke-width=".8"/>`).join('')}
-      <ellipse cx="${-w * 0.2}" cy="${-h * 0.82}" rx="${w * 0.08}" ry="${h * 0.06}" fill="#fff" opacity=".5"/>`;
+    const acc = d.accent || '#f6a6c1';
+    const defs = `<radialGradient id="${id}eg" cx=".36" cy=".3" r=".8"><stop offset="0" stop-color="${light(d.c1, 0.5)}"/><stop offset=".35" stop-color="${d.c1}"/><stop offset=".8" stop-color="${d.c2}"/><stop offset="1" stop-color="${dark(d.c2, 0.25)}"/></radialGradient><linearGradient id="${id}lcd" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#c9dcae"/><stop offset=".25" stop-color="#e3f0cf"/><stop offset="1" stop-color="#d2e4b8"/></linearGradient><radialGradient id="${id}bt" cx=".35" cy=".3" r=".75"><stop offset="0" stop-color="${light(acc, 0.6)}"/><stop offset=".55" stop-color="${acc}"/><stop offset="1" stop-color="${dark(acc, 0.25)}"/></radialGradient>`;
+    const sx = -w * 0.26, sy = -h * 0.72, sw = w * 0.52, shh = h * 0.36;
+    const pet = ['..XXXX..', '.X....X.', 'X.X..X.X', 'X......X', 'X..XX..X', '.X....X.', '..X..X..'];
+    const cell = (sw - 14) / 8 * 0.62;
+    let px = '';
+    pet.forEach((row, y) => [...row].forEach((c, x) => { if (c === 'X') px += `<rect x="${(x * cell).toFixed(2)}" y="${(y * cell).toFixed(2)}" width="${(cell * 0.9).toFixed(2)}" height="${(cell * 0.9).toFixed(2)}" fill="#34452a"/>`; }));
+    let body = `<path d="${ptsPath(mirrorPts(OUTLINE.tamagotchi(w, h)))}" fill="url(#${id}eg)" stroke="${dark(d.c2, 0.22)}" stroke-width=".8"/>`;
+    body += `<path d="M${-w * 0.36} ${-h * 0.5} C${-w * 0.36} ${-h * 0.8} ${-w * 0.14} ${-h * 0.95} ${w * 0.04} ${-h * 0.96}" stroke="#fff" stroke-width="2.4" stroke-linecap="round" fill="none" opacity=".55"/>`;
+    body += `<rect x="${sx - 4}" y="${sy - 4}" width="${sw + 8}" height="${shh + 8}" rx="10" fill="${dark(d.c2, 0.14)}"/><rect x="${sx - 3}" y="${sy - 3}" width="${sw + 6}" height="${shh + 6}" rx="9" fill="none" stroke="${light(d.c1, 0.5)}" stroke-width="1" opacity=".6" transform="translate(.6 .8)"/>`;
+    body += `<rect x="${sx}" y="${sy}" width="${sw}" height="${shh}" rx="6" fill="url(#${id}lcd)"/><rect x="${sx}" y="${sy}" width="${sw}" height="3" rx="1.5" fill="#000" opacity=".1"/>`;
+    body += `<g transform="translate(${(-cell * 4).toFixed(1)},${(sy + shh * 0.3).toFixed(1)})">${px}</g><path transform="translate(${(sx + 6).toFixed(1)},${(sy + 6).toFixed(1)}) scale(.22)" d="${heartPath}" fill="#34452a"/><path transform="translate(${(sx + 12).toFixed(1)},${(sy + 6).toFixed(1)}) scale(.22)" d="${heartPath}" fill="#34452a"/><path transform="translate(${(sx + 18).toFixed(1)},${(sy + 6).toFixed(1)}) scale(.22)" d="${heartPath}" fill="#34452a" opacity=".3"/>`;
+    body += [[-0.2, 0.2], [0, 0.155], [0.2, 0.2]].map(([x, y]) => `<circle cx="${x * w}" cy="${-h * y + 1}" r="${w * 0.068}" fill="${dark(acc, 0.35)}" opacity=".35"/><circle cx="${x * w}" cy="${-h * y}" r="${w * 0.065}" fill="url(#${id}bt)"/><circle cx="${x * w - w * 0.02}" cy="${-h * y - w * 0.022}" r="${w * 0.018}" fill="#fff" opacity=".8"/>`).join('');
+    body += [-1, 0, 1].map((x) => `<circle cx="${x * 4}" cy="${-h * 0.07}" r=".9" fill="${dark(d.c2, 0.3)}" opacity=".5"/>`).join('');
+    body += `<circle cx="${-w * 0.22}" cy="${-h - 1}" r="4.2" fill="none" stroke="${GOLD}" stroke-width="1.7"/><circle cx="${-w * 0.27}" cy="${-h - 7}" r="2.4" fill="none" stroke="${GOLD}" stroke-width="1.3"/>`;
+    return { defs, body };
+  },
+  toadstool: (d, w, h, id, opts) => {
+    const acc = d.accent || '#e2554f';
+    const capD = `M${-w / 2} ${-h * 0.5} C${-w / 2} ${-h * 1.16} ${w / 2} ${-h * 1.16} ${w / 2} ${-h * 0.5} Q0 ${-h * 0.43} ${-w / 2} ${-h * 0.5}Z`;
+    const defs = `<radialGradient id="${id}cap" cx=".4" cy=".28" r=".8"><stop offset="0" stop-color="${light(acc, 0.35)}"/><stop offset=".5" stop-color="${acc}"/><stop offset="1" stop-color="${dark(acc, 0.3)}"/></radialGradient><linearGradient id="${id}stm" x1="0" x2="1"><stop offset="0" stop-color="${dark(d.c2, 0.12)}"/><stop offset=".4" stop-color="${light(d.c1, 0.4)}"/><stop offset=".72" stop-color="${d.c1}"/><stop offset="1" stop-color="${dark(d.c2, 0.15)}"/></linearGradient><linearGradient id="${id}mos" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#b3d394"/><stop offset="1" stop-color="#78a05c"/></linearGradient><radialGradient id="${id}spt" cx=".38" cy=".3" r=".7"><stop offset="0" stop-color="#fff"/><stop offset=".7" stop-color="#fbf4ea"/><stop offset="1" stop-color="#e6d6c6"/></radialGradient>`;
+    let body = `<path d="M${-w * 0.17} ${-h * 0.46} C${-w * 0.19} ${-h * 0.3} ${-w * 0.22} ${-h * 0.18} ${-w * 0.22} ${-h * 0.08} L${w * 0.22} ${-h * 0.08} C${w * 0.22} ${-h * 0.18} ${w * 0.19} ${-h * 0.3} ${w * 0.17} ${-h * 0.46}Z" fill="url(#${id}stm)"/>`;
+    const win = opts.lit ? '#ffd27a' : '#cfe0e6';
+    body += `<path d="M${-w * 0.075} ${-h * 0.08} v${-h * 0.12} a${w * 0.075} ${w * 0.075} 0 0 1 ${w * 0.15} 0 v${h * 0.12}Z" fill="#b98a5e" stroke="#7f5b3a" stroke-width="1.2"/><path d="M${-w * 0.025} ${-h * 0.08} v${-h * 0.17} M${w * 0.025} ${-h * 0.08} v${-h * 0.17}" stroke="#9a7048" stroke-width=".7"/><circle cx="${w * 0.045}" cy="${-h * 0.15}" r="1.3" fill="${GOLD}"/>`;
+    body += `<circle cx="${w * 0.02}" cy="${-h * 0.34}" r="${w * 0.05}" fill="${win}" stroke="#7f5b3a" stroke-width="1.3"/><path d="M${w * 0.02} ${-h * 0.34 - w * 0.05} v${w * 0.1} M${w * 0.02 - w * 0.05} ${-h * 0.34} h${w * 0.1}" stroke="#7f5b3a" stroke-width=".9"/>${opts.lit ? `<circle cx="${w * 0.02}" cy="${-h * 0.34}" r="${w * 0.1}" fill="#ffd27a" opacity=".25"/>` : ''}`;
+    body += `<ellipse cy="${-h * 0.47}" rx="${w * 0.47}" ry="${h * 0.05}" fill="${dark(d.c2, 0.12)}"/>${Array.from({ length: 13 }, (_, i) => { const a = Math.PI * (0.05 + (i / 12) * 0.9); return `<path d="M0 ${-h * 0.46} L${(Math.cos(a) * w * 0.45).toFixed(1)} ${(-h * 0.47 + Math.sin(a) * h * 0.045).toFixed(1)}" stroke="${dark(d.c2, 0.28)}" stroke-width=".6" opacity=".6"/>`; }).join('')}`;
+    body += `<path d="${capD}" fill="url(#${id}cap)" stroke="${dark(acc, 0.35)}" stroke-width=".7"/><path d="M${-w * 0.38} ${-h * 0.62} C${-w * 0.34} ${-h * 0.8} ${-w * 0.2} ${-h * 0.9} ${-w * 0.06} ${-h * 0.93}" stroke="#fff" stroke-width="3" stroke-linecap="round" fill="none" opacity=".35"/>`;
+    body += [[-0.27, -0.66, 0.075], [0.06, -0.84, 0.08], [0.3, -0.64, 0.065], [-0.06, -0.62, 0.05], [0.24, -0.84, 0.04], [-0.37, -0.55, 0.04], [0.41, -0.55, 0.035], [-0.2, -0.86, 0.04]].map(([x, y, r]) => `<ellipse cx="${x * w}" cy="${y * h + 1}" rx="${r * w}" ry="${r * w * (1 - Math.abs(x) * 0.6)}" fill="${dark(acc, 0.35)}" opacity=".25"/><ellipse cx="${x * w}" cy="${y * h}" rx="${r * w}" ry="${r * w * (1 - Math.abs(x) * 0.6)}" fill="url(#${id}spt)"/>`).join('');
+    body += `<path d="M${-w * 0.46} 0 C${-w * 0.44} ${-h * 0.11} ${w * 0.44} ${-h * 0.11} ${w * 0.46} 0Z" fill="url(#${id}mos)"/>${[-0.36, -0.24, -0.12, 0.14, 0.27, 0.38].map((x, i) => `<path d="M${x * w} ${-h * 0.035} l${-1.5 + (i % 2)} -4 M${x * w + 2} ${-h * 0.04} l1 -4.5" stroke="#6b9450" stroke-width="1" stroke-linecap="round"/>`).join('')}`;
+    const mini = (x, s) => `<g transform="translate(${x * w},${-h * 0.05}) scale(${s})"><rect x="-1.6" y="-7" width="3.2" height="7" rx="1.4" fill="#fbf1df"/><path d="M-6 -6 C-6 -13 6 -13 6 -6Z" fill="${acc}"/><circle cx="-2" cy="-9" r="1" fill="#fff"/><circle cx="2.2" cy="-8" r=".8" fill="#fff"/></g>`;
+    body += mini(-0.32, 1) + mini(-0.24, 0.65) + mini(0.33, 0.85) + blossom(w * 0.22, -h * 0.05, 0.5, '#fff', '#ffd36e') + blossom(-w * 0.12, -h * 0.04, 0.45, '#f7c6d6', '#ffd36e');
+    if (opts.lit) body += [[-0.56, -0.7], [0.58, -0.78], [0.5, -0.32], [-0.5, -0.3], [-0.3, -1.02]].map(([x, y], i) => `<circle class="twinkle" style="animation-delay:${i * 0.4}s" cx="${x * w}" cy="${y * h}" r="1.8" fill="#fff3b0"/><circle cx="${x * w}" cy="${y * h}" r="5" fill="#ffe680" opacity=".25"/>`).join('');
+    return { defs, body };
   },
 };
+
+function moldedCandle(d, shape, w, h, r, opts, id) {
+  const right = OUTLINE[shape](w, h), sil = ptsPath(mirrorPts(right)), M = MOLD[shape];
+  const full = r >= 0.999, cut = full ? -h : -h * Math.max(0.1, r);
+  const art = FIGURES[shape](d, w, h, id, opts);
+  const molten = opts.lit ? mix(d.drip, '#ffc56b', 0.45) : d.drip;
+  let defs = `${art.defs}<clipPath id="${id}sil"><path d="${sil}"/></clipPath><clipPath id="${id}cl"><rect x="-300" y="${full ? -h - 80 : cut}" width="600" height="${h + 100}"/></clipPath>
+    <radialGradient id="${id}glo" gradientUnits="userSpaceOnUse" cx="0" cy="${cut}" r="${w * 0.8}"><stop offset="0" stop-color="#ffcf7a" stop-opacity=".65"/><stop offset=".45" stop-color="#ffcf7a" stop-opacity=".2"/><stop offset="1" stop-color="#ffcf7a" stop-opacity="0"/></radialGradient>
+    <radialGradient id="${id}pool" cx=".5" cy=".35" r=".65"><stop offset="0" stop-color="${light(molten, 0.4)}"/><stop offset="1" stop-color="${dark(molten, 0.06)}"/></radialGradient>`;
+  const baseHalf = Math.max(w * 0.2, halfAt(right, -h * 0.04));
+  let out = `<ellipse cy="2" rx="${(baseHalf + 6 + (1 - r) * w * 0.3).toFixed(1)}" ry="${(4.5 + (1 - r) * 4).toFixed(1)}" fill="${d.drip}"/><ellipse cx="${(-baseHalf * 0.3).toFixed(1)}" cy="1" rx="${(baseHalf * 0.45 + (1 - r) * w * 0.1).toFixed(1)}" ry="1.4" fill="#fff" opacity=".55"/>`;
+  out += `<g clip-path="url(#${id}cl)">${art.body}${opts.lit ? `<rect x="${-w}" y="${-h - 10}" width="${2 * w}" height="${h + 20}" fill="url(#${id}glo)" clip-path="url(#${id}sil)"/>` : ''}</g>`;
+  let wickBase;
+  if (full) {
+    const yT = -h + M.top * h;
+    if (M.tw) out += `<ellipse cy="${yT.toFixed(1)}" rx="${(M.tw * w).toFixed(1)}" ry="${(M.tw * w * M.k).toFixed(1)}" fill="${dark(d.c2, 0.2)}" opacity=".35"/><ellipse cy="${(yT + 0.6).toFixed(1)}" rx="${(M.tw * w * 0.7).toFixed(1)}" ry="${(M.tw * w * M.k * 0.6).toFixed(1)}" fill="url(#${id}pool)"/>`;
+    wickBase = yT + 1;
+  } else {
+    const rx = Math.max(5, halfAt(right, cut) * 0.97), ry = Math.max(2, rx * M.k);
+    const R = rng((d.id || 'custom') + shape);
+    let drips = '';
+    const dc = mix(d.drip, d.c1, 0.45);
+    [-0.74, -0.34, 0.16, 0.6].forEach((fx0) => {
+      const fx = fx0 + (R() - 0.5) * 0.12, x = fx * rx, y0 = cut + ry * Math.sqrt(1 - fx * fx) * 0.9;
+      const len = 3 + (1 - r) * h * (0.18 + R() * 0.38), end = Math.min(-3, y0 + len), dw = 2 + R() * 1.8;
+      drips += `<path d="M${(x - dw).toFixed(1)} ${(y0 - 2).toFixed(1)} L${(x - dw).toFixed(1)} ${end.toFixed(1)} a${dw.toFixed(1)} ${(dw * 1.2).toFixed(1)} 0 0 0 ${(2 * dw).toFixed(1)} 0 L${(x + dw).toFixed(1)} ${(y0 - 2).toFixed(1)}Z" fill="${dc}"/><path d="M${(x - dw * 0.35).toFixed(1)} ${(y0 + 1).toFixed(1)} L${(x - dw * 0.35).toFixed(1)} ${(end - 1).toFixed(1)}" stroke="#fff" stroke-width=".7" opacity=".4"/>`;
+    });
+    out += `<g clip-path="url(#${id}sil)">${drips}</g>`;
+    out += `<ellipse cy="${cut.toFixed(1)}" rx="${rx.toFixed(1)}" ry="${ry.toFixed(1)}" fill="${light(d.c1, 0.3)}"/><ellipse cy="${(cut + ry * 0.1).toFixed(1)}" rx="${(rx * 0.8).toFixed(1)}" ry="${(ry * 0.72).toFixed(1)}" fill="url(#${id}pool)"/><path d="M${(-rx * 0.8).toFixed(1)} ${(cut + ry * 0.1).toFixed(1)} A${(rx * 0.8).toFixed(1)} ${(ry * 0.72).toFixed(1)} 0 0 1 ${(rx * 0.8).toFixed(1)} ${(cut + ry * 0.1).toFixed(1)}" stroke="${dark(d.c1, 0.2)}" stroke-width="1" fill="none" opacity=".45"/><path d="M${(-rx * 0.5).toFixed(1)} ${(cut + ry * 0.45).toFixed(1)} q${(rx * 0.3).toFixed(1)} ${(ry * 0.2).toFixed(1)} ${(rx * 0.55).toFixed(1)} 0" stroke="#fff" stroke-width="1" fill="none" opacity=".5"/>`;
+    wickBase = cut + ry * 0.1;
+  }
+  return { defs, out, wickBase };
+}
 
 /* ---- little illustrated motifs ---- */
 const rose = (x, y, s, col) => `<g transform="translate(${x.toFixed(1)},${y.toFixed(1)}) scale(${s})">
@@ -425,8 +547,8 @@ export function candleGroup(d, kind, rem, opts = {}) {
   if (opts.bare && (shape === 'jar' || shape === 'teacup')) shape = 'pillar';
   const S = SHAPES[shape];
   const w = S.w;
-  const h = S.h * (KMUL[kind] || 1);
-  const holder = opts.bare ? null : (shape === 'jar' || shape === 'teacup') ? null : holderMarkup(d, w, id);
+  const h = FIGURES[shape] ? S.h : S.h * (KMUL[kind] || 1);
+  const holder = opts.bare || FIGURES[shape] || shape === 'jar' || shape === 'teacup' ? null : holderMarkup(d, w, id);
   let defs = holder ? holder.defs : '';
   let out = holder ? holder.back : '';
   let wickBase, flameDrawnEarly = false;
@@ -445,11 +567,10 @@ export function candleGroup(d, kind, rem, opts = {}) {
       <ellipse cy="${-h}" rx="${w / 2 - 1}" ry="5" fill="none" stroke="#fff" stroke-width="2"/>
       <g transform="translate(0,${-h * 0.42})"><rect x="-22" y="-14" width="44" height="30" rx="6" fill="#fffaf2" stroke="#ead9c4" stroke-width=".8"/>${leaf(-14, 6, -50, 0.7)}${blossom(-8, -2, 0.9, d.accent)}${blossom(9, 4, 0.7, '#f7d27a')}${leaf(6, 8, 20, 0.6)}</g>`;
   } else if (FIGURES[shape]) {
-    const cut = -h * r;
-    defs += `<linearGradient id="${id}p" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="${light(d.c1, 0.2)}"/><stop offset=".5" stop-color="${d.c1}"/><stop offset="1" stop-color="${d.c2}"/></linearGradient><clipPath id="${id}cl"><rect x="-200" y="${r >= 0.999 ? -h - 40 : cut}" width="400" height="${h + 60}"/></clipPath>`;
-    out += `<ellipse cy="2" rx="${(w * 0.45 + (1 - r) * w * 0.2).toFixed(1)}" ry="${(4 + (1 - r) * 3).toFixed(1)}" fill="${d.drip}"/><g clip-path="url(#${id}cl)">${FIGURES[shape](d, w, h, id)}</g>`;
-    if (r < 0.999) out += `<ellipse cy="${cut}" rx="${(w * 0.42 * Math.sqrt(Math.max(0.15, 1 - Math.pow((cut + h / 2) / (h / 2), 2)))).toFixed(1)}" ry="${(w * 0.07).toFixed(1)}" fill="${opts.lit ? mix(d.drip, '#ffd27a', 0.3) : d.drip}"/>`;
-    wickBase = r >= 0.999 ? -h + (shape === 'pumpkin' ? 4 : shape === 'seashell' ? h * 0.12 : 2) : cut;
+    const m = moldedCandle(d, shape, w, S.h, r, opts, id);
+    defs += m.defs;
+    out += m.out;
+    wickBase = m.wickBase;
   } else if (shape === 'teacup') {
     const cw = w, ch = h;
     const hc = d.hc || '#ffffff';
@@ -487,8 +608,8 @@ export function candleMetrics(d, kind, bare = false) {
   let shape = d.shape || 'taper';
   if (bare && (shape === 'jar' || shape === 'teacup')) shape = 'pillar';
   const S = SHAPES[shape];
-  const h = S.h * (KMUL[kind] || 1);
-  const hold = bare || shape === 'jar' || shape === 'teacup' ? { h: shape === 'teacup' || shape === 'jar' ? 12 : 0, hw: S.w + 60 } : ({ ornate: { h: 150, hw: 120 }, brass: { h: 22, hw: S.w + 84 }, wood: { h: 18, hw: S.w + 48 }, ceramic: { h: 16, hw: S.w + 44 } }[d.holder] || { h: 14, hw: S.w + 40 });
+  const h = FIGURES[shape] ? S.h : S.h * (KMUL[kind] || 1);
+  const hold = bare || FIGURES[shape] || shape === 'jar' || shape === 'teacup' ? { h: shape === 'teacup' || shape === 'jar' ? 12 : 0, hw: S.w + 60 } : ({ ornate: { h: 150, hw: 120 }, brass: { h: 22, hw: S.w + 84 }, wood: { h: 18, hw: S.w + 48 }, ceramic: { h: 16, hw: S.w + 44 } }[d.holder] || { h: 14, hw: S.w + 40 });
   return { w: S.w, h, holderH: hold.h, holderW: hold.hw, extraTop: d.topper ? (FIGS[d.topper] ? 60 : 40) : 0 };
 }
 

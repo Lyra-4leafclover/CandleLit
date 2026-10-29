@@ -27,6 +27,8 @@ const cakeOpts = (extra = {}) => ({ getDesign: getCandle, ...extra });
 
 const ui = {
   view: 'focus', shopTab: 'candles', shopCol: 'All', statsPeriod: 'week', statsOffset: 0, taskTitle: '', taskTag: '', taskEst: 1, taskFilter: 'all', agitatedUntil: 0, lastRem: -1, lastAgitated: false,
+  studioSlot: 'c1',
+  wheel: { h: 0, s: 0, v: 1 },
   studio: { name: '', c1: '#fde4ec', c2: '#f6c6d6', c3: '#e2668e', pattern: 'solid', shape: 'taper', holder: 'ornate', decor: 'roses', scent: STUDIO.scents[0] },
   joinCode: '', blown: false, newSubject: '',
 };
@@ -506,6 +508,42 @@ VIEWS.shop = () => {
 const catalog = (type, id) => (type === 'candle' ? CANDLES : type === 'cake' ? CAKES : TOPPERS).find((x) => x.id === id);
 
 /* ---------- studio ---------- */
+const SWATCHES = ['#fde4ec', '#f6c6d6', '#e2668e', '#fbe3c8', '#f2a65a', '#fff3c4', '#e8c35a', '#dff2d8', '#9fd68c', '#d8f0f2', '#7fd1c7', '#dbe8fb', '#7fa8e8', '#ece3fb', '#b49ce8', '#fffaf0', '#c8b8a6', '#3a2f3a'];
+const hsvToHex = (h, s, v) => { const f = (n) => { const k = (n + h / 60) % 6; return v - v * s * Math.max(0, Math.min(k, 4 - k, 1)); }; return '#' + [f(5), f(3), f(1)].map((x) => Math.round(x * 255).toString(16).padStart(2, '0')).join(''); };
+const hexToHsv = (hex) => { const [r, g, b] = [1, 3, 5].map((i) => parseInt(hex.slice(i, i + 2), 16) / 255); const mx = Math.max(r, g, b), d = mx - Math.min(r, g, b); let h = 0; if (d) { h = mx === r ? ((g - b) / d) % 6 : mx === g ? (b - r) / d + 2 : (r - g) / d + 4; h *= 60; if (h < 0) h += 360; } return { h, s: mx ? d / mx : 0, v: mx }; };
+function syncWheel(fromHex = true) {
+  const s = ui.studio, k = ui.studioSlot || 'c1';
+  if (fromHex) ui.wheel = hexToHsv(s[k]);
+  const { h, s: sat, v } = ui.wheel, el = $('#wheel');
+  if (!el) return;
+  const rad = el.clientWidth / 2, a = (h * Math.PI) / 180;
+  $('#wheelKnob').style.left = `${rad + Math.sin(a) * sat * rad}px`;
+  $('#wheelKnob').style.top = `${rad - Math.cos(a) * sat * rad}px`;
+  $('#wheelKnob').style.background = s[k];
+  $('#wheelDim').style.opacity = String(1 - v);
+  $('#wheelV').value = Math.round(v * 100);
+  $('#wheelV').style.setProperty('--hue', hsvToHex(h, sat, 1));
+  if (document.activeElement !== $('#wheelHex')) $('#wheelHex').value = s[k];
+  const slot = document.querySelector(`.color-slot[data-id="${k}"]`);
+  if (slot) { slot.querySelector('.sw').style.background = s[k]; slot.querySelector('small').textContent = s[k]; }
+}
+function setStudioColor(hex, fromHex = true) { ui.studio[ui.studioSlot || 'c1'] = hex; syncWheel(fromHex); renderStudioPreview(); }
+function initWheel() {
+  const el = $('#wheel');
+  if (!el) return;
+  const pick = (e) => {
+    const r = el.getBoundingClientRect(), rad = r.width / 2, dx = e.clientX - r.left - rad, dy = e.clientY - r.top - rad;
+    ui.wheel.h = ((Math.atan2(dx, -dy) * 180) / Math.PI + 360) % 360;
+    ui.wheel.s = Math.min(1, Math.hypot(dx, dy) / rad);
+    if (ui.wheel.v < 0.15) ui.wheel.v = 1;
+    setStudioColor(hsvToHex(ui.wheel.h, ui.wheel.s, ui.wheel.v), false);
+  };
+  el.addEventListener('pointerdown', (e) => { el.setPointerCapture(e.pointerId); pick(e); });
+  el.addEventListener('pointermove', (e) => { if (el.hasPointerCapture(e.pointerId)) pick(e); });
+  $('#wheelV').addEventListener('input', (e) => { ui.wheel.v = +e.target.value / 100; setStudioColor(hsvToHex(ui.wheel.h, ui.wheel.s, ui.wheel.v), false); });
+  $('#wheelHex').addEventListener('input', (e) => { let v = e.target.value.trim(); if (!v.startsWith('#')) v = '#' + v; if (/^#[0-9a-f]{6}$/i.test(v)) setStudioColor(v.toLowerCase()); });
+  syncWheel();
+}
 const mixLight = (c) => '#' + [1, 3, 5].map((i) => Math.round(parseInt(c.slice(i, i + 2), 16) + (255 - parseInt(c.slice(i, i + 2), 16)) * 0.5).toString(16).padStart(2, '0')).join('');
 function studioDesign() {
   const s = ui.studio;
@@ -524,7 +562,16 @@ VIEWS.studio = () => {
       <p class="muted">Pour your own candle with the wax drips you collect from sessions and breaks. Each pour costs <b>${STUDIO_COST} drips</b>. You have ${state.wax}.</p>
       <label class="field">Name</label><input type="text" data-studio="name" value="${esc(s.name)}" placeholder="e.g. Exam Season Survivor" style="width:100%">
       <label class="field">Engraving</label><input type="text" data-studio="engrave" value="${esc(s.engrave || '')}" maxlength="18" placeholder="e.g. you got this" style="width:100%">
-      <label class="field">Colours</label><div class="row"><input type="color" data-studio="c1" value="${s.c1}"><input type="color" data-studio="c2" value="${s.c2}"><input type="color" data-studio="c3" value="${s.c3}"><span class="muted">top · bottom · accent</span></div>
+      <label class="field">Colours</label>
+      <div class="color-slots">${[['c1', 'Top'], ['c2', 'Bottom'], ['c3', 'Accent']].map(([k, l]) => `<button class="color-slot ${ui.studioSlot === k ? 'on' : ''}" data-act="colorSlot" data-id="${k}"><span class="sw" style="background:${s[k]}"></span><span class="cs-text"><b>${l}</b><small>${s[k]}</small></span></button>`).join('')}</div>
+      <div class="wheel-wrap">
+        <div class="wheel" id="wheel"><div class="wheel-dim" id="wheelDim"></div><span class="wheel-knob" id="wheelKnob"></span></div>
+        <div class="wheel-side">
+          <label class="muted" for="wheelV">Brightness</label><input type="range" id="wheelV" min="0" max="100">
+          <label class="muted" for="wheelHex">Hex</label><input type="text" id="wheelHex" maxlength="7" spellcheck="false">
+          <div class="swatches">${SWATCHES.map((c) => `<button class="swatch" data-act="swatch" data-id="${c}" style="background:${c}" aria-label="${c}"></button>`).join('')}</div>
+        </div>
+      </div>
       ${[['shape', 'Shape', STUDIO.shapes], ['holder', 'Holder', STUDIO.holders], ['decor', 'Decoration', STUDIO.decors]].map(([k, label, list]) => `<label class="field">${label}</label><div class="chips">${list.map((x) => `<button class="chip ${s[k] === x ? 'on' : ''}" data-act="studioOpt" data-key="${k}" data-id="${x}">${x}</button>`).join('')}</div>`).join('')}
       <label class="field">Pattern</label><div class="chips">${STUDIO.patterns.map((p) => `<button class="chip ${s.pattern === p ? 'on' : ''}" data-act="studioPattern" data-id="${p}">${p}</button>`).join('')}</div>
       <label class="field">Scent</label><select data-studio="scent">${STUDIO.scents.map((x) => `<option ${x === s.scent ? 'selected' : ''}>${x}</option>`).join('')}</select>
@@ -538,6 +585,7 @@ VIEWS.studio = () => {
     </div>
   </section>`;
   renderStudioPreview();
+  initWheel();
 };
 
 /* ---------- party ---------- */
@@ -912,6 +960,8 @@ const actions = {
     route();
   },
   copy: ({ text }) => { navigator.clipboard?.writeText(text).then(() => toast('Copied'), () => toast(text)); },
+  colorSlot: ({ id }) => { ui.studioSlot = id; document.querySelectorAll('.color-slot').forEach((el) => el.classList.toggle('on', el.dataset.id === id)); syncWheel(); },
+  swatch: ({ id }) => setStudioColor(id),
   studioOpt: ({ key, id }) => { ui.studio[key] = id; document.querySelectorAll(`[data-act="studioOpt"][data-key="${key}"]`).forEach((el) => el.classList.toggle('on', el.dataset.id === id)); renderStudioPreview(); },
   studioPattern: ({ id }) => { ui.studio.pattern = id; document.querySelectorAll('[data-act="studioPattern"]').forEach((el) => el.classList.toggle('on', el.dataset.id === id)); renderStudioPreview(); },
   pour: () => {
