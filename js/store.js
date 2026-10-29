@@ -19,10 +19,11 @@ function fresh() {
     partyCakes: [],
     sculptures: [],
     sessions: [],
+    tasks: [],
     subjects: [...DEFAULT_SUBJECTS],
     redeemed: [],
     name: '',
-    settings: { volume: 0.5, ambience: [], demo: false, design: 'classic', cakeDesign: 'vanilla', minutes: 25, subject: 'General', breakMin: 5 },
+    settings: { volume: 0.5, ambience: [], demo: false, design: 'classic', cakeDesign: 'vanilla', minutes: 25, subject: 'General', breakMin: 5, taskId: null },
     active: null,
     pending: null,
   };

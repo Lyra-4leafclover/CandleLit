@@ -1,11 +1,12 @@
 import { CANDLES, CAKES, TOPPERS, KINDS, DURATIONS, RARITY, STUDIO, STUDIO_COST, AMBIENCE, CAKE_SLOTS, kindFor } from './data.js';
 import {
   state, save, resetAll, dayKey, newId, allCandles, getCandle, getCake, ownsCandle, streak, isBlue,
-  currentCake, serveCake, rolloverIfNewDay, addCandleToCake, spend, weekStats, totals, encodeGift, decodeGift,
+  currentCake, serveCake, rolloverIfNewDay, addCandleToCake, spend, totals, encodeGift, decodeGift,
 } from './store.js';
 import { candleSVG, cakeSVG, sculptureSVG } from './render.js';
 import * as audio from './audio.js';
 import { party } from './party.js';
+import { periodStats, barChart, donut, hourChart, trendChart, heatmap, tagColor, fmtMin } from './stats.js';
 
 const $ = (s, r = document) => r.querySelector(s);
 const view = $('#view');
@@ -22,7 +23,7 @@ const DROP = '<svg class="ico" viewBox="0 0 24 24"><path fill="currentColor" d="
 const cakeOpts = (extra = {}) => ({ getDesign: getCandle, ...extra });
 
 const ui = {
-  view: 'focus', shopTab: 'candles', recapWeek: 0, agitatedUntil: 0, lastRem: -1, lastAgitated: false,
+  view: 'focus', shopTab: 'candles', statsPeriod: 'week', statsOffset: 0, taskTitle: '', taskTag: '', taskEst: 1, taskFilter: 'all', agitatedUntil: 0, lastRem: -1, lastAgitated: false,
   studio: { name: '', c1: '#fde4ec', c2: '#f6c6d6', c3: '#e2668e', pattern: 'solid', shape: 'taper', holder: 'ornate', decor: 'roses', scent: STUDIO.scents[0] },
   joinCode: '', blown: false, newSubject: '',
 };
@@ -72,6 +73,7 @@ const VIEWS = {};
 function route() {
   const a = state.active;
   let name = location.hash.replace(/^#\/?/, '').split('?')[0] || 'focus';
+  if (name === 'recap') name = 'stats';
   if (a?.type === 'focus') name = 'focus';
   else if (a?.type === 'break') name = 'break';
   else if (name === 'done' && !state.pending) name = 'focus';
@@ -97,6 +99,7 @@ function ambienceControls() {
 VIEWS.focus = () => {
   if (state.active?.type === 'focus') return focusActive();
   const st = state.settings;
+  const linkedTask = state.tasks.find((t) => t.id === st.taskId && !t.done);
   const d = getCandle(st.design);
   const kind = kindFor(st.minutes);
   const s = streak();
@@ -123,9 +126,11 @@ VIEWS.focus = () => {
         ${owned.map((c) => `<div class="candle-opt ${c.id === st.design ? 'on' : ''}" data-act="design" data-id="${c.id}">${candleThumb(c, 'taper', false)}${esc(c.name)}</div>`).join('')}
         <a class="candle-opt" href="#/shop" style="display:flex;align-items:center;justify-content:center;text-decoration:none">+ more in the shop</a>
       </div>
-      <label class="field">Studying</label>
+      <label class="field">Task</label>
+      <div class="row"><select data-change="linkTask" style="flex:1;min-width:220px"><option value="">No task, just focus</option>${state.tasks.filter((t) => !t.done).map((t) => `<option value="${t.id}" ${linkedTask?.id === t.id ? 'selected' : ''}>${esc(t.title)} · ${esc(t.tag)}</option>`).join('')}</select><a class="btn ghost sm" href="#/tasks">Manage to-do</a></div>
+      <label class="field">Tag${linkedTask ? ' <span style="text-transform:none;letter-spacing:0;font-weight:500">· set by the linked task</span>' : ''}</label>
       <div class="chips">
-        ${state.subjects.map((x) => `<button class="chip ${st.subject === x ? 'on' : ''}" data-act="subject" data-id="${esc(x)}">${esc(x)}</button>`).join('')}
+        ${state.subjects.map((x) => `<button class="chip ${st.subject === x ? 'on' : ''}" data-act="subject" data-id="${esc(x)}" ${linkedTask ? 'disabled' : ''}>${esc(x)}</button>`).join('')}
         <input type="text" placeholder="+ add subject" data-change="newSubject" style="width:150px">
       </div>
       <label class="field">Ambience</label>
@@ -143,7 +148,7 @@ function focusActive() {
   const a = state.active;
   view.innerHTML = `
   <section class="burn">
-    <div class="burn-subject">${esc(a.subject)} · ${a.minutes} min${a.party ? ` · party ${esc(party.code || '')}` : ''}</div>
+    <div class="burn-subject">${a.task ? esc(state.tasks.find((t) => t.id === a.task)?.title || '') + ' · ' : ''}${esc(a.subject)} · ${a.minutes} min${a.party ? ` · party ${esc(party.code || '')}` : ''}</div>
     <div id="time" class="time">${fmt(a.durationMs)}</div>
     <div id="stage" class="stage"></div>
     <div id="friends" class="friends"></div>
@@ -211,6 +216,7 @@ function startFocus(partySession) {
   audio.unlock();
   audio.setAmbience(state.settings.ambience);
   const minutes = partySession ? partySession.minutes : state.settings.minutes;
+  const linked = !partySession && state.tasks.find((t) => t.id === state.settings.taskId && !t.done);
   state.active = {
     type: 'focus',
     startedAt: partySession ? partySession.startAt - party.offset : Date.now(),
@@ -218,7 +224,8 @@ function startFocus(partySession) {
     minutes,
     kind: kindFor(minutes),
     design: state.settings.design,
-    subject: state.settings.subject,
+    subject: linked ? linked.tag : state.settings.subject,
+    task: linked ? linked.id : null,
     blue: isBlue(),
     party: !!partySession,
     partySession: partySession?.id || null,
@@ -243,7 +250,9 @@ function finishSession(completed) {
     id: newId(), design: a.design, kind: a.kind, minutes: a.minutes, subject: a.subject, melted: !completed,
     remaining: Math.min(0.6, Math.max(0.15, 1 - p)), blue: a.blue, date: dayKey(), party: a.party,
   };
-  state.sessions.push({ date: dayKey(), minutes: completed ? a.minutes : Math.round(a.minutes * p), subject: a.subject, completed, flames, party: a.party, distractions: a.distractions });
+  state.sessions.push({ date: dayKey(), minutes: completed ? a.minutes : Math.round(a.minutes * p), subject: a.subject, completed, flames, party: a.party, distractions: a.distractions, ts: Date.now(), task: a.task || null });
+  const task = a.task && state.tasks.find((t) => t.id === a.task);
+  if (task && completed) task.pomos++;
   state.flames += flames;
   state.wax += wax;
   const res = addCandleToCake(candle);
@@ -253,7 +262,7 @@ function finishSession(completed) {
     if (completed) state.partyCakes.unshift({ id: newId(), date: dayKey(), code: party.code, minutes: a.minutes, members: partyMembers, design: 'funfetti' });
     party.status({ status: completed ? 'done' : 'quit' });
   }
-  state.pending = { candle, flames, wax, served: res.served, cakeId: res.cake.id, completed, partyMembers, design: a.design };
+  state.pending = { candle, flames, wax, served: res.served, cakeId: res.cake.id, completed, partyMembers, design: a.design, task: a.task || null };
   state.active = null;
   save();
   if (completed) {
@@ -304,6 +313,7 @@ VIEWS.done = () => {
         ${[5, 10, 15].map((m) => `<button class="btn sm" data-act="startBreak" data-min="${m}">${m} min</button>`).join('')}
         <span class="muted">Your drips cool into a wax sculpture while you rest.</span>
         <span class="spacer"></span>
+        ${pd.task && state.tasks.some((t) => t.id === pd.task && !t.done) ? `<button class="btn sm" data-act="toggleTask" data-id="${pd.task}">Mark “${esc(state.tasks.find((t) => t.id === pd.task).title)}” done</button>` : ''}
         <button class="btn ghost sm" data-act="share" data-cake="${cake.id}">Share today (${completedToday} candle${completedToday === 1 ? '' : 's'})</button>
         <button class="btn ghost sm" data-act="lightAnother">Light another</button>
         <a class="btn ghost sm" href="#/bakery" data-act="clearPending">Bakery</a>
@@ -575,50 +585,108 @@ party.onChange((room) => {
   if (state.active?.party) ui.lastRem = -1;
 });
 
-/* ---------- recap ---------- */
-VIEWS.recap = () => {
-  const w = weekStats(ui.recapWeek);
+/* ---------- stats ---------- */
+VIEWS.stats = () => {
+  const P = ui.statsPeriod, off = ui.statsOffset;
+  const st = periodStats(P, off);
+  const prev = periodStats(P, off + 1);
   const t = totals();
-  const maxDay = Math.max(30, ...w.perDay.map((d) => d.minutes));
-  const subj = Object.entries(w.subjects).sort((a, b) => b[1] - a[1]);
-  const maxSubj = Math.max(1, ...subj.map((s) => s[1]));
-  const hours = (m) => (m / 60).toFixed(m % 60 ? 1 : 0);
-  const impactGoal = 25;
-  const impactHours = t.minutes / 60;
+  const n = P === 'year' ? 5 : 8;
+  const trend = Array.from({ length: n }, (_, i) => {
+    const x = periodStats(P, off + n - 1 - i);
+    const d = x.range.start;
+    return { minutes: x.minutes, label: x.range.label, short: P === 'week' ? d.toLocaleDateString(undefined, { month: 'short', day: 'numeric' }) : P === 'month' ? d.toLocaleDateString(undefined, { month: 'short' }) : String(d.getFullYear()) };
+  });
+  const delta = prev.minutes ? Math.round(((st.minutes - prev.minutes) / prev.minutes) * 100) : null;
+  const avg = st.activeDays ? Math.round(st.minutes / st.activeDays) : 0;
+  const peak = Math.max(...st.hours);
+  const peakH = st.hours.indexOf(peak);
+  const hLabel = (h) => (h === 0 ? '12am' : h < 12 ? h + 'am' : h === 12 ? '12pm' : h - 12 + 'pm');
+  const taskTags = Object.entries(st.tasksByTag).sort((x, y) => y[1] - x[1]);
+  const maxT = Math.max(1, ...taskTags.map((x) => x[1]));
+  const impactGoal = 25, impactHours = t.minutes / 60;
+  const stat = (label, val, sub = '') => `<div class="stat"><span>${label}</span><b>${val}</b>${sub ? `<small>${sub}</small>` : ''}</div>`;
   view.innerHTML = `
   <section class="grid">
-    <div class="card">
-      <div class="row"><h1 style="margin:0">Weekly recap</h1><span class="spacer"></span>
-        <button class="chip ${ui.recapWeek === 0 ? 'on' : ''}" data-act="recapWeek" data-id="0">This week</button>
-        <button class="chip ${ui.recapWeek === 1 ? 'on' : ''}" data-act="recapWeek" data-id="1">Last week</button></div>
-      <p class="served" style="text-align:left;margin:16px 0">You baked ${w.cakes} cake${w.cakes === 1 ? '' : 's'}, burned ${w.candles} candle${w.candles === 1 ? '' : 's'}, and studied ${hours(w.minutes)} hrs.</p>
-      <div class="stats">
-        <div class="stat"><b>${w.cakes}</b>cakes served</div>
-        <div class="stat"><b>${w.candles}</b>candles melted</div>
-        <div class="stat"><b>${hours(w.minutes)}</b>hours focused</div>
-        <div class="stat"><b>${w.flames}</b>flames earned</div>
-        <div class="stat"><b>${w.melted}</b>blown out early</div>
-        <div class="stat"><b>${streak()}</b>day streak</div>
-      </div>
+    <div class="stats-head">
+      <div><h1 style="margin:0">Stats</h1><p class="muted" style="margin:2px 0 0">${esc(st.range.label)}</p></div>
+      <span class="spacer"></span>
+      <div class="seg">${['week', 'month', 'year'].map((x) => `<button class="${P === x ? 'on' : ''}" data-act="statsPeriod" data-id="${x}">${x[0].toUpperCase() + x.slice(1)}</button>`).join('')}</div>
+      <div class="row" style="gap:6px"><button class="icon-btn" data-act="statsShift" data-id="1" aria-label="Previous ${P}">‹</button><button class="icon-btn" data-act="statsShift" data-id="-1" ${off === 0 ? 'disabled' : ''} aria-label="Next ${P}">›</button></div>
     </div>
-    <div class="bakery-top">
-      <div class="card"><h2>Minutes per day</h2><div class="bars">${w.perDay.map((d) => `<div class="bar"><span class="muted">${d.minutes || ''}</span><i style="height:${(d.minutes / maxDay) * 100}%"></i>${d.label}</div>`).join('')}</div></div>
-      <div class="card"><h2>By subject</h2>${subj.length ? subj.map(([k, v]) => `<div class="hbar"><div class="row"><span>${esc(k)}</span><span class="spacer"></span><span class="muted">${v} min</span></div><div class="track"><div class="fill" style="width:${(v / maxSubj) * 100}%"></div></div></div>`).join('') : '<p class="muted">Tag your candles with a subject and the breakdown shows up here.</p>'}</div>
+    <div class="stats">
+      ${stat('Focus time', fmtMin(st.minutes), delta === null ? `this ${P}` : `<span class="${delta >= 0 ? 'up' : 'down'}">${delta >= 0 ? '▲' : '▼'} ${Math.abs(delta)}%</span> vs last ${P}`)}
+      ${stat('Pomodoros', st.done.length, `${st.blown} blown out early`)}
+      ${stat('Daily average', fmtMin(avg), `${st.activeDays} active day${st.activeDays === 1 ? '' : 's'}`)}
+      ${stat('Completion', st.rate + '%', 'sessions finished')}
+      ${stat('Tasks done', st.tasksDone.length, `${Object.keys(st.tasksByTag).length} tag${Object.keys(st.tasksByTag).length === 1 ? '' : 's'}`)}
+      ${stat('Cakes served', st.cakes, `${st.flames} flames earned`)}
+      ${stat('Streak', streak() + ' days', streak() >= 7 ? 'blue flame active' : `${7 - streak()} to blue flame`)}
+      ${stat('Distractions', st.distractions, 'tab switches')}
     </div>
-    <div class="card">
-      <h2>Light a candle for a cause <span class="badge" style="background:#ffd27a">concept</span></h2>
-      <p class="muted">Like Forest's real-tree planting: every ${impactGoal} hours studied across Candlelit could fund a real donation (e.g. school supplies or literacy programs). All-time you've studied <b>${impactHours.toFixed(1)} hrs</b> across ${t.candles} candles and ${t.cakes} cakes.</p>
+    <div class="card"><div class="row"><h2 style="margin:0">Focus time</h2><span class="spacer"></span><span class="muted">${st.best?.total ? `Best ${P === 'year' ? 'month' : 'day'}: ${esc(st.best.full)} · ${fmtMin(st.best.total)}` : ''}</span></div>${barChart(st.buckets, { labelEvery: P === 'month' ? 3 : 1 })}</div>
+    <div class="two">
+      <div class="card"><h2>By tag</h2>${donut(st.byTag)}</div>
+      <div class="card"><h2>Tasks completed by tag</h2>${taskTags.length ? taskTags.map(([k, v]) => `<div class="hbar"><span class="legend-row"><i style="background:${tagColor(k)}"></i>${esc(k)}</span><div class="track"><div class="fill" style="width:${(v / maxT) * 100}%;background:${tagColor(k)}"></div></div><b>${v}</b></div>`).join('') : `<p class="muted">No tasks finished this ${P}. <a href="#/tasks">Open your to-do list</a>.</p>`}</div>
+    </div>
+    <div class="two">
+      <div class="card"><h2>When you focus</h2><p class="muted" style="margin-top:-6px">${peak ? `You focus most around <b>${hLabel(peakH)}</b>.` : 'Finish a few sessions to see your best hours.'}</p>${hourChart(st.hours)}</div>
+      <div class="card"><h2>Trend</h2><p class="muted" style="margin-top:-6px">Focus time over your last ${n} ${P}s</p>${trendChart(trend)}</div>
+    </div>
+    ${P === 'year' ? `<div class="card"><h2>${st.range.start.getFullYear()} at a glance</h2>${heatmap(st.range.start.getFullYear())}</div>` : ''}
+    <div class="card tint-butter">
+      <div class="row"><h2 style="margin:0">Light a candle for a cause</h2><span class="badge" style="background:#fff">concept</span></div>
+      <p class="muted">Like Forest's real-tree planting: every ${impactGoal} hours studied across Candlelit could fund a real donation. All-time you've studied <b>${impactHours.toFixed(1)} hrs</b> across ${t.candles} candles and ${t.cakes} cakes.</p>
       <div class="progress"><div style="width:${Math.min(100, ((impactHours % impactGoal) / impactGoal) * 100)}%"></div></div>
-      <p class="muted" style="font-size:.9rem">${(impactGoal - (impactHours % impactGoal)).toFixed(1)} hrs until your next contribution.</p>
     </div>
     <div class="card plain">
-      <h3>Settings</h3>
-      <div class="row">
-        <label>Name <input type="text" data-change="name" value="${esc(state.name)}" style="width:160px"></label>
-        <span class="spacer"></span>
-        <button class="btn ghost sm" data-act="reset">Reset all data</button>
+      <div class="row"><label class="muted">Name <input type="text" data-change="name" value="${esc(state.name)}" style="width:160px"></label><span class="spacer"></span><button class="btn ghost sm" data-act="reset">Reset all data</button></div>
+    </div>
+  </section>`;
+};
+
+/* ---------- to-do ---------- */
+VIEWS.tasks = () => {
+  const f = ui.taskFilter;
+  const match = (t) => f === 'all' || t.tag === f;
+  const active = state.tasks.filter((t) => !t.done && match(t));
+  const done = state.tasks.filter((t) => t.done && match(t)).sort((x, y) => String(y.doneAt).localeCompare(String(x.doneAt)));
+  const today = dayKey();
+  const doneToday = state.tasks.filter((t) => t.done && t.doneAt === today).length;
+  const pomToday = state.sessions.filter((x) => x.completed && x.date === today && x.task).length;
+  const usedTags = [...new Set(state.tasks.map((t) => t.tag))];
+  const openByTag = {};
+  state.tasks.filter((t) => !t.done).forEach((t) => { openByTag[t.tag] = (openByTag[t.tag] || 0) + 1; });
+  const linked = state.settings.taskId;
+  const row = (t) => `<li class="task ${t.done ? 'done' : ''} ${linked === t.id && !t.done ? 'linked' : ''}">
+    <button class="check ${t.done ? 'on' : ''}" data-act="toggleTask" data-id="${t.id}" aria-label="${t.done ? 'Mark not done' : 'Mark done'}"></button>
+    <div class="task-main"><div class="task-title">${esc(t.title)}</div>
+      <div class="task-meta"><span class="tagpill" style="--c:${tagColor(t.tag)}">${esc(t.tag)}</span><span class="pomos" title="${t.pomos} of ${t.est} pomodoros">${Array.from({ length: Math.max(t.est, t.pomos) }, (_, i) => `<i class="${i < t.pomos ? 'on' : ''}"></i>`).join('')}</span><span class="muted">${t.pomos}/${t.est}</span></div></div>
+    ${t.done ? '' : `<button class="btn sm ${linked === t.id ? '' : 'ghost'}" data-act="focusTask" data-id="${t.id}">${linked === t.id ? 'Linked · start' : 'Focus'}</button>`}
+    <button class="icon-btn" data-act="deleteTask" data-id="${t.id}" aria-label="Delete task">×</button></li>`;
+  view.innerHTML = `
+  <section class="tasks-grid">
+    <div class="grid">
+      <div class="card">
+        <h1 style="margin:0 0 4px">To-do</h1>
+        <p class="muted" style="margin:0">Link a task to a pomodoro. Every task needs a tag so its focus time counts in your stats.</p>
+        <input type="text" id="taskTitle" class="task-input" placeholder="What are you working on?" value="${esc(ui.taskTitle)}" data-input="taskTitle" maxlength="80">
+        <label class="field">Tag <span class="req">required</span></label>
+        <div class="chips" id="tagChips">${state.subjects.map((x) => `<button class="chip tagchip ${ui.taskTag === x ? 'on' : ''}" style="--c:${tagColor(x)}" data-act="taskTag" data-id="${esc(x)}"><i></i>${esc(x)}</button>`).join('')}<input type="text" placeholder="+ new tag" data-change="newTag" style="width:130px"></div>
+        <label class="field">Estimated pomodoros</label>
+        <div class="row"><div class="chips">${[1, 2, 3, 4, 5, 6].map((k) => `<button class="chip est ${ui.taskEst === k ? 'on' : ''}" data-act="taskEst" data-id="${k}">${k}</button>`).join('')}</div><span class="spacer"></span><button class="btn" data-act="addTask">Add task</button></div>
+      </div>
+      <div class="card">
+        <div class="row"><h2 style="margin:0">Tasks</h2><span class="spacer"></span><div class="chips">${['all', ...usedTags].map((x) => `<button class="chip sm ${f === x ? 'on' : ''}" data-act="taskFilter" data-id="${esc(x)}">${x === 'all' ? 'All' : esc(x)}</button>`).join('')}</div></div>
+        ${active.length ? `<ul class="task-list">${active.map(row).join('')}</ul>` : '<p class="muted">Nothing here. Add a task above.</p>'}
+        ${done.length ? `<details class="done-list"><summary>Completed (${done.length})</summary><ul class="task-list">${done.map(row).join('')}</ul></details>` : ''}
       </div>
     </div>
+    <aside class="grid">
+      <div class="card tint-pink"><div class="eyebrow">Today</div><div class="big-n">${doneToday}</div><div class="muted">tasks done</div><div class="big-n" style="margin-top:14px">${pomToday}</div><div class="muted">pomodoros on tasks</div></div>
+      <div class="card"><h3>Open by tag</h3>${Object.keys(openByTag).length ? Object.entries(openByTag).sort((x, y) => y[1] - x[1]).map(([k, v]) => `<div class="legend-row"><i style="background:${tagColor(k)}"></i><span>${esc(k)}</span><span class="spacer"></span><b>${v}</b></div>`).join('') : '<p class="muted">All clear.</p>'}
+        <p class="muted" style="font-size:.85rem;margin-bottom:0">Want the full picture? <a href="#/stats">See your stats</a>.</p></div>
+    </aside>
   </section>`;
 };
 
@@ -726,7 +794,45 @@ const actions = {
       await party.start(state.settings.minutes, state.settings.minutes * msPerMin());
     } catch (e) { toast(esc(e.message)); }
   },
-  recapWeek: ({ id }) => { ui.recapWeek = +id; route(); },
+  statsPeriod: ({ id }) => { ui.statsPeriod = id; ui.statsOffset = 0; route(); },
+  statsShift: ({ id }) => { ui.statsOffset = Math.max(0, ui.statsOffset + +id); route(); },
+  taskTag: ({ id }) => { ui.taskTag = id; $('#tagChips')?.classList.remove('invalid'); document.querySelectorAll('[data-act="taskTag"]').forEach((el) => el.classList.toggle('on', el.dataset.id === id)); },
+  taskEst: ({ id }) => { ui.taskEst = +id; document.querySelectorAll('[data-act="taskEst"]').forEach((el) => el.classList.toggle('on', el.dataset.id === id)); },
+  taskFilter: ({ id }) => { ui.taskFilter = id; route(); },
+  addTask: () => {
+    const title = ui.taskTitle.trim();
+    if (!title) { toast('Give the task a name first'); $('#taskTitle')?.focus(); return; }
+    if (!ui.taskTag) {
+      const el = $('#tagChips');
+      if (el) { el.classList.remove('invalid'); void el.offsetWidth; el.classList.add('invalid'); }
+      toast('Pick a tag. Tags are how tasks show up in your stats.');
+      return;
+    }
+    state.tasks.unshift({ id: newId(), title: title.slice(0, 80), tag: ui.taskTag, est: ui.taskEst, pomos: 0, done: false, createdAt: dayKey(), doneAt: null });
+    ui.taskTitle = '';
+    save(); route();
+    setTimeout(() => $('#taskTitle')?.focus(), 0);
+  },
+  toggleTask: ({ id }) => {
+    const t = state.tasks.find((x) => x.id === id);
+    if (!t) return;
+    t.done = !t.done;
+    t.doneAt = t.done ? dayKey() : null;
+    if (t.done) { if (state.settings.taskId === id) state.settings.taskId = null; confetti(30); toast(`Done: ${esc(t.title)}`); }
+    save(); route();
+  },
+  deleteTask: ({ id }) => {
+    state.tasks = state.tasks.filter((x) => x.id !== id);
+    if (state.settings.taskId === id) state.settings.taskId = null;
+    save(); route();
+  },
+  focusTask: ({ id }) => {
+    const t = state.tasks.find((x) => x.id === id);
+    if (!t) return;
+    state.settings.taskId = id;
+    state.settings.subject = t.tag;
+    save(); go('focus');
+  },
   reset: () => modal(`<h2>Reset everything?</h2><p>This deletes all cakes, candles, flames and sculptures on this device.</p><button class="btn ghost" data-act="confirmReset">Yes, reset</button>`),
   confirmReset: resetAll,
 };
@@ -747,6 +853,8 @@ document.addEventListener('change', (e) => {
   if (k === 'customMin') { const n = Math.max(1, Math.min(180, parseInt(v, 10) || 25)); state.settings.minutes = n; save(); route(); }
   if (k === 'newSubject' && v.trim()) { const s = v.trim().slice(0, 24); if (!state.subjects.includes(s)) state.subjects.push(s); state.settings.subject = s; save(); route(); }
   if (k === 'demo') { state.settings.demo = v; save(); route(); }
+  if (k === 'linkTask') { const t = state.tasks.find((x) => x.id === v); state.settings.taskId = t ? t.id : null; if (t) state.settings.subject = t.tag; save(); route(); }
+  if (k === 'newTag' && v.trim()) { const s = v.trim().slice(0, 24); if (!state.subjects.includes(s)) state.subjects.push(s); ui.taskTag = s; save(); route(); }
   if (k === 'name') { state.name = v.trim().slice(0, 24); save(); }
 });
 document.addEventListener('input', (e) => {
@@ -755,11 +863,13 @@ document.addEventListener('input', (e) => {
   if (k === 'joinCode') ui.joinCode = e.target.value.trim();
   if (k === 'redeem') ui.redeemCode = e.target.value.trim();
   if (k === 'name') state.name = e.target.value.trim().slice(0, 24);
+  if (e.target.dataset.input === 'taskTitle') ui.taskTitle = e.target.value;
   const s = e.target.dataset.studio;
   if (s) { ui.studio[s] = e.target.value; renderStudioPreview(); }
 });
 document.addEventListener('keydown', (e) => {
-  if (e.key === 'Enter' && e.target.dataset.change === 'newSubject') e.target.blur();
+  if (e.key === 'Enter' && (e.target.dataset.change === 'newSubject' || e.target.dataset.change === 'newTag')) e.target.blur();
+  if (e.key === 'Enter' && e.target.id === 'taskTitle') actions.addTask();
 });
 
 document.addEventListener('visibilitychange', () => {
