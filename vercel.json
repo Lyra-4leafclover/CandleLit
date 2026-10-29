@@ -1,8 +1,13 @@
 {
-  "rewrites": [{ "source": "/api/(.*)", "destination": "/api/index" }],
+  "rewrites": [
+    {
+      "source": "/api/(.*)",
+      "destination": "/api/index"
+    }
+  ],
   "functions": {
     "api/index.py": {
-      "excludeFiles": "{art,art3,art4,art5,art6,art7,audio,css,js,data}/**"
+      "excludeFiles": "{art,art3,art4,art5,art6,art7,audio,css,js,data,docs,memory}/**"
     }
   }
 }
